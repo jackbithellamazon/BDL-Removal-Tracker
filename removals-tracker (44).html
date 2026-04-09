@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Removals Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0d14;--bg2:#111520;--bg3:#181e2e;--bg4:#1e2638;--bg5:#252d3d;
+  --border:#222840;--border2:#2e3a55;
+  --text:#e8eaf0;--text2:#8b93a8;--text3:#4e5870;
+  --blue:#4d8ef0;--blue-bg:#0f1f3d;--blue-dim:#1a2d52;
+  --green:#3dd68c;--green-bg:#0a2b1c;--green-dim:#0f2e1f;
+  --amber:#f5a623;--amber-bg:#2e1f08;--amber-dim:#241808;
+  --red:#f05050;--red-bg:#2d1010;--red-dim:#250e0e;
+  --purple:#9b7ff0;--purple-bg:#1e1540;--purple-dim:#1a1238;
+  --cyan:#22d3ee;--cyan-bg:#0a2030;
+  --pink:#f472b6;--pink-bg:#2d1028;
+  --radius:8px;--radius-lg:12px;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --sidebar-w:210px;--sidebar-collapsed:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh;line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* Layout */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:all .2s ease;overflow:hidden}
+.sidebar.collapsed{width:var(--sidebar-collapsed);min-width:var(--sidebar-collapsed)}
+.sidebar-logo{padding:16px 12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;min-height:56px}
+.sidebar-logo-text h1{font-size:14px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.sidebar-logo-text p{font-size:10px;color:var(--text3);white-space:nowrap}
+.sidebar-toggle{background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text3);cursor:pointer;padding:4px 6px;flex-shrink:0;transition:all .15s;font-size:11px}
+.sidebar-toggle:hover{color:var(--text);border-color:var(--blue-dim)}
+.sidebar.collapsed .sidebar-logo-text{display:none}
+.sidebar-nav{padding:10px 6px;flex:1;overflow:hidden}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:12.5px;font-weight:400;transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;white-space:nowrap;overflow:hidden}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--blue-bg);color:var(--blue);font-weight:500}
+.nav-icon{width:15px;height:15px;opacity:.7;flex-shrink:0}
+.nav-item.active .nav-icon{opacity:1}
+.nav-label{overflow:hidden;text-overflow:ellipsis;flex:1}
+.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-badge,.sidebar.collapsed .nav-alert-dot{display:none}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px}
+.nav-badge{font-size:10px;background:var(--bg5);color:var(--text2);padding:1px 6px;border-radius:20px;font-weight:500;flex-shrink:0}
+.nav-item.active .nav-badge{background:var(--blue-dim);color:var(--blue)}
+.nav-alert-dot{width:7px;height:7px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 2s infinite}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.topbar{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0}
+.topbar-left h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.topbar-left p{font-size:11px;color:var(--text3);margin-top:1px}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* Tiles */
+.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.tile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.tile:hover{border-color:var(--border2);transform:translateY(-1px)}
+.tile::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+.tile-blue::before{background:var(--blue)}
+.tile-green::before{background:var(--green)}
+.tile-amber::before{background:var(--amber)}
+.tile-red::before{background:var(--red)}
+.tile-purple::before{background:var(--purple)}
+.tile-cyan::before{background:var(--cyan)}
+.tile-v{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1;margin-bottom:5px}
+.tile-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+.tile-sub{font-size:11px;color:var(--text2);margin-top:3px}
+.tv-blue{color:var(--blue)}.tv-green{color:var(--green)}.tv-amber{color:var(--amber)}.tv-red{color:var(--red)}.tv-purple{color:var(--purple)}.tv-cyan{color:var(--cyan)}.tv-white{color:var(--text)}
+
+/* Action list */
+.action-list{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
+.action-list-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+.action-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.action-item:last-child{border-bottom:none}
+.action-item:hover{background:var(--bg3)}
+.action-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ad-red{background:var(--red)}.ad-amber{background:var(--amber)}.ad-purple{background:var(--purple)}.ad-blue{background:var(--blue)}.ad-cyan{background:var(--cyan)}
+.action-info{flex:1;min-width:0}
+.action-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.action-desc{font-size:11px;color:var(--text3);margin-top:1px}
+.action-meta{font-size:11px;color:var(--text2);white-space:nowrap;text-align:right}
+
+/* Filter chips */
+.filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.chip{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text2);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .12s;white-space:nowrap}
+.chip:hover{border-color:var(--border2);color:var(--text)}
+.chip.on{background:var(--blue-bg);border-color:var(--blue-dim);color:var(--blue);font-weight:500}
+.chip-n{font-size:10px;opacity:.6;margin-left:3px}
+
+/* Table */
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--bg3)}
+th{padding:9px 12px;text-align:left;font-weight:500;color:var(--text3);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .1s}
+tbody tr:hover{background:var(--bg3)}
+.empty-row td{text-align:center;padding:40px;color:var(--text3)}
+
+/* Status badges */
+.sbadge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.sb-transit{background:var(--blue-bg);color:var(--blue)}
+.sb-arrived{background:var(--amber-bg);color:var(--amber)}
+.sb-checkedin{background:var(--cyan-bg);color:var(--cyan)}
+.sb-caseopen{background:var(--blue-dim);color:var(--blue)}
+.sb-mscsubmit{background:var(--blue-dim);color:var(--blue)}
+.sb-mscreview{background:var(--amber-bg);color:var(--amber)}
+.sb-mscapproved{background:var(--green-bg);color:var(--green)}
+.sb-mscreduced{background:var(--green-dim);color:var(--green)}
+.sb-mscdenied{background:var(--red-bg);color:var(--red)}
+.sb-mscneedsdoc{background:var(--purple-bg);color:var(--purple)}
+.sb-escalated{background:var(--pink-bg);color:var(--pink)}
+.sb-reimbursed{background:var(--green-bg);color:var(--green)}
+.sb-sentout{background:var(--purple-bg);color:var(--purple)}
+.sb-writeoff{background:var(--bg5);color:var(--text3)}
+
+/* Inline status select */
+.status-sel{padding:3px 8px;border-radius:20px;border:none;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font);outline:none;-webkit-appearance:none;appearance:none;background:var(--bg4);color:var(--text)}
+
+/* Deadline chip */
+.dc{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;font-family:var(--mono)}
+.dc-red{background:var(--red-bg);color:var(--red)}
+.dc-amber{background:var(--amber-bg);color:var(--amber)}
+.dc-green{background:var(--green-dim);color:var(--green)}
+
+/* Buttons */
+.btn{padding:5px 13px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .12s;white-space:nowrap}
+.btn:hover{background:var(--bg4)}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-primary:hover{opacity:.88}
+.btn-sm{padding:3px 9px;font-size:11px}
+.btn-blue{background:var(--blue-bg);border-color:var(--blue-dim);color:var(--blue)}
+.btn-blue:hover{background:var(--blue-dim)}
+.btn-green{background:var(--green-bg);border-color:var(--green-dim);color:var(--green)}
+.btn-green:hover{background:var(--green-dim)}
+.btn-red{background:var(--red-bg);border-color:var(--red-dim);color:var(--red)}
+.btn-amber{background:var(--amber-bg);border-color:var(--amber-dim);color:var(--amber)}
+
+/* Reimb table */
+.reimb-row-outer{border-bottom:1px solid var(--border)}
+.reimb-row-outer:last-child{border-bottom:none}
+.reimb-main-row{display:grid;grid-template-columns:4px 1fr 110px 160px 90px 90px 90px 90px 80px 110px;align-items:center;cursor:pointer;transition:background .1s;min-height:52px}
+.reimb-main-row:hover{background:var(--bg3)}
+.reimb-border{height:100%;border-radius:2px 0 0 2px}
+.reimb-cell{padding:8px 10px;font-size:12px}
+.reimb-expand{background:var(--bg3);border-top:1px solid var(--border);padding:16px 20px;display:none}
+.reimb-expand.open{display:block}
+.reimb-expand-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.inl-input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:var(--font);width:100%;outline:none;transition:border .12s}
+.inl-input:focus{border-color:var(--blue)}
+
+/* Attempt rows */
+.attempt-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:var(--bg4);margin-bottom:4px;border:1px solid var(--border)}
+.ao-approved{color:var(--green)}.ao-denied{color:var(--red)}.ao-review{color:var(--amber)}.ao-needsdoc{color:var(--purple)}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px;backdrop-filter:blur(3px)}
+.overlay.h{display:none}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:16px;letter-spacing:-.01em}
+.modal-sub{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px}
+.fg{display:grid;gap:10px}
+.fg.g2{grid-template-columns:1fr 1fr}
+.fg.g3{grid-template-columns:1fr 1fr 1fr}
+.fg.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+.field label{display:block;font-size:11px;color:var(--text3);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);font-size:12px;font-family:var(--font);outline:none;transition:border .12s}
+.field input:focus,.field textarea:focus{border-color:var(--blue)}
+.field select{cursor:pointer}
+.field textarea{resize:vertical;min-height:70px;line-height:1.5}
+.sep{border:none;border-top:1px solid var(--border);margin:14px 0}
+.modal-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+
+/* Case output */
+.case-out{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;font-family:var(--mono);font-size:11.5px;line-height:1.9;white-space:pre-wrap;max-height:300px;overflow-y:auto;color:var(--text2);margin-top:10px}
+
+/* PDF builder */
+.pdf-drop{border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:36px;text-align:center;cursor:pointer;transition:all .15s;background:var(--bg3)}
+.pdf-drop:hover,.pdf-drop.drag{border-color:var(--blue);background:var(--blue-bg)}
+.pdf-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pdf-thumb{position:relative;width:80px;height:80px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border2)}
+.pdf-thumb img{width:100%;height:100%;object-fit:cover}
+.pdf-thumb-rm{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.75);border:none;color:#fff;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+
+/* Quick links */
+.qlinks{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.qlink{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:11.5px;text-decoration:none;transition:all .12s;cursor:pointer;font-family:var(--font)}
+.qlink:hover{background:var(--bg4);color:var(--text);border-color:var(--blue-dim)}
+.qlink svg{width:12px;height:12px;flex-shrink:0}
+
+/* Misc */
+.trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap}
+.b-green{background:var(--green-bg);color:var(--green)}
+.b-red{background:var(--red-bg);color:var(--red)}
+.b-amber{background:var(--amber-bg);color:var(--amber)}
+.b-blue{background:var(--blue-bg);color:var(--blue)}
+.b-gray{background:var(--bg5);color:var(--text3)}
+.b-purple{background:var(--purple-bg);color:var(--purple)}
+.cg-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
+/* Case log */
+.cl-entry{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden}
+.cl-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;transition:background .1s}
+.cl-header:hover{background:var(--bg3)}
+.cl-chevron{font-size:12px;color:var(--text3);transition:transform .2s;flex-shrink:0}
+.cl-entry.open .cl-chevron{transform:rotate(90deg)}
+.cl-body{display:none;border-top:1px solid var(--border);padding:16px}
+.cl-entry.open .cl-body{display:block}
+.cl-issues{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.cl-issue-tag{font-size:11px;padding:3px 9px;border-radius:20px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-dim)}
+.cl-note-block{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px}
+.cl-note-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.cl-note-txt{font-size:12px;color:var(--text2);white-space:pre-wrap;line-height:1.5}
+.cl-msg{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px;font-family:var(--mono);font-size:11.5px;line-height:1.9;white-space:pre-wrap;color:var(--text2);max-height:280px;overflow-y:auto}
+
+/* Reimbursement cards */
+.rc{border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:all .2s;border:1px solid transparent}
+.rc-checkdiscord {background:#0d0a1a;border-color:#a78bfa55}
+.rc-mscsubmit   {background:#060a18;border-color:#4d8ef055}
+.rc-mscreview   {background:#1a1200;border-color:#f5a62366}
+.rc-mscapproved {background:#021508;border-color:#3dd68c77}
+.rc-mscreduced  {background:#1a1000;border-color:#f5a62377}
+.rc-mscdenied   {background:#180303;border-color:#f0505077}
+.rc-mscneedsdoc {background:#0d0620;border-color:#9b7ff077}
+.rc-caseopen    {background:#061518;border-color:#22d3ee66}
+.rc-header{padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,.07)}
+.rc-header-left{flex:1;min-width:0}
+.rc-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:5px;user-select:text}
+.rc-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.rc-copy{font-size:11px;color:var(--text3);font-family:var(--mono);cursor:pointer;border:none;background:none;padding:0;transition:color .1s;user-select:text;font-family:var(--mono)}
+.rc-copy:hover{color:var(--blue)}
+.rc-oid{font-size:11px;color:var(--blue);text-decoration:none;font-family:var(--mono)}
+.rc-oid:hover{text-decoration:underline}
+.rc-tags{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.rc-tag{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.rc-progress{padding:10px 14px 0}
+.rc-prog-label{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.rc-prog-step{font-size:12px;font-weight:800}
+.rc-bar-track{height:8px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;margin-bottom:14px}
+.rc-bar-fill{height:100%;border-radius:4px;transition:width .4s ease,background .3s}
+.rc-steps{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:10px}
+.rc-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
+.rc-step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:2px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.25)}
+.rc-step-dot.done{background:#3dd68c;border-color:#3dd68c;color:#fff;box-shadow:0 0 12px #3dd68c55}
+.rc-step-dot.warn{background:#f5a62318;border-color:#f5a623;color:#f5a623}
+.rc-step-dot.err{background:#f0505018;border-color:#f05050;color:#f05050;box-shadow:0 0 12px #f0505044}
+.rc-step-lbl{font-size:9px;color:var(--text3);text-align:center;line-height:1.3;white-space:nowrap}
+.rc-body{display:grid;grid-template-columns:1fr 220px;border-top:1px solid rgba(255,255,255,.07)}
+.rc-left{padding:10px 14px}
+.rc-field-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.rc-field-row:last-child{border-bottom:none}
+.rc-field-name{font-size:11px;color:var(--text3);font-weight:500}
+.rc-field-val{font-size:12px;font-weight:500;text-align:right;cursor:pointer;user-select:text}
+.rc-right{background:rgba(0,0,0,.25);border-left:1px solid rgba(255,255,255,.07);padding:11px}
+.rc-right-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.rc-right-val{font-size:20px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-bottom:4px}
+.rc-right-sub{font-size:11px;color:var(--text3);margin-bottom:10px}
+.rc-alert{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:12px;font-weight:600}
+.rc-footer{padding:8px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rc-age{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-left:auto;white-space:nowrap;flex-shrink:0}
+.rc-msc-date-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:var(--font);outline:none;width:100%;margin-top:6px}
+.rc-msc-date-input:focus{border-color:currentColor}
+.copy-flash{position:fixed;bottom:20px;right:20px;background:#3dd68c;color:#fff;font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;z-index:9999;animation:fadeup .3s ease;pointer-events:none}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* Mobile */
+@media(max-width:700px){
+  .shell{flex-direction:column}
+  .sidebar{width:100%!important;min-width:0!important;flex-direction:row;height:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .sidebar-logo{display:none}
+  .sidebar-nav{display:flex;flex-direction:row;padding:6px;gap:3px;overflow-x:auto}
+  .nav-label,.nav-badge{display:none!important}
+  .nav-item{justify-content:center;padding:8px;min-width:44px}
+  .main{height:calc(100vh - 56px)}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">
+        <h1>Removals</h1>
+        <p>BDL Tracker</p>
+      </div>
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar">‹</button>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" id="nav-overview" onclick="navTo('overview')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        <span class="nav-label">Overview</span>
+      </button>
+      <button class="nav-item" id="nav-active" onclick="navTo('active')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" rx="1" fill="currentColor"/><rect x="1" y="7" width="14" height="2" rx="1" fill="currentColor"/><rect x="1" y="11" width="9" height="2" rx="1" fill="currentColor"/></svg>
+        <span class="nav-label">Active</span>
+        <span class="nav-badge" id="nb-active">0</span>
+      </button>
+      <button class="nav-item" id="nav-reimb" onclick="navTo('reimb')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v1.5M8 9.5V11M6.5 7.5C6.5 6.67 7.17 6 8 6s1.5.67 1.5 1.5S8.83 9 8 9s-1.5.67-1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span class="nav-label">Reimbursements</span>
+        <span class="nav-badge" id="nb-reimb">0</span>
+        <span class="nav-alert-dot" id="reimb-alert" style="display:none"></span>
+      </button>
+      <button class="nav-item" id="nav-case" onclick="navTo('case')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h6M5 9h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="nav-label">Case Generator</span>
+      </button>
+      <button class="nav-item" id="nav-hist" onclick="navTo('hist')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="nav-label">History</span>
+        <span class="nav-badge" id="nb-hist">0</span>
+      </button>
+      <button class="nav-item" id="nav-caselog" onclick="navTo('caselog')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 2h12v12H2z" stroke="currentColor" stroke-width="1.3" rx="1"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span class="nav-label">Case Log</span>
+        <span class="nav-badge" id="nb-caselog">0</span>
+      </button>
+      <button class="nav-item" id="nav-pdf" onclick="navTo('pdf')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span class="nav-label">PDF Builder</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2 id="page-title">Overview</h2>
+        <p id="page-sub">Your removals at a glance</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="openAdd()">+ Add removal</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- OVERVIEW PAGE -->
+      <div id="page-overview">
+        <div style="margin-bottom:16px">
+          <a href="https://app.sellerfuse.com/your-orders?status=Removal+Order" target="_blank" style="display:inline-block;padding:8px 16px;background:#4d8ef0;color:white;border-radius:6px;font-weight:600;font-size:12px;text-decoration:none;border:1px solid #4d8ef055">📋 Check SellerFuse for new removals</a>
+        </div>
+        <div class="tile-grid" id="overview-tiles"></div>
+        <div class="action-list" id="overview-action-list">
+          <div class="action-list-hdr">
+            <span style="color:var(--red)">●</span> Sarah's action list
+          </div>
+          <div id="overview-actions"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="tbl-wrap">
+            <div style="padding:11px 16px;border-bottom:1px solid var(--border);font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">⏰ Upcoming reupdates</div>
+            <div id="overview-reupdates"></div>
+          </div>
+          <div class="tbl-wrap">
+            <div style="padding:11px 16px;border-bottom:1px solid var(--border);font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">⏱ Approaching 60-day deadline</div>
+            <div id="overview-deadlines"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE PAGE -->
+      <div id="page-active" style="display:none">
+        <div class="qlinks">
+          <a class="qlink" href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/list" target="_blank">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M2 3h12v10H2z" stroke="currentColor" stroke-width="1.3"/><path d="M5 6h6M5 9h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Removal Orders
+          </a>
+          <a class="qlink" href="https://sellercentral.amazon.co.uk/help/center?redirectSource=Hill" target="_blank">
+            <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 7v5M8 5v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Create a Case
+          </a>
+          <a class="qlink" href="https://sellercentral.amazon.co.uk/reportcentral/REMOVAL_SHIPMENT_DETAIL/1" target="_blank">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 2h10v12H3z" stroke="currentColor" stroke-width="1.3"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Removal Reports
+          </a>
+          <a class="qlink" href="https://sellercentral.amazon.co.uk/myc/msc" target="_blank">
+            <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>MSC Portal
+          </a>
+        </div>
+        <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+          <input type="text" id="search-active" placeholder="Search by product name, ASIN, or Removal ID..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text1);font-size:14px" onkeyup="filterActiveTable()">
+        </div>
+        <div class="filter-row" id="filter-row"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-scroll">
+            <table id="main-table">
+              <thead><tr>
+                <th>Date</th>
+                <th style="min-width:200px">Product</th>
+                <th>ASIN</th>
+                <th>FNSKU</th>
+                <th>SKU</th>
+                <th>Removal ID</th>
+                <th>COG</th>
+                <th>LPN</th>
+                <th>Status</th>
+                <th>60d</th>
+                <th>Actions</th>
+              </tr></thead>
+              <tbody id="tbl-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- REIMBURSEMENTS PAGE -->
+      <div id="page-reimb" style="display:none">
+        <div class="qlinks">
+          <a class="qlink" href="https://sellercentral.amazon.co.uk/help/center?redirectSource=Hill" target="_blank">
+            <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 7v5M8 5v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Create a Case
+          </a>
+          <a class="qlink" href="https://sellercentral.amazon.co.uk/myc/msc" target="_blank">
+            <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>MSC Portal
+          </a>
+          <a class="qlink" href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/list" target="_blank">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M2 3h12v10H2z" stroke="currentColor" stroke-width="1.3"/></svg>Removal Orders
+          </a>
+        </div>
+        <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+          <input type="text" id="search-reimb" placeholder="Search by product name, ASIN, or Removal ID..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text1);font-size:14px" onkeyup="filterReimbCards()">
+        </div>
+        <div class="filter-row" id="reimb-filter-row"></div>
+        <div id="reimb-cards"></div>
+      </div>
+
+      <!-- CASE GENERATOR PAGE -->
+      <div id="page-case" style="display:none">
+        <div class="cg-card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px">Amazon Seller Support — Case Generator</div>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Select removal, tick what's wrong, paste your Discord notes into each box, then generate and copy.</p>
+
+          <div class="field" style="margin-bottom:14px">
+            <label>Select removal</label>
+            <select id="cg-removal" onchange="onCgRemovalChange()"><option value="">Choose removal...</option></select>
+          </div>
+
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">
+            <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Item details — auto-filled, edit if needed</div>
+            <div class="fg g3">
+              <div class="field"><label>Product name</label><input id="cg-name" placeholder="Product name"></div>
+              <div class="field"><label>ASIN</label><input id="cg-asin" placeholder="B0XXXXXXXX"></div>
+              <div class="field"><label>FNSKU</label><input id="cg-fnsku" placeholder="X002XXXXXX"></div>
+            </div>
+            <div class="fg g4" style="margin-top:10px">
+              <div class="field"><label>Removal Order ID</label><input id="cg-oid" placeholder="2603261DDA"></div>
+              <div class="field"><label>Shipment ID</label><input id="cg-shipid" placeholder="146183407971552"></div>
+              <div class="field"><label>Tracking number</label><input id="cg-tracking" placeholder="QD363275631GB"></div>
+              <div class="field"><label>COG £ (inc VAT)</label><input id="cg-cog" type="number" step="0.01" placeholder="0.00"></div>
+            </div>
+            <div class="fg g3" style="margin-top:10px">
+              <div class="field"><label>LPN last 4 <span style="color:var(--amber);font-size:10px">(from your photo — leave blank if no LPN)</span></label><input id="cg-lpn4" placeholder="e.g. 2825" maxlength="10"></div>
+              <div class="field"><label>Quantity ordered</label><input id="cg-qty" type="number" value="1" min="1"></div>
+              <div class="field"><label>Tracking URL (Royal Mail / Evri etc)</label><input id="cg-trackurl" placeholder="https://track.royalmail.com/..."></div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">
+            <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Issue(s) — tick all that apply, paste your Discord notes below each</div>
+            <div id="cg-issues-list">
+
+              <div class="issue-block" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--bg4)">
+                  <input type="checkbox" id="ci-damaged" style="width:16px;height:16px;accent-color:var(--blue);flex-shrink:0" onchange="toggleIssueBox('ci-damaged')">
+                  <span style="font-size:12px;font-weight:500">📦 Damaged / unsellable</span>
+                </label>
+                <div id="ci-damaged-box" style="display:none;padding:10px 12px;border-top:1px solid var(--border)">
+                  <textarea id="ci-damaged-txt" placeholder='Paste your Discord message about the damage — e.g. "missing top of it and straw and packing, only returned the holder..."' style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text);font-family:var(--font);font-size:12px;resize:vertical;outline:none;line-height:1.5"></textarea>
+                </div>
+              </div>
+
+              <div class="issue-block" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--bg4)">
+                  <input type="checkbox" id="ci-missing" style="width:16px;height:16px;accent-color:var(--blue);flex-shrink:0" onchange="toggleIssueBox('ci-missing')">
+                  <span style="font-size:12px;font-weight:500">📭 Missing item / arrived empty</span>
+                </label>
+                <div id="ci-missing-box" style="display:none;padding:10px 12px;border-top:1px solid var(--border)">
+                  <textarea id="ci-missing-txt" placeholder='Paste your Discord notes — e.g. "empty box, missing USB receiver, all 3 items missing..."' style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text);font-family:var(--font);font-size:12px;resize:vertical;outline:none;line-height:1.5"></textarea>
+                </div>
+              </div>
+
+              <div class="issue-block" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--bg4)">
+                  <input type="checkbox" id="ci-wrong" style="width:16px;height:16px;accent-color:var(--blue);flex-shrink:0" onchange="toggleIssueBox('ci-wrong')">
+                  <span style="font-size:12px;font-weight:500">🔄 Wrong item returned (Switcharoo)</span>
+                </label>
+                <div id="ci-wrong-box" style="display:none;padding:10px 12px;border-top:1px solid var(--border)">
+                  <textarea id="ci-wrong-txt" placeholder='Paste your Discord notes — e.g. "Switcharoo — not Belkin, some cheap Chinese knockoff..."' style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text);font-family:var(--font);font-size:12px;resize:vertical;outline:none;line-height:1.5"></textarea>
+                </div>
+              </div>
+
+              <div class="issue-block" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--bg4)">
+                  <input type="checkbox" id="ci-notarrived" style="width:16px;height:16px;accent-color:var(--blue);flex-shrink:0" onchange="toggleIssueBox('ci-notarrived')">
+                  <span style="font-size:12px;font-weight:500">🚚 Dispatched but never arrived</span>
+                </label>
+                <div id="ci-notarrived-box" style="display:none;padding:10px 12px;border-top:1px solid var(--border)">
+                  <textarea id="ci-notarrived-txt" placeholder='Paste tracking status or Discord notes — e.g. "dispatched 13th March, never arrived, last tracking movement was..."' style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text);font-family:var(--font);font-size:12px;resize:vertical;outline:none;line-height:1.5"></textarea>
+                </div>
+              </div>
+
+              <div class="issue-block" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--bg4)">
+                  <input type="checkbox" id="ci-nolpn" style="width:16px;height:16px;accent-color:var(--blue);flex-shrink:0" onchange="toggleIssueBox('ci-nolpn')">
+                  <span style="font-size:12px;font-weight:500">🏷 No LPN on product</span>
+                </label>
+                <div id="ci-nolpn-box" style="display:none;padding:10px 12px;border-top:1px solid var(--border)">
+                  <textarea id="ci-nolpn-txt" placeholder="Any notes about missing LPN..." style="width:100%;min-height:50px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text);font-family:var(--font);font-size:12px;resize:vertical;outline:none;line-height:1.5"></textarea>
+                </div>
+              </div>
+
+              <div class="issue-block" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--bg4)">
+                  <input type="checkbox" id="ci-notrack" style="width:16px;height:16px;accent-color:var(--blue);flex-shrink:0" onchange="toggleIssueBox('ci-notrack')">
+                  <span style="font-size:12px;font-weight:500">📄 No tracking slip</span>
+                </label>
+                <div id="ci-notrack-box" style="display:none;padding:10px 12px;border-top:1px solid var(--border)">
+                  <textarea id="ci-notrack-txt" placeholder="Any notes about missing tracking slip..." style="width:100%;min-height:50px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text);font-family:var(--font);font-size:12px;resize:vertical;outline:none;line-height:1.5"></textarea>
+                </div>
+              </div>
+
+              <div class="issue-block" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--bg4)">
+                  <input type="checkbox" id="ci-partialarr" style="width:16px;height:16px;accent-color:var(--blue);flex-shrink:0" onchange="toggleIssueBox('ci-partialarr')">
+                  <span style="font-size:12px;font-weight:500">📦 Partial arrival (some units missing)</span>
+                </label>
+                <div id="ci-partialarr-box" style="display:none;padding:10px 12px;border-top:1px solid var(--border)">
+                  <textarea id="ci-partialarr-txt" placeholder='e.g. "ordered 3, only 1 arrived. Missing item 2 slips..."' style="width:100%;min-height:70px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px;color:var(--text);font-family:var(--font);font-size:12px;resize:vertical;outline:none;line-height:1.5"></textarea>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="genCaseMsg()" style="width:100%;padding:10px;font-size:13px">Generate message</button>
+
+          <div id="cg-out" style="display:none;margin-top:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:600">Copy and paste this into Amazon → new case</span>
+              <button class="btn btn-blue btn-sm" onclick="copyCase()">📋 Copy message</button>
+            </div>
+            <div class="case-out" id="cg-msg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY PAGE -->
+      <div id="page-hist" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div class="filter-row" style="margin-bottom:0" id="hist-filter-row"></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div id="hist-custom-range" style="display:none;align-items:center;gap:6px">
+              <input type="date" id="hist-from" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:4px 8px;color:var(--text);font-size:11px;font-family:var(--font)" onchange="renderHist()">
+              <span style="font-size:11px;color:var(--text3)">to</span>
+              <input type="date" id="hist-to" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:4px 8px;color:var(--text);font-size:11px;font-family:var(--font)" onchange="renderHist()">
+            </div>
+            <div style="font-size:12px;color:var(--text3)" id="hist-summary"></div>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-scroll">
+            <table>
+              <thead><tr>
+                <th>Date</th><th>Product</th><th>ASIN</th><th>FNSKU</th><th>SKU</th>
+                <th>Order ID</th><th>COG</th><th>Status</th><th>Reimb.</th><th style="text-align:right">Net P/L</th>
+              </tr></thead>
+              <tbody id="hist-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CASE LOG PAGE -->
+      <div id="page-caselog" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <p style="font-size:12px;color:var(--text3)">Every generated case message is saved here automatically. Use this to review, improve templates, and track what's been sent.</p>
+          <button class="btn btn-sm btn-red" onclick="if(confirm('Clear all case log entries?')){CASE_LOG=[];saveCaseLog();renderCaseLog()}">Clear log</button>
+        </div>
+        <div id="caselog-body"></div>
+      </div>
+
+      <!-- PDF BUILDER PAGE -->
+      <div id="page-pdf" style="display:none">
+        <div class="cg-card" style="max-width:700px">
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px">PDF Builder</div>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Drag your Discord photos here — the app bundles them into a single PDF ready to attach to your Seller Support case.</p>
+          <div class="field" style="margin-bottom:12px"><label>Link to removal (optional — adds reference to filename)</label>
+            <select id="pdf-removal"><option value="">No removal selected</option></select>
+          </div>
+          <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handlePdfDrop(event)">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="margin:0 auto 8px;display:block;opacity:.4"><path d="M12 16V8M8 12l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M20 16.7A5 5 0 0018 7h-1.26A8 8 0 104 15.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <div style="font-size:13px;font-weight:500;color:var(--text2)">Drop images here or click to select</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">JPG, PNG — all images will be combined into one PDF</div>
+          </div>
+          <input type="file" id="pdf-file-input" accept="image/*" multiple style="display:none" onchange="handlePdfFiles(this.files)">
+          <div class="pdf-thumbs" id="pdf-thumbs"></div>
+          <div id="pdf-actions" style="display:none;margin-top:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="buildPdf()">Build PDF</button>
+            <button class="btn" onclick="clearPdfImages()">Clear all</button>
+            <span id="pdf-status" style="font-size:12px;color:var(--text3)"></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="overlay h" id="add-overlay" onclick="closeBg(event,'add-overlay')">
+<div class="modal" style="max-width:520px">
+  <div class="modal-title">Log new removal</div>
+  <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Fill in what you have now — shipment ID, tracking, LPN and COG can be added later.</p>
+  <div class="fg g2">
+    <div class="field"><label>Date removed *</label><input id="a-dsub" type="date"></div>
+    <div class="field"><label>Removal source</label><select id="a-src"><option value="seller">Seller-initiated</option><option value="amazon">Amazon auto-removal</option></select></div>
+  </div>
+  <div class="fg g2" style="margin-top:10px">
+    <div class="field"><label>Product name *</label><input id="a-name" placeholder="e.g. Belkin BoostCharge Pro"></div>
+    <div class="field"><label>ASIN *</label><input id="a-asin" placeholder="B0CTJCHX2F"></div>
+  </div>
+  <div class="fg g2" style="margin-top:10px">
+    <div class="field"><label>FNSKU</label><input id="a-fnsku" placeholder="X002II5IBB"></div>
+    <div class="field"><label>SKU</label><input id="a-sku" placeholder="e.g. BLKN-BOOST-PRO"></div>
+  </div>
+  <div class="fg g2" style="margin-top:10px">
+    <div class="field"><label>Removal Order ID</label><input id="a-oid" placeholder="2603261DDA"></div>
+    <div class="field"><label>Quantity</label><input id="a-qord" type="number" value="1" min="1"></div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-primary" onclick="saveAdd()">Log removal</button>
+    <button class="btn" onclick="closeModal('add-overlay')">Cancel</button>
+  </div>
+</div>
+</div>
+
+<!-- CHECK-IN DECISION MODAL -->
+<div class="overlay h" id="checkin-overlay" onclick="closeBg(event,'checkin-overlay')">
+<div class="modal" style="max-width:480px">
+  <div class="modal-title" id="checkin-title">Item checked in — what's the verdict?</div>
+  <input type="hidden" id="checkin-rid">
+  <div style="display:grid;gap:7px;margin-bottom:4px">
+    <button class="btn" style="padding:13px;text-align:left;border-color:var(--green-dim);background:var(--green-bg);cursor:pointer" onclick="checkinDecision('new');event.stopPropagation()">
+      <div style="font-weight:600;color:var(--green);margin-bottom:2px;pointer-events:none">✓ Send back as New</div>
+      <div style="font-size:11px;color:var(--text3);pointer-events:none">Item is in perfect condition — relist as new on Amazon</div>
+    </button>
+    <button class="btn" style="padding:13px;text-align:left;border-color:var(--blue-dim);background:var(--blue-bg);cursor:pointer" onclick="checkinDecision('used');event.stopPropagation()">
+      <div style="font-weight:600;color:var(--blue);margin-bottom:2px;pointer-events:none">↩ Send back as Used</div>
+      <div style="font-size:11px;color:var(--text3);pointer-events:none">Item is sellable but not as new — relist as used</div>
+    </button>
+    <button class="btn" style="padding:13px;text-align:left;border-color:var(--red-dim);background:var(--red-bg);cursor:pointer" onclick="checkinDecision('claim');event.stopPropagation()">
+      <div style="font-weight:600;color:var(--red);margin-bottom:2px;pointer-events:none">⚠ Claim reimbursement</div>
+      <div style="font-size:11px;color:var(--text3);pointer-events:none">Item is damaged, missing or unsellable — open a case</div>
+    </button>
+  </div>
+</div>
+</div>
+<div class="overlay h" id="detail-overlay" onclick="closeBg(event,'detail-overlay')">
+<div class="modal" id="detail-modal"></div>
+</div>
+
+<!-- CASE GEN MODAL (from button) -->
+<div class="overlay h" id="casegen-overlay" onclick="closeBg(event,'casegen-overlay')">
+<div class="modal" id="casegen-modal"></div>
+</div>
+
+<!-- ADD CASE ATTEMPT MODAL -->
+<div class="overlay h" id="addcase-overlay" onclick="closeBg(event,'addcase-overlay')">
+<div class="modal" style="max-width:480px">
+  <div class="modal-title">Log case attempt</div>
+  <input type="hidden" id="addcase-rid">
+  <div class="fg g2">
+    <div class="field"><label>Date</label><input type="date" id="ac-date"></div>
+    <div class="field"><label>Outcome</label>
+      <select id="ac-outcome">
+        <option value="review">Under review</option>
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+        <option value="needsdoc">Needs document</option>
+      </select>
+    </div>
+  </div>
+  <div class="field" style="margin-top:10px"><label>Amazon Case ID (optional)</label>
+    <input id="ac-caseid" placeholder="e.g. 12261286012">
+  </div>
+  <div class="field" style="margin-top:10px"><label>Notes (COG submitted, denial reason, etc.)</label>
+    <textarea id="ac-note" placeholder="e.g. COG £35.90 submitted — denied, policy mismatch" style="min-height:70px"></textarea>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-primary" onclick="saveAddCase()">Save attempt</button>
+    <button class="btn" onclick="closeModal('addcase-overlay')">Cancel</button>
+  </div>
+</div>
+</div>
+
+<!-- MARK AS REIMBURSED MODAL -->
+<div class="overlay h" id="markreimb-overlay" onclick="closeBg(event,'markreimb-overlay')">
+<div class="modal" style="max-width:480px">
+  <div class="modal-title">Mark as Reimbursed</div>
+  <input type="hidden" id="markreimb-rid">
+  <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:14px;font-size:12px">
+    <div style="color:var(--text2);margin-bottom:3px" id="markreimb-name">Product name</div>
+    <div style="color:var(--text3);font-size:11px">ASIN: <span id="markreimb-asin">--</span> | FNSKU: <span id="markreimb-fnsku">--</span> | SKU: <span id="markreimb-sku">--</span></div>
+  </div>
+  <div class="fg g2">
+    <div class="field"><label>COG</label><input type="number" step="0.01" id="markreimb-cog" placeholder="0.00"></div>
+    <div class="field"><label>Reimbursed £</label><input type="number" step="0.01" id="markreimb-ramt" placeholder="0.00"></div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-green" onclick="confirmReimbursed()">✓ Mark as Reimbursed</button>
+    <button class="btn" onclick="closeModal('markreimb-overlay')">Cancel</button>
+  </div>
+</div>
+</div>
+
+<script>
+// DATA --
+let DB = [];
+let CURRENT_PAGE = 'active';
+let ACTIVE_FILTER = 'all';
+let REIMB_FILTER = 'all';
+
+const STATUS_LIST = [
+  {v:'transit',       l:'In transit',          cls:'ss-transit'},
+  {v:'arrived',       l:'Arrived at BDL',      cls:'ss-arrived'},
+  {v:'checkdiscord',  l:'Check Discord',       cls:'ss-checkdiscord'},
+  {v:'mscsubmit',     l:'MSC submitted',       cls:'ss-mscsubmit'},
+  {v:'mscreview',     l:'MSC under review',    cls:'ss-mscreview'},
+  {v:'mscapproved',   l:'MSC approved',        cls:'ss-mscapproved'},
+  {v:'mscreduced',    l:'Reduced MSC approved',cls:'ss-mscreduced'},
+  {v:'mscdenied',     l:'MSC denied',          cls:'ss-mscdenied'},
+  {v:'mscneedsdoc',   l:'Needs document',      cls:'ss-mscneedsdoc'},
+  {v:'caseopen',      l:'Case opened',         cls:'ss-caseopen'},
+  {v:'reimbursed',    l:'Reimbursed',          cls:'ss-reimbursed'},
+  {v:'sentout',       l:'Sent back out',       cls:'ss-sentout'},
+  {v:'writeoff',      l:'Written off',         cls:'ss-writeoff'},
+];
+const SL = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.l]));
+const SC = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.cls]));
+
+const ACTIVE_STATUSES = ['transit','arrived'];
+const REIMB_STATUSES  = ['checkdiscord','mscsubmit','mscreview','mscapproved','mscreduced','mscdenied','mscneedsdoc','caseopen'];
+const HIST_STATUSES   = ['reimbursed','sentout','writeoff'];
+
+let PDF_IMAGES = []; // {dataUrl, name}
+let CASE_LOG = []; // {id, ts, removalName, removalOid, issues:[{label,note}], message}
+
+function seed() {
+  DB = [];
+}
+
+// HELPERS --
+function deadline60(r) {
+  if (HIST_STATUSES.includes(r.status)) return null;
+  const base = r.darr || r.dsub; if (!base) return null;
+  const d = new Date(base); d.setDate(d.getDate()+60);
+  return Math.ceil((d - new Date()) / 86400000);
+}
+
+function deadlineCell(r) {
+  const d = deadline60(r);
+  if (d === null) return '<span style="color:var(--text3)">--</span>';
+  if (d < 0)  return `<span class="dc dc-red">Expired</span>`;
+  if (d <= 10) return `<span class="dc dc-red">${d}d</span>`;
+  if (d <= 20) return `<span class="dc dc-amber">${d}d</span>`;
+  return `<span class="dc dc-green">${d}d</span>`;
+}
+
+function statusSel(r, onchange) {
+  const opts = STATUS_LIST.map(s => `<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('');
+  const cls = SC[r.status] || '';
+  return `<select class="status-sel ${cls}" onchange="${onchange}" onclick="event.stopPropagation()">${opts}</select>`;
+}
+
+function upd(id, key, val) {
+  const r = DB.find(x=>x.id===id); if (r) r[key] = val;
+}
+
+function counts() {
+  const c = {all:0};
+  STATUS_LIST.forEach(s => { c[s.v] = DB.filter(r=>r.status===s.v).length; c.all++; });
+  c.all = DB.length;
+  return c;
+}
+
+// NAVIGATION --
+function navTo(page) {
+  CURRENT_PAGE = page;
+  const pages = ['overview','active','reimb','case','hist','caselog','pdf'];
+  pages.forEach(p => {
+    document.getElementById(`page-${p}`).style.display = p===page ? 'block' : 'none';
+    document.getElementById(`nav-${p}`)?.classList.toggle('active', p===page);
+  });
+  const titles = {
+    overview:['Overview','Your removals at a glance'],
+    active:['Active Removals','In transit and arrived at BDL'],
+    reimb:['Reimbursements','Case tracking, MSC status, claim updates'],
+    case:['Case Generator','Build and copy Amazon Seller Support message'],
+    hist:['History','Reimbursed, sent back out, written off'],
+    caselog:['Case Log','Every generated case message -- review and improve'],
+    pdf:['PDF Builder','Bundle Discord photos into one PDF for Seller Central']
+  };
+  const t = titles[page];
+  document.getElementById('page-title').textContent = t[0];
+  document.getElementById('page-sub').textContent = t[1];
+  renderPage(page);
+}
+
+function renderPage(page) {
+  if (page==='overview') renderOverview();
+  if (page==='active')   renderActive();
+  if (page==='reimb')    renderReimb();
+  if (page==='hist')     renderHist();
+  if (page==='case')     loadCaseDropdown();
+  if (page==='caselog')  renderCaseLog();
+  if (page==='pdf')      loadPdfDropdown();
+  updateBadges();
+}
+
+function updateBadges() {
+  document.getElementById('nb-active').textContent = DB.filter(r=>ACTIVE_STATUSES.includes(r.status)).length;
+  document.getElementById('nb-reimb').textContent  = DB.filter(r=>REIMB_STATUSES.includes(r.status)).length;
+  document.getElementById('nb-hist').textContent   = DB.filter(r=>HIST_STATUSES.includes(r.status)).length;
+  const nbLog = document.getElementById('nb-caselog');
+  if(nbLog) nbLog.textContent = CASE_LOG.length;
+  const today = new Date().toISOString().split('T')[0];
+  const overdue = DB.filter(r=>r.reupdate&&r.reupdate<=today&&!HIST_STATUSES.includes(r.status)).length;
+  const alertDot = document.getElementById('reimb-alert');
+  if(alertDot) alertDot.style.display = overdue ? 'inline-block' : 'none';
+}
+
+// ACTIVE PAGE --
+function renderActive() {
+  const active = DB.filter(r => ACTIVE_STATUSES.includes(r.status));
+  const today = new Date().toISOString().split('T')[0];
+
+  const filterDefs = [{v:'all',l:'All active'}, ...ACTIVE_STATUSES.map(s=>({v:s,l:SL[s]}))];
+  document.getElementById('filter-row').innerHTML = filterDefs.map(f=>
+    `<button class="chip${ACTIVE_FILTER===f.v?' on':''}" onclick="setActiveFilter('${f.v}')">${f.l}<span class="chip-n">${f.v==='all'?active.length:DB.filter(r=>r.status===f.v).length}</span></button>`
+  ).join('');
+
+  let rows = ACTIVE_FILTER==='all' ? active : active.filter(r=>r.status===ACTIVE_FILTER);
+  const lpn4 = lpn => { if(!lpn) return '<em style="color:var(--text3);font-size:11px">--</em>'; const m=lpn.match(/\d+/g); if(!m) return lpn; const digits=m.join(''); return `<span title="${lpn}" style="cursor:help;font-family:var(--mono);font-size:11px">${digits.slice(-4)}</span>`; };
+  const statusBadge = r => {
+    const s = STATUS_LIST.find(x=>x.v===r.status);
+    return `<span class="sbadge sb-${r.status}">${s?.l||r.status}</span>`;
+  };
+  document.getElementById('tbl-body').innerHTML = rows.length ? rows.map(r=>`<tr>
+    <td style="color:var(--text3);white-space:nowrap;font-family:var(--mono);font-size:11px">${r.dsub||'--'}</td>
+    <td>
+      <div style="font-weight:600;font-size:12px" title="${r.name}">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:1px">${r.src==='amazon'?'Amazon auto':'Seller-initiated'}${r.reason?' · '+( REASON_LABELS[r.reason]||r.reason):''}</div>
+    </td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.asin}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.fnsku||'--'}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.sku||'--'}</td>
+    <td style="font-family:var(--mono);font-size:11px">${r.oid?`<a href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank" style="color:var(--blue);text-decoration:none">${r.oid} ↗</a>`:'--'}</td>
+    <td style="font-weight:600;color:${r.cog>0?'var(--amber)':'var(--text3)'}">${r.cog>0?'£'+Number(r.cog).toFixed(2):'--'}</td>
+    <td>${lpn4(r.lpn)}</td>
+    <td>
+      <select class="status-sel sb-${r.status}" onchange="upd(${r.id},'status',this.value);updateBadges();renderActive()" onclick="event.stopPropagation()" style="font-size:11px">
+        ${STATUS_LIST.filter(s=>ACTIVE_STATUSES.includes(s.v)||s.v===r.status).map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('')}
+      </select>
+    </td>
+    <td>${deadlineCell(r)}</td>
+    <td>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-sm" onclick="openDetail(${r.id})">Edit</button>
+        <button class="btn btn-sm btn-green" onclick="openCheckin(${r.id})">Check in</button>
+      </div>
+    </td>
+  </tr>`).join('') : `<tr class="empty-row"><td colspan="10">No removals in this status</td></tr>`;
+}
+
+function setActiveFilter(f) { ACTIVE_FILTER = f; renderActive(); }
+
+// REIMBURSEMENTS PAGE --
+const MSC_STATUS_LIST = [
+  {v:'checkdiscord',  l:'Check Discord',        cls:'sb-checkdiscord', border:'#a78bfa'},
+  {v:'mscsubmit',     l:'MSC submitted',        cls:'sb-mscsubmit',    border:'#4d8ef0'},
+  {v:'mscreview',     l:'MSC under review',     cls:'sb-mscreview',    border:'#f5a623'},
+  {v:'mscapproved',   l:'MSC approved',         cls:'sb-mscapproved',  border:'#3dd68c'},
+  {v:'mscreduced',    l:'Reduced MSC approved', cls:'sb-mscreduced',   border:'#3dd68c'},
+  {v:'mscdenied',     l:'MSC denied',           cls:'sb-mscdenied',    border:'#f05050'},
+  {v:'mscneedsdoc',   l:'Needs document',       cls:'sb-mscneedsdoc',  border:'#9b7ff0'},
+  {v:'caseopen',      l:'Case opened',          cls:'sb-caseopen',     border:'#22d3ee'},
+];
+const MSC_BORDER = Object.fromEntries(MSC_STATUS_LIST.map(s=>[s.v,s.border]));
+
+// STATE CONFIG --
+const STATE_CONFIG = {
+  checkdiscord: {color:'#a78bfa', bar:10,  step:1, label:'Check Discord',       alert:{color:'#0d0a1f',border:'#a78bfa',text:'📱 Check Discord for Jack\'s photos, LPN and damage notes',btn:null}},
+  mscsubmit:    {color:'#4d8ef0', bar:35,  step:2, label:'MSC submitted',       alert:null},
+  mscreview:    {color:'#f5a623', bar:55,  step:3, label:'MSC under review',    alert:null},
+  mscapproved:  {color:'#3dd68c', bar:80,  step:4, label:'MSC approved',        alert:{color:'#021508',border:'#3dd68c',text:'✓ MSC Approved -- open a Seller Support case to claim',btn:null}},
+  mscreduced:   {color:'#f5a623', bar:80,  step:4, label:'Reduced MSC approved',alert:{color:'#1a1000',border:'#f5a623',text:'⚠ Reduced MSC -- open a case to claim or appeal',btn:null}},
+  mscdenied:    {color:'#f05050', bar:0,   step:4, label:'MSC denied',          alert:{color:'#180303',border:'#f05050',text:'✗ MSC Denied -- set next MSC update date and open a case',btn:null}},
+  mscneedsdoc:  {color:'#9b7ff0', bar:35,  step:2, label:'Needs document',      alert:{color:'#0d0620',border:'#9b7ff0',text:'📄 Document required -- find invoice in purchase sheet',btn:null}},
+  caseopen:     {color:'#22d3ee', bar:100, step:5, label:'Case opened',         alert:null},
+  reimbursed:   {color:'#3dd68c', bar:100, step:5, label:'Reimbursed',          alert:null},
+};
+
+function renderReimb() {
+  const reimb = DB.filter(r => REIMB_STATUSES.includes(r.status));
+  const filterDefs = [{v:'all',l:'All'},...MSC_STATUS_LIST.map(s=>({v:s.v,l:s.l}))];
+  document.getElementById('reimb-filter-row').innerHTML = filterDefs.map(f=>`
+    <button class="chip${REIMB_FILTER===f.v?' on':''}" onclick="setReimbFilter('${f.v}')">${f.l}<span class="chip-n">${f.v==='all'?reimb.length:DB.filter(r=>r.status===f.v).length}</span></button>`
+  ).join('');
+
+  const today = new Date().toISOString().split('T')[0];
+  let rows = REIMB_FILTER==='all' ? reimb : reimb.filter(r=>r.status===REIMB_FILTER);
+
+  if(!rows.length){
+    document.getElementById('reimb-cards').innerHTML=`<div style="text-align:center;padding:60px;font-size:12px;color:var(--text3)">No removals in reimbursement</div>`;
+    return;
+  }
+
+  document.getElementById('reimb-cards').innerHTML = rows.map(r => buildReimbCard(r, today)).join('');
+}
+
+function buildReimbCard(r, today) {
+  const sc = STATE_CONFIG[r.status] || STATE_CONFIG.checkdiscord;
+  const cog = Number(r.cog||0);
+  const ramt = Number(r.ramt||0);
+  const shortfall = cog - ramt;
+  const pct = r.status==='mscreduced' && cog>0 ? Math.round((ramt/cog)*100) : sc.bar;
+  const barPct = pct ?? 0;
+  const col = sc.color;
+  const cardCls = 'rc rc-'+r.status;
+
+  // Step dots - new flow: Check Discord > MSC submitted > MSC under review > MSC result > Case opened
+  const steps = ['Check Discord','MSC submitted','MSC review','MSC result','Case opened'];
+  const stepDots = steps.map((lbl,i) => {
+    const stepN = i+1;
+    let cls='', txt='';
+    if(stepN < sc.step){ cls='done'; txt='✓'; }
+    else if(stepN === sc.step){
+      if(r.status==='mscdenied') { cls='err'; txt='✗'; }
+      else if(r.status==='mscneedsdoc'||r.status==='mscreduced') { cls='warn'; txt='!'; }
+      else { cls='done'; txt='✓'; }
+    }
+    return `<div class="rc-step"><div class="rc-step-dot ${cls}">${txt}</div><div class="rc-step-lbl">${lbl}</div></div>`;
+  }).join('');
+
+  // Tags
+  const reasonTag = r.reason && r.reason!=='unknown' ? `<span class="rc-tag" style="background:rgba(255,255,255,.07);color:var(--text2)">${REASON_LABELS[r.reason]||r.reason}</span>` : '';
+  const statusTag = `<span class="rc-tag" style="background:${col}28;color:${col};border:1px solid ${col}55">${sc.label}</span>`;
+
+  // Alert banner
+  const alertHtml = sc.alert ? `
+    <div class="rc-alert" style="background:${col}18;border-bottom:2px solid ${col}66">
+      <span style="flex:1;color:${col};font-size:12px">${sc.alert.text}</span>
+      ${sc.alert.btn ? `<button class="btn btn-sm" style="background:${col}22;border-color:${col}55;color:${col};font-size:11px;font-weight:600">${sc.alert.btn}</button>` : ''}
+    </div>` : '';
+
+  // Case ID
+  const latestCase = (r.cases||[]).slice(-1)[0];
+  const caseDisplay = latestCase?.id
+    ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?caseID=${latestCase.id}" target="_blank" style="color:var(--blue);font-family:var(--mono);font-size:12px;text-decoration:none" onclick="copyText('${latestCase.id}')">${latestCase.id} ↗</a>`
+    : `<span style="color:var(--text3)">--</span>`;
+
+  // Shortfall
+  const shortfallDisplay = cog>0&&ramt>0
+    ? (shortfall>0.01 ? `<span style="color:#f05050;font-weight:700">-£${shortfall.toFixed(2)}</span>` : `<span style="color:#3dd68c;font-weight:700">None ✓</span>`)
+    : `<span style="color:var(--text3)">--</span>`;
+
+  // COG/Reimb display
+  const cogDisplay = cog>0 ? `<span style="color:#f5a623;font-weight:700">£${cog.toFixed(2)}</span>` : `<span style="color:var(--text3)">--</span>`;
+  const ramtDisplay = ramt>0 ? `<span style="color:#3dd68c;font-weight:700">£${ramt.toFixed(2)}</span>` : `<span style="color:var(--text3)">--</span>`;
+
+  // Reupdate / Next MSC update
+  const reupdateHtml = r.reupdate
+    ? (r.reupdate<=today ? `<span style="color:#f05050;font-weight:700">⚠ ${r.reupdate}</span>` : `<span style="color:#f5a623">⏰ ${r.reupdate}</span>`)
+    : `<span style="color:var(--text3)">--</span>`;
+
+  // Age / deadline
+  const daysOpen = r.darr ? Math.ceil((new Date()-new Date(r.darr))/86400000) : null;
+  const d60 = deadline60(r);
+  const ageLabel = d60===null?'Closed ✓':d60<=0?'Expired':d60+'d left';
+  const ageColor = d60===null?'#3dd68c':d60<=0?'#f05050':d60<=14?'#f5a623':'#3dd68c';
+
+  // Right sidebar per state
+  let rightContent = '';
+  if(r.status==='checkdiscord'){
+    rightContent = `<div class="rc-right-label">Action needed</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">Check Discord #removals for Jack's photos, LPN and damage notes. Fill in COG, then update status.</div>
+      <div class="rc-right-label">COG at risk</div>
+      <div class="rc-right-val" style="color:#f5a623">${cog>0?'£'+cog.toFixed(2):'--'}</div>`;
+  } else if(r.status==='mscsubmit'||r.status==='mscreview'){
+    rightContent = `<div class="rc-right-label">Days open</div><div class="rc-right-val" style="color:${col}">${daysOpen??'--'}</div><div class="rc-right-sub">Since arrival${r.status==='mscreview'?' · ~7 day SLA':''}</div>`;
+  } else if(r.status==='mscapproved'){
+    rightContent = `<div class="rc-right-label">Recovered</div><div class="rc-right-val" style="color:#3dd68c">100%</div><div class="rc-right-sub" style="color:#3dd68c88">Open a case to claim</div>`;
+  } else if(r.status==='mscreduced'){
+    const p=cog>0?Math.round((ramt/cog)*100):0;
+    rightContent=`<div class="rc-right-label">Recovery</div><div class="rc-right-val" style="color:#f5a623">${p}%</div><div class="rc-right-sub">£${ramt.toFixed(2)} of £${cog.toFixed(2)}</div><div style="background:rgba(255,255,255,.08);border-radius:4px;height:8px;margin-top:8px;overflow:hidden"><div style="background:#f5a623;width:${p}%;height:100%;border-radius:4px;box-shadow:0 0 8px #f5a62344"></div></div>`;
+  } else if(r.status==='mscdenied'){
+    rightContent = `<div class="rc-right-label">Appeal window</div><div class="rc-right-val" style="color:#f05050">18 days</div><div class="rc-right-sub">Open a case. Set next MSC update:</div>
+      <input type="date" class="rc-msc-date-input" style="border-color:#f0505044;color:#f05050" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value);renderReimb()">`;
+  } else if(r.status==='mscneedsdoc'){
+    rightContent = `<div class="rc-right-label">Blocked</div><div class="rc-right-val" style="color:#9b7ff0;font-size:16px">Invoice needed</div><div class="rc-right-sub">Find in purchase sheet</div>`;
+  } else if(r.status==='caseopen'){
+    rightContent = `<div class="rc-right-label">Case status</div><div class="rc-right-val" style="color:#22d3ee;font-size:16px">Open</div><div class="rc-right-sub">Log case ID + reimb when received</div>`;
+  }
+
+  const showMscDate = ['mscreview','mscsubmit'].includes(r.status);
+  const statusOpts = MSC_STATUS_LIST.map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('');
+
+  return `
+  <div class="${cardCls}">
+    <div data-product="${r.name}" data-asin="${r.asin}" data-removid="${r.oid}"></div>
+    ${alertHtml}
+    <div class="rc-header">
+      <div class="rc-header-left">
+        <div class="rc-name">${r.name}</div>
+        <div class="rc-meta">
+          <button class="rc-copy" onclick="copyText('${r.asin}')" title="Click to copy">${r.asin}</button>
+          ${r.fnsku?`<button class="rc-copy" onclick="copyText('${r.fnsku}')" title="Click to copy">${r.fnsku}</button>`:''}
+          ${r.sku?`<button class="rc-copy" onclick="copyText('${r.sku}')" title="Click to copy">${r.sku}</button>`:''}
+          ${r.oid?`<a class="rc-oid" href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank">${r.oid} ↗</a>`:''}
+        </div>
+      </div>
+      <div class="rc-tags">${reasonTag}${statusTag}</div>
+    </div>
+    <div class="rc-progress">
+      <div class="rc-prog-label"><span>MSC Progress</span><span class="rc-prog-step" style="color:${col}">Step ${sc.step} of 5</span></div>
+      <div class="rc-bar-track"><div class="rc-bar-fill" style="width:${barPct}%;background:${col};box-shadow:0 0 12px ${col}66"></div></div>
+      <div class="rc-steps">${stepDots}</div>
+    </div>
+    <div class="rc-body">
+      <div class="rc-left">
+        <div class="rc-field-row"><span class="rc-field-name">Date in</span><span class="rc-field-val" style="font-family:var(--mono);color:var(--text2)">${r.darr||r.dsub||'--'}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'cog',+this.value);renderReimb()"></span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'ramt',+this.value);renderReimb()"></span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val">${caseDisplay}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
+        ${r.damage?`<div class="rc-field-row"><span class="rc-field-name">Notes</span><span class="rc-field-val" style="font-size:11px;color:var(--text2);text-align:right;max-width:200px">${r.damage}</span></div>`:''}
+      </div>
+      <div class="rc-right">
+        <div class="rc-right-label" style="margin-bottom:4px">Update status</div>
+        <select class="inl-input" style="margin-bottom:12px;font-size:11px" onchange="upd(${r.id},'status',this.value);updateBadges();renderReimb()">${statusOpts}</select>
+        ${showMscDate && r.status!=='mscdenied' ? `<div class="rc-right-label">Next MSC update date</div><input type="date" class="rc-msc-date-input" style="border-color:${col}44;color:${col}" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value);renderReimb()">` : ''}
+        ${rightContent}
+      </div>
+    </div>
+    <div class="rc-footer">
+      <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase(${r.id}),50)">Case msg</button>
+      <button class="btn btn-sm" onclick="openAddCase(${r.id})">+ Log attempt</button>
+      <button class="btn btn-sm" onclick="openDetail(${r.id})">Details</button>
+      <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive(${r.id})">← Move to Active</button>
+      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed(${r.id})">✓ Mark as Reimbursed</button>
+      <input class="inl-input" style="flex:1;font-size:11px;min-width:0" value="${r.mscnotes||''}" placeholder="Notes / urgent action..." onchange="upd(${r.id},'mscnotes',this.value)">
+      <span class="rc-age" style="background:${ageColor}22;color:${ageColor};border:1px solid ${ageColor}44">${ageLabel}</span>
+    </div>
+  </div>`;
+}
+
+const REASON_LABELS = {damaged:'Damaged',missing:'Missing',wrong:'Wrong item',nolpn:'No LPN',notracking:'No tracking',notarrived:'Never arrived',unknown:'To assess'};
+
+function setReimbFilter(f) { REIMB_FILTER=f; renderReimb(); }
+
+function markReimbursed(id) {
+  const r = DB.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('markreimb-rid').value = id;
+  document.getElementById('markreimb-name').textContent = r.name;
+  document.getElementById('markreimb-asin').textContent = r.asin||'--';
+  document.getElementById('markreimb-fnsku').textContent = r.fnsku||'--';
+  document.getElementById('markreimb-sku').textContent = r.sku||'--';
+  document.getElementById('markreimb-cog').value = r.cog||'';
+  document.getElementById('markreimb-ramt').value = r.ramt||'';
+  document.getElementById('markreimb-overlay').classList.remove('h');
+}
+
+function confirmReimbursed() {
+  const cog = document.getElementById('markreimb-cog').value.trim();
+  const ramt = document.getElementById('markreimb-ramt').value.trim();
+  
+  if(!cog || !ramt) {
+    alert('Please fill in both COG and Reimbursed amount');
+    return;
+  }
+  
+  const id = +document.getElementById('markreimb-rid').value;
+  const r = DB.find(x=>x.id===id);
+  if(!r) return;
+  
+  r.cog = parseFloat(cog)||0;
+  r.ramt = parseFloat(ramt)||0;
+  r.status = 'reimbursed';
+  closeModal('markreimb-overlay');
+  renderReimb();
+  renderHist();
+  updateBadges();
+}
+
+function moveRimbBack() {
+  const id = +document.getElementById('markreimb-rid').value;
+  const r = DB.find(x=>x.id===id);
+  if(!r) return;
+  r.status = 'arrived';
+  closeModal('markreimb-overlay');
+  renderActive();
+  renderReimb();
+  updateBadges();
+}
+
+function moveReimbToActive(id) {
+  const r = DB.find(x=>x.id===id);
+  if(!r) return;
+  r.status = 'arrived';
+  renderReimb();
+  renderActive();
+  updateBadges();
+}
+
+function moveHistToReimb(id) {
+  const r = DB.find(x=>x.id===id);
+  if(!r) return;
+  r.status = 'checkdiscord';
+  renderHist();
+  renderReimb();
+  updateBadges();
+}
+
+function moveHistToActive(id) {
+  const r = DB.find(x=>x.id===id);
+  if(!r) return;
+  r.status = 'arrived';
+  renderHist();
+  renderActive();
+  updateBadges();
+}
+
+let HIST_FILTER = 'month';
+
+// HISTORY PAGE --
+function renderHist() {
+  const now = new Date();
+  const filterDefs = [
+    {v:'month',      l:'This month'},
+    {v:'lastmonth',  l:'Last month'},
+    {v:'30',         l:'Last 30 days'},
+    {v:'60',         l:'Last 60 days'},
+    {v:'all',        l:'All time'},
+    {v:'custom',     l:'Custom range'},
+  ];
+  document.getElementById('hist-filter-row').innerHTML = filterDefs.map(f=>`
+    <button class="chip${HIST_FILTER===f.v?' on':''}" onclick="setHistFilter('${f.v}')">${f.l}</button>`).join('');
+
+  const customRange = document.getElementById('hist-custom-range');
+  if(customRange) customRange.style.display = HIST_FILTER==='custom' ? 'flex' : 'none';
+
+  const hist = DB.filter(r => HIST_STATUSES.includes(r.status));
+  const filtered = hist.filter(r => {
+    const d = new Date(r.dreim||r.darr||r.dsub||'2000-01-01');
+    if(HIST_FILTER==='month') return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+    if(HIST_FILTER==='lastmonth'){ const lm=new Date(now.getFullYear(),now.getMonth()-1,1); return d.getMonth()===lm.getMonth()&&d.getFullYear()===lm.getFullYear(); }
+    if(HIST_FILTER==='30') return (now-d)/86400000<=30;
+    if(HIST_FILTER==='60') return (now-d)/86400000<=60;
+    if(HIST_FILTER==='custom'){
+      const from = document.getElementById('hist-from')?.value;
+      const to   = document.getElementById('hist-to')?.value;
+      const ds   = d.toISOString().split('T')[0];
+      if(from && ds < from) return false;
+      if(to   && ds > to)   return false;
+      return true;
+    }
+    return true;
+  });
+
+  const totCog = filtered.reduce((s,r)=>s+Number(r.cog||0),0);
+  const totRec = filtered.reduce((s,r)=>s+Number(r.ramt||0),0);
+  document.getElementById('hist-summary').textContent = `${filtered.length} removals -- COG: £${totCog.toFixed(2)} · Recovered: £${totRec.toFixed(2)}`;
+  document.getElementById('hist-body').innerHTML = filtered.length ? filtered.map(r=>{
+    const netPL = (r.ramt||0) - (r.cog||0);
+    return `<tr style="background:${r.status==='reimbursed'?'rgba(61,214,140,0.08)':''}">
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${r.dsub||'--'}</td>
+    <td><div class="trunc" style="max-width:200px" title="${r.name}">${r.name}</div>${r.reason?`<div style="font-size:10px;margin-top:2px"><span style="padding:1px 6px;border-radius:10px;background:var(--bg4);color:var(--text3)">${REASON_LABELS[r.reason]||r.reason}</span></div>`:''}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.asin}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.fnsku||'--'}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.sku||'--'}</td>
+    <td style="font-family:var(--mono);font-size:11px">${r.oid||'--'}</td>
+    <td style="font-weight:500">£${Number(r.cog||0).toFixed(2)}</td>
+    <td><span class="badge ${r.status==='reimbursed'?'b-green':r.status==='sentout'?'b-purple':'b-gray'}">${SL[r.status]||r.status}</span></td>
+    <td style="color:${r.ramt>0?'var(--green)':'var(--text3)'};font-weight:500">${r.ramt>0?'£'+Number(r.ramt).toFixed(2):'--'}</td>
+    <td style="font-weight:500;color:${netPL<0?'#f05050':netPL>0?'#3dd68c':'var(--text3)'}">£${Number(netPL).toFixed(2)}</td>
+    <td style="font-size:11px;display:flex;flex-direction:column;gap:6px;align-items:center">
+      ${r.status==='reimbursed'?`<button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600;padding:4px 8px" onclick="moveHistToReimb(${r.id})">→ Reimb</button>`:``}
+      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600;padding:4px 8px" onclick="moveHistToActive(${r.id})">→ Active</button>
+    </td>
+  </tr>`}).join('') : `<tr class="empty-row"><td colspan="11">No closed removals in this period</td></tr>`;
+}
+
+function setHistFilter(f) {
+  HIST_FILTER=f;
+  renderHist();
+}
+
+// STATUS CHANGE --
+function changeStatus(id, val, page) {
+  upd(id, 'status', val);
+  if (page==='active') renderActive();
+  if (page==='reimb') renderReimb();
+  updateBadges();
+}
+
+// DETAIL MODAL --
+function openDetail(id) {
+  const r = DB.find(x=>x.id===id);
+  document.getElementById('detail-modal').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" style="margin-bottom:0">${r.name}</div>
+      <button onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:0 4px;line-height:1" title="Close">×</button>
+    </div>
+    <div class="modal-sub">Product info</div>
+    <div class="fg g3">
+      <div class="field"><label>Product name</label><input value="${r.name}" onchange="upd(${r.id},'name',this.value)"></div>
+      <div class="field"><label>ASIN</label><input value="${r.asin}" onchange="upd(${r.id},'asin',this.value)"></div>
+      <div class="field"><label>FNSKU</label><input value="${r.fnsku||''}" onchange="upd(${r.id},'fnsku',this.value)"></div>
+    </div>
+    <div class="fg g2" style="margin-top:10px">
+      <div class="field"><label>LPN (from photo)</label><input value="${r.lpn||''}" placeholder="e.g. 2825" onchange="upd(${r.id},'lpn',this.value)"></div>
+      <div class="field"><label>Quantity</label><input type="number" value="${r.qord||1}" onchange="upd(${r.id},'qord',+this.value)"></div>
+    </div>
+    <div class="modal-sub">Order details</div>
+    <div class="fg g3">
+      <div class="field"><label>Removal Order ID</label><input value="${r.oid||''}" onchange="upd(${r.id},'oid',this.value)">
+        ${r.oid?`<div style="margin-top:4px"><a href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank" style="font-size:11px;color:var(--blue)">Open in Seller Central ↗</a></div>`:''}
+      </div>
+      <div class="field"><label>Shipment ID</label><input value="${r.shipid||''}" onchange="upd(${r.id},'shipid',this.value)"></div>
+      <div class="field"><label>Tracking number</label><input value="${r.tracking||''}" onchange="upd(${r.id},'tracking',this.value)"></div>
+    </div>
+    <div class="fg g3" style="margin-top:10px">
+      <div class="field"><label>Date submitted</label><input type="date" value="${r.dsub||''}" onchange="upd(${r.id},'dsub',this.value)"></div>
+      <div class="field"><label>COG £ (inc VAT)</label><input type="number" step="0.01" value="${r.cog||''}" onchange="upd(${r.id},'cog',+this.value)"></div>
+      <div class="field"><label>Order source</label><select onchange="upd(${r.id},'src',this.value)"><option value="seller"${r.src==='seller'?' selected':''}>Seller-initiated</option><option value="amazon"${r.src==='amazon'?' selected':''}>Amazon auto</option></select></div>
+    </div>
+    <div class="sep"></div>
+    <div class="modal-sub">Damage / condition notes</div>
+    <div class="field"><textarea onchange="upd(${r.id},'damage',this.value)" placeholder="Describe damage, missing parts, condition from Discord check-in...">${r.damage||''}</textarea></div>
+    <div class="sep"></div>
+    <div class="modal-sub">Case attempts</div>
+    <div id="dm-cases-${r.id}"></div>
+    <button class="btn btn-sm" style="margin-top:8px" onclick="openAddCase(${r.id})">+ Log new attempt</button>
+    <div class="sep"></div>
+    <div class="modal-sub">Reimbursement</div>
+    <div class="fg g3">
+      <div class="field"><label>Amount reimbursed £</label><input type="number" step="0.01" value="${r.ramt||''}" onchange="upd(${r.id},'ramt',+this.value)"></div>
+      <div class="field"><label>Reimbursement ID</label><input value="${r.reimbid||''}" onchange="upd(${r.id},'reimbid',this.value)"></div>
+      <div class="field"><label>Date reimbursed</label><input type="date" value="${r.dreim||''}" onchange="upd(${r.id},'dreim',this.value)"></div>
+    </div>
+    <div class="fg g2" style="margin-top:10px">
+      <div class="field"><label>Status</label><select onchange="upd(${r.id},'status',this.value);updateBadges()">
+        ${STATUS_LIST.map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('')}
+      </select></div>
+      <div class="field"><label>MSC reupdate date</label><input type="date" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value)"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>General notes</label><textarea onchange="upd(${r.id},'mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)">Save & close</button>
+      <button class="btn btn-blue" onclick="closeModal('detail-overlay');openCaseGenModal(${r.id})">Generate case message</button>
+      <button class="btn btn-red btn-sm" style="margin-left:auto" onclick="delR(${r.id})">Delete</button>
+    </div>`;
+  document.getElementById('detail-overlay').classList.remove('h');
+  renderDetailCases(r.id);
+}
+
+// ADD MODAL --
+function openAdd() {
+  document.getElementById('a-dsub').value = new Date().toISOString().split('T')[0];
+  document.getElementById('add-overlay').classList.remove('h');
+}
+function saveAdd() {
+  const name = document.getElementById('a-name').value.trim();
+  const asin = document.getElementById('a-asin').value.trim();
+  if (!name || !asin) { alert('Product name and ASIN are required'); return; }
+  DB.unshift({
+    id: Date.now(), name, asin,
+    fnsku: document.getElementById('a-fnsku').value.trim(),
+    sku:   document.getElementById('a-sku').value.trim(),
+    oid:   document.getElementById('a-oid').value.trim(),
+    dsub:  document.getElementById('a-dsub').value,
+    qord:  +document.getElementById('a-qord').value||1,
+    src:   document.getElementById('a-src').value,
+    reason:'unknown',
+    status:'transit',
+    // filled in later:
+    msku:'',ean:'',shipid:'',tracking:'',amid:'',qdis:0,qcan:0,qpen:1,
+    cog:0,lpn:'',disp:'Unsellable',cond:'Damaged',
+    darr:'',dreim:'',cases:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:''
+  });
+  ['a-name','a-asin','a-fnsku','a-sku','a-oid'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('a-qord').value='1';
+  closeModal('add-overlay');
+  renderPage(CURRENT_PAGE);
+}
+
+function renderDetailCases(id) {
+  const r = DB.find(x=>x.id===id); if(!r) return;
+  const el = document.getElementById(`dm-cases-${id}`); if(!el) return;
+  const cases = r.cases||[];
+  if(!cases.length){ el.innerHTML=`<div style="font-size:12px;color:var(--text3);padding:8px 0">No attempts logged yet.</div>`; return; }
+  el.innerHTML = cases.map((c,i)=>`
+    <div class="attempt-row">
+      <span class="attempt-date">${c.date||'--'}</span>
+      <span class="attempt-row-outcome ao-${c.outcome||'review'}">${c.outcome==='approved'?'✓ Approved':c.outcome==='denied'?'✗ Denied':c.outcome==='needsdoc'?'📄 Needs doc':'⏳ Review'}</span>
+      <span class="attempt-note">${c.note||''}</span>
+      ${c.id?`<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?caseID=${c.id}" target="_blank" style="font-size:11px;color:var(--blue);white-space:nowrap;text-decoration:none">Case ${c.id} ↗</a>`:'<span style="font-size:11px;color:var(--text3)">No case ID</span>'}
+      <button onclick="removeCase(${id},${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0 4px" title="Remove">×</button>
+    </div>`).join('');
+}
+
+function removeCase(rid, idx) {
+  const r = DB.find(x=>x.id===rid); if(!r||!r.cases) return;
+  r.cases.splice(idx,1);
+  renderDetailCases(rid);
+  renderPage(CURRENT_PAGE);
+}
+
+function openAddCase(rid) {
+  document.getElementById('addcase-rid').value = rid;
+  document.getElementById('ac-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('ac-caseid').value='';
+  document.getElementById('ac-outcome').value='review';
+  document.getElementById('ac-note').value='';
+  document.getElementById('addcase-overlay').classList.remove('h');
+}
+
+function saveAddCase() {
+  const rid = +document.getElementById('addcase-rid').value;
+  const r = DB.find(x=>x.id===rid); if(!r) return;
+  if(!r.cases) r.cases=[];
+  r.cases.push({
+    date: document.getElementById('ac-date').value,
+    id:   document.getElementById('ac-caseid').value.trim(),
+    outcome: document.getElementById('ac-outcome').value,
+    note: document.getElementById('ac-note').value.trim(),
+  });
+  closeModal('addcase-overlay');
+  renderDetailCases(rid);
+  renderPage(CURRENT_PAGE);
+}
+
+// SIDEBAR TOGGLE --
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const collapsed = sb.classList.toggle('collapsed');
+  const btn = sb.querySelector('.sidebar-toggle');
+  btn.textContent = collapsed ? '›' : '‹';
+  localStorage.setItem('sb-collapsed', collapsed ? '1' : '0');
+}
+
+// OVERVIEW PAGE --
+function renderOverview() {
+  const today = new Date().toISOString().split('T')[0];
+  const inTransit = DB.filter(r=>r.status==='transit').length;
+  const arrived = DB.filter(r=>r.status==='arrived').length;
+  const checkedin = DB.filter(r=>r.status==='checkdiscord').length;
+  const inReimb = DB.filter(r=>REIMB_STATUSES.includes(r.status)).length;
+  const overdueReu = DB.filter(r=>r.reupdate&&r.reupdate<=today&&!HIST_STATUSES.includes(r.status)).length;
+  const needsDoc = DB.filter(r=>r.status==='mscneedsdoc').length;
+  const escalated = DB.filter(r=>r.status==='escalated').length;
+  const cogAtRisk = DB.filter(r=>!HIST_STATUSES.includes(r.status)).reduce((s,r)=>s+Number(r.cog||0),0);
+  const recovered = DB.reduce((s,r)=>s+Number(r.ramt||0),0);
+  const noCaseYet = DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length)).length;
+  const approaching = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;}).length;
+  const totalActive = DB.filter(r=>!HIST_STATUSES.includes(r.status)).length;
+
+  const tiles = [
+    {v:inTransit,   l:'In transit',         sub:'On the way to BDL',    c:'tile-blue',  tv:'tv-blue',  click:"navTo('active')"},
+    {v:arrived,     l:'Arrived at BDL',     sub:'Awaiting check-in',    c:'tile-amber', tv:'tv-amber', click:"navTo('active')"},
+    {v:checkedin,   l:'Checked in',         sub:'Awaiting decision',    c:'tile-cyan',  tv:'tv-cyan',  click:"navTo('active')"},
+    {v:inReimb,     l:'Active cases',       sub:'In reimbursement',     c:'tile-blue',  tv:'tv-blue',  click:"navTo('reimb')"},
+    {v:overdueReu,  l:'Overdue reupdates',  sub:'Need chasing now',     c:'tile-red',   tv:'tv-red',   click:"navTo('reimb')"},
+    {v:needsDoc,    l:'Needs document',     sub:'Invoice required',     c:'tile-purple',tv:'tv-purple',click:"navTo('reimb')"},
+    {v:escalated,   l:'Escalated to Jack',  sub:'Waiting on MD',        c:'tile-purple',tv:'tv-purple',click:"navTo('reimb')"},
+    {v:approaching, l:'Deadline <14 days',  sub:'60-day window closing',c:'tile-amber', tv:'tv-amber', click:"navTo('active')"},
+    {v:totalActive, l:'Total active',       sub:'All open removals',    c:'tile-blue',  tv:'tv-white', click:"navTo('active')"},
+  ];
+  document.getElementById('overview-tiles').innerHTML = tiles.map(t=>`
+    <div class="tile ${t.c}" onclick="${t.click}" title="Click to view">
+      <div class="tile-v ${t.tv}">${t.v}</div>
+      <div class="tile-l">${t.l}</div>
+      <div class="tile-sub">${t.sub}</div>
+    </div>`).join('');
+
+  // Action list -- Sarah's to-do
+  const actions = [];
+  DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status)).forEach(r=>{
+    const days=Math.ceil((new Date()-new Date(r.reupdate))/86400000);
+    actions.push({r,dot:'ad-red',label:`MSC reupdate overdue by ${days} day${days!==1?'s':''}`,meta:r.reupdate,note:r.reupdateNote||''});
+  });
+  DB.filter(r=>r.reupdate&&r.reupdate===today&&!HIST_STATUSES.includes(r.status)).forEach(r=>{
+    actions.push({r,dot:'ad-amber',label:'MSC reupdate due TODAY',meta:'Today',note:r.reupdateNote||''});
+  });
+  DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length)).forEach(r=>{
+    actions.push({r,dot:'ad-cyan',label:'Checked in -- no case opened yet',meta:r.darr||''});
+  });
+  DB.filter(r=>r.status==='mscneedsdoc').forEach(r=>{
+    actions.push({r,dot:'ad-purple',label:'Invoice / document needed',meta:''});
+  });
+  DB.filter(r=>r.status==='arrived').forEach(r=>{
+    actions.push({r,dot:'ad-amber',label:'Arrived at BDL -- needs checking in',meta:r.darr||r.dsub||''});
+  });
+  DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=7;}).forEach(r=>{
+    const d=deadline60(r);
+    actions.push({r,dot:'ad-red',label:`60-day deadline in ${d} day${d!==1?'s':''}`,meta:''});
+  });
+
+  document.getElementById('overview-actions').innerHTML = actions.length ? actions.map(({r,dot,label,meta,note})=>`
+    <div class="action-item" onclick="openDetail(${r.id})">
+      <div class="action-dot ${dot}"></div>
+      <div class="action-info">
+        <div class="action-name">${r.name}</div>
+        <div class="action-desc">${label}${note?` -- <em>${note}</em>`:''}</div>
+      </div>
+      <div class="action-meta">${meta}</div>
+    </div>`).join('') :
+    `<div class="action-item"><div class="action-dot ad-blue"></div><div class="action-info"><div class="action-name" style="color:var(--green)">All clear ✓</div><div class="action-desc">Nothing needs action right now</div></div></div>`;
+
+  // Upcoming reupdates
+  const upcoming = DB.filter(r=>r.reupdate&&r.reupdate>today&&!HIST_STATUSES.includes(r.status))
+    .sort((a,b)=>a.reupdate.localeCompare(b.reupdate)).slice(0,6);
+  document.getElementById('overview-reupdates').innerHTML = upcoming.length ? upcoming.map(r=>{
+    const days=Math.ceil((new Date(r.reupdate)-new Date())/86400000);
+    return `<div class="action-item" onclick="openDetail(${r.id})">
+      <div class="action-dot ad-amber"></div>
+      <div class="action-info">
+        <div class="action-name">${r.name}</div>
+        <div class="action-desc">${r.reupdateNote||'MSC reupdate scheduled'}</div>
+      </div>
+      <div class="action-meta" style="color:var(--amber)">${r.reupdate} <span style="color:var(--text3)">(${days}d)</span></div>
+    </div>`;
+  }).join('') : `<div style="padding:16px;font-size:12px;color:var(--text3)">No upcoming reupdates</div>`;
+
+  // Approaching deadlines
+  const deadlines = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;})
+    .sort((a,b)=>deadline60(a)-deadline60(b));
+  document.getElementById('overview-deadlines').innerHTML = deadlines.length ? deadlines.map(r=>{
+    const d=deadline60(r);
+    return `<div class="action-item" onclick="openDetail(${r.id})">
+      <div class="action-dot ${d<=7?'ad-red':'ad-amber'}"></div>
+      <div class="action-info">
+        <div class="action-name">${r.name}</div>
+        <div class="action-desc">${r.oid||'No order ID'}</div>
+      </div>
+      <div class="action-meta" style="color:${d<=7?'var(--red)':'var(--amber)'}">${d}d left</div>
+    </div>`;
+  }).join('') : `<div style="padding:16px;font-size:12px;color:var(--text3)">No deadlines approaching</div>`;
+}
+
+// CHECK-IN DECISION --
+let CHECKIN_DECISION = null;
+function openCheckin(id) {
+  const r = DB.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('checkin-rid').value = id;
+  document.getElementById('checkin-title').textContent = `${r.name} -- what's the verdict?`;
+  CHECKIN_DECISION=null;
+  document.getElementById('checkin-overlay').classList.remove('h');
+  saveDb();
+}
+
+function checkinDecision(type) {
+  const rid = +document.getElementById('checkin-rid').value;
+  const r = DB.find(x=>x.id===rid);
+  if(!r) {
+    console.error('Item not found:', rid);
+    return;
+  }
+  
+  if(type === 'claim') {
+    r.darr = r.darr || new Date().toISOString().split('T')[0];
+    r.status = 'checkdiscord';
+    closeModal('checkin-overlay');
+    setTimeout(() => navTo('reimb'), 100);
+  } else if(type === 'new') {
+    r.status='sentout';
+    r.cond='New';
+    r.darr=r.darr||new Date().toISOString().split('T')[0];
+    closeModal('checkin-overlay');
+    setTimeout(() => { navTo('history'); }, 100);
+  } else if(type === 'used') {
+    r.status='sentout';
+    r.cond='Used';
+    r.darr=r.darr||new Date().toISOString().split('T')[0];
+    closeModal('checkin-overlay');
+    setTimeout(() => { navTo('history'); }, 100);
+  }
+}
+
+function checkinConfirm() {
+  // Legacy - no longer used
+}
+
+// PREFILL CASE FROM REIMB PAGE --
+function prefillCase(id) {
+  const sel = document.getElementById('cg-removal');
+  if(sel) { sel.value=id; onCgRemovalChange(); }
+}
+
+function delR(id) {
+  if (!confirm('Delete this removal? This cannot be undone.')) return;
+  DB = DB.filter(x=>x.id!==id);
+  closeModal('detail-overlay');
+  renderPage(CURRENT_PAGE);
+}
+
+// CASE LOG --
+function saveCaseLog() {
+  try { localStorage.setItem('removals-case-log', JSON.stringify(CASE_LOG)); } catch(e){}
+}
+
+function loadCaseLog() {
+  try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
+}
+
+function renderCaseLog() {
+  const el = document.getElementById('caselog-body');
+  if(!CASE_LOG.length){
+    el.innerHTML=`<div style="text-align:center;padding:60px;font-size:12px;color:var(--text3)">No cases generated yet -- use the Case Generator to create your first message.</div>`;
+    return;
+  }
+  el.innerHTML = [...CASE_LOG].reverse().map((entry,idx)=>{
+    const realIdx = CASE_LOG.length-1-idx;
+    const issueTagsHtml = entry.issues.map(i=>`<span class="cl-issue-tag">${i.label}</span>`).join('');
+    const notesHtml = entry.issues.filter(i=>i.note).map(i=>`
+      <div class="cl-note-block">
+        <div class="cl-note-label">${i.label}</div>
+        <div class="cl-note-txt">${i.note}</div>
+      </div>`).join('');
+    const ts = new Date(entry.ts);
+    const dateStr = ts.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const timeStr = ts.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    return `
+    <div class="cl-entry" id="cl-${realIdx}">
+      <div class="cl-header" onclick="toggleCaseLog(${realIdx})">
+        <span class="cl-chevron">›</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${entry.removalName||'Unknown product'}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${entry.removalOid||'No order ID'} · ${dateStr} at ${timeStr}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${issueTagsHtml}</div>
+        <button class="btn btn-sm btn-blue" style="font-size:11px;flex-shrink:0" onclick="event.stopPropagation();copyCaseLogEntry(${realIdx})">Copy</button>
+      </div>
+      <div class="cl-body">
+        ${entry.issues.length ? `<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Issues ticked</div><div class="cl-issues">${issueTagsHtml}</div></div>` : ''}
+        ${notesHtml ? `<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Notes pasted</div>${notesHtml}</div>` : ''}
+        <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Generated message</div>
+        <div class="cl-msg">${entry.message}</div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-sm btn-blue" onclick="copyCaseLogEntry(${realIdx})">📋 Copy message</button>
+          <button class="btn btn-sm btn-red" onclick="deleteCaseLogEntry(${realIdx})">Delete entry</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCaseLog(idx) {
+  const el = document.getElementById(`cl-${idx}`);
+  if(el) el.classList.toggle('open');
+}
+
+function copyCaseLogEntry(idx) {
+  const entry = CASE_LOG[idx];
+  if(!entry) return;
+  navigator.clipboard.writeText(entry.message).then(()=>{
+    // brief visual feedback
+  });
+}
+
+function deleteCaseLogEntry(idx) {
+  if(!confirm('Delete this case log entry?')) return;
+  CASE_LOG.splice(idx,1);
+  saveCaseLog();
+  renderCaseLog();
+}
+
+// CASE GENERATOR --
+function toggleIssueBox(id) {
+  const cb = document.getElementById(id);
+  const box = document.getElementById(id+'-box');
+  if(cb && box) {
+    box.style.display = cb.checked ? 'block' : 'none';
+    const txt = document.getElementById(id+'-txt');
+    if(txt && cb.checked && !txt.value.trim()) {
+      if(id === 'ci-nolpn') txt.value = 'No LPN on product';
+      if(id === 'ci-notrack') txt.value = 'No tracking slip';
+    }
+  }
+}
+
+function loadCaseDropdown() {
+  const sel = document.getElementById('cg-removal');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">Choose removal...</option>` +
+    DB.filter(r=>!HIST_STATUSES.includes(r.status)).map(r=>`<option value="${r.id}">${r.name} -- ${r.oid||r.asin}</option>`).join('');
+  if(cur) { sel.value=cur; onCgRemovalChange(); }
+}
+
+function onCgRemovalChange() {
+  const rid = document.getElementById('cg-removal').value;
+  if(!rid) return;
+  const r = DB.find(x=>x.id==rid); if(!r) return;
+  document.getElementById('cg-name').value     = r.name||'';
+  document.getElementById('cg-asin').value     = r.asin||'';
+  document.getElementById('cg-fnsku').value    = r.fnsku||'';
+  document.getElementById('cg-oid').value      = r.oid||'';
+  document.getElementById('cg-shipid').value   = r.shipid||'';
+  document.getElementById('cg-tracking').value = r.tracking||'';
+  document.getElementById('cg-cog').value      = r.cog||'';
+  document.getElementById('cg-lpn4').value     = r.lpn||'';
+  document.getElementById('cg-qty').value      = r.qord||1;
+  document.getElementById('cg-trackurl').value = '';
+  document.getElementById('cg-out').style.display = 'none';
+  // Clear ALL checkboxes AND their textarea notes
+  ['ci-damaged','ci-missing','ci-wrong','ci-notarrived','ci-nolpn','ci-notrack','ci-partialarr'].forEach(id=>{
+    const cb=document.getElementById(id); if(cb) cb.checked=false;
+    const box=document.getElementById(id+'-box'); if(box) box.style.display='none';
+    const txt=document.getElementById(id+'-txt'); if(txt) txt.value=''; // CLEAR the textarea!
+  });
+}
+
+function genCaseMsg() {
+  const name     = document.getElementById('cg-name').value.trim();
+  const asin     = document.getElementById('cg-asin').value.trim();
+  if(!name||!asin){alert('Please select a removal first');return;}
+  const fnsku    = document.getElementById('cg-fnsku').value.trim();
+  const oid      = document.getElementById('cg-oid').value.trim();
+  const shipid   = document.getElementById('cg-shipid').value.trim();
+  const tracking = document.getElementById('cg-tracking').value.trim();
+  const lpn4     = document.getElementById('cg-lpn4').value.trim();
+
+  const issues = [];
+  const addIssue = (id, label) => {
+    const cb = document.getElementById(id);
+    if(!cb?.checked) return;
+    const txt = document.getElementById(id+'-txt')?.value.trim()||'';
+    issues.push({id, label, txt});
+  };
+  addIssue('ci-damaged',    'Damaged / unsellable');
+  addIssue('ci-missing',    'Missing item / arrived empty');
+  addIssue('ci-wrong',      'Wrong item returned (Switcharoo)');
+  addIssue('ci-notarrived', 'Dispatched but never arrived');
+  addIssue('ci-nolpn',      'No LPN on product');
+  addIssue('ci-notrack',    'No tracking slip');
+  addIssue('ci-partialarr', 'Partial arrival');
+
+  if(!issues.length){alert('Please tick at least one issue type');return;}
+
+  const hasMissing = issues.some(i=>i.id==='ci-missing');
+  const hasDamaged = issues.some(i=>i.id==='ci-damaged');
+  const hasWrong = issues.some(i=>i.id==='ci-wrong');
+  const hasNotArrived = issues.some(i=>i.id==='ci-notarrived');
+  const hasPartial = issues.some(i=>i.id==='ci-partialarr');
+  const hasNoLpn = issues.some(i=>i.id==='ci-nolpn');
+  const hasNoTrack = issues.some(i=>i.id==='ci-notrack');
+
+  const primaryIssue = hasMissing ? 'missing' : hasDamaged ? 'damaged' : hasWrong ? 'wrong' : hasNotArrived ? 'notarrived' : hasPartial ? 'partial' : 'other';
+
+  let msg = `Hi,\n\nI am writing regarding Removal Order ID: ${oid||'[Missing]'}, which has been received with an issue affecting the returned unit.\n\n`;
+  
+  // Header - clean product info
+  msg += `Product: ${name}\nASIN: ${asin}\nFNSKU: ${fnsku}\nRemoval Order ID: ${oid||''}`;
+  if(lpn4) msg += `\nLPN (last 4 digits): ${lpn4}`;
+  else if(hasNoLpn) msg += `\nLPN: Not present on returned unit`;
+  if(tracking) msg += `\nTracking number: ${tracking}`;
+  if(hasNoTrack) msg += `\nTracking slip: Not included with the return`;
+  
+  msg += `\n\nIssue Details\n`;
+
+  const primaryNote = issues.find(i => {
+    if(primaryIssue==='missing') return i.id==='ci-missing';
+    if(primaryIssue==='damaged') return i.id==='ci-damaged';
+    if(primaryIssue==='wrong') return i.id==='ci-wrong';
+    if(primaryIssue==='notarrived') return i.id==='ci-notarrived';
+    if(primaryIssue==='partial') return i.id==='ci-partialarr';
+    return false;
+  });
+
+  let note = primaryNote?.txt||'';
+
+  // SPELL-CHECK - Fix common typos
+  const spellFix = {
+    'bottel': 'bottle',
+    'pacakaing': 'packaging',
+    'componet': 'component',
+    'damged': 'damaged',
+    'reciever': 'receiver',
+    'transmiter': 'transmitter',
+    'chargar': 'charger',
+    'recived': 'received',
+    'inclued': 'included',
+    'returnd': 'returned',
+    'conditio': 'condition',
+    'missin': 'missing'
+  };
+  
+  for(const [wrong, correct] of Object.entries(spellFix)) {
+    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    note = note.replace(regex, correct);
+  }
+
+  // DUPLICATE REMOVAL - Clean note to avoid "missing X missing"
+  // If note starts with "missing", remove it since we add "missing" in the sentence
+  note = note.replace(/^missing\s+/gi, '');
+  
+  // Remove any doubled words
+  note = note.replace(/\b(\w+)\s+\1\b/gi, '$1');
+  
+  // Clean up multiple spaces
+  note = note.replace(/  +/g, ' ').trim();
+
+  // SMART ITEM NAMING - Upgrade vague terms
+  let itemName = note.toLowerCase();
+  if(itemName === 'usb' || itemName === 'usb adapter') itemName = 'USB adapter';
+  else if(itemName === 'bottle' || itemName === 'serum') itemName = 'bottle';
+  else if(itemName === 'lid' || itemName === 'top') itemName = 'top component';
+  else if(itemName === 'cable' || itemName === 'charger') itemName = itemName;
+  
+  // TEMPLATE A - Use for all issue types (99% are missing/empty returns)
+  if(primaryIssue === 'missing' || primaryIssue === 'damaged' || primaryIssue === 'partial') {
+    msg += `\nThe return has been received with packaging present but the ${itemName} missing, meaning the item has been returned as an empty unit.\n`;
+    msg += `\nThis is not in the condition sent by the distributor and the item has not been returned in the same condition as originally fulfilled.\n`;
+    msg += `\nAs a result, the item does not meet the criteria for sellable inventory, is unsellable in its current state, and cannot be relisted.`;
+  } else if(primaryIssue === 'wrong') {
+    msg += `\nThe returned unit is not the same product as originally fulfilled. ${note}.\n`;
+    msg += `\nThis is not in the condition sent by the distributor and the item has not been returned in the same condition as originally fulfilled.\n`;
+    msg += `\nAs a result, the item does not meet the criteria for sellable inventory and cannot be relisted.`;
+  } else if(primaryIssue === 'notarrived') {
+    msg += `\nThe removal was dispatched but never arrived at our facility. ${note}.\n`;
+    msg += `\nAs a result, the inventory is missing and unaccounted for, representing lost inventory while under Amazon's control.`;
+  }
+
+  msg += `\n\nRequest\n\n`;
+  
+  if(primaryIssue === 'missing' || primaryIssue === 'damaged' || primaryIssue === 'partial') {
+    msg += `Please issue full reimbursement for this unit as the item has not been returned.`;
+  } else if(primaryIssue === 'wrong') {
+    msg += `Please issue full reimbursement for this unit as the returned item does not match the original inventory and cannot be verified or resold.`;
+  } else if(primaryIssue === 'notarrived') {
+    msg += `Please issue full reimbursement for this unit as it was not successfully delivered and is missing from our inventory.`;
+  }
+  
+  msg += `\n\nPhotos have been attached clearly showing the condition of the returned item.\n\nThank you for your assistance.`;
+
+  // CLEANUP - simple validation only
+  msg = msg.replace(/}\./g, '.');
+  msg = msg.replace(/}\n/g, '\n');
+  msg = msg.replace(/\.\./g, '.');
+  msg = msg.replace(/  +/g, ' ');
+  msg = msg.replace(/^([a-z])/gm, (match) => match.toUpperCase());
+
+  document.getElementById('cg-msg').textContent = msg;
+  document.getElementById('cg-out').style.display = 'block';
+
+  const rid = document.getElementById('cg-removal').value;
+  CASE_LOG.push({
+    id: Date.now(),
+    ts: new Date().toISOString(),
+    removalName: name,
+    removalOid: oid||'',
+    issues: issues,
+    message: msg
+  });
+  saveCaseLog();
+  updateBadges();
+}
+
+function copyCase() {
+  navigator.clipboard.writeText(document.getElementById('cg-msg').textContent).then(()=>{
+    const b = document.querySelector('#page-case .btn-blue');
+    const o = b.textContent; b.textContent='✓ Copied!';
+    setTimeout(()=>b.textContent=o, 2000);
+  });
+}
+
+function openCaseGenModal(id) { navTo('case'); setTimeout(()=>prefillCase(id),50); }
+function copyCaseModal(){} // legacy stub
+function updateCaseModal(){} // legacy stub
+function buildCaseMsg(){} // legacy stub
+
+// PDF BUILDER --
+function handlePdfDrop(e) {
+  e.preventDefault();
+  document.getElementById('pdf-drop').classList.remove('drag');
+  handlePdfFiles(e.dataTransfer.files);
+}
+
+function handlePdfFiles(files) {
+  const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
+  Array.from(files).filter(f=>allowed.includes(f.type)).forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = ev => {
+      PDF_IMAGES.push({dataUrl:ev.target.result, name:f.name});
+      renderPdfThumbs();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function renderPdfThumbs() {
+  const wrap = document.getElementById('pdf-thumbs');
+  wrap.innerHTML = PDF_IMAGES.map((img,i)=>`
+    <div class="pdf-thumb">
+      <img src="${img.dataUrl}" alt="${img.name}">
+      <button class="pdf-thumb-rm" onclick="removePdfImg(${i})">×</button>
+    </div>`).join('');
+  document.getElementById('pdf-actions').style.display = PDF_IMAGES.length ? 'flex' : 'none';
+  document.getElementById('pdf-status').textContent = `${PDF_IMAGES.length} image${PDF_IMAGES.length!==1?'s':''} ready`;
+}
+
+function removePdfImg(i) {
+  PDF_IMAGES.splice(i,1);
+  renderPdfThumbs();
+}
+
+function clearPdfImages() {
+  PDF_IMAGES=[];
+  renderPdfThumbs();
+}
+
+async function buildPdf() {
+  if(!PDF_IMAGES.length){alert('Add at least one image first');return;}
+  document.getElementById('pdf-status').textContent='Building PDF…';
+  const rid = document.getElementById('pdf-removal').value;
+  const r = rid ? DB.find(x=>x.id==rid) : null;
+  const filename = r ? `${r.oid||r.asin}_removal.pdf` : 'removal_photos.pdf';
+
+  // Build a simple PDF using canvas + data URLs
+  // Each image becomes a page sized to the image
+  const pages = await Promise.all(PDF_IMAGES.map(img=>new Promise(res=>{
+    const image = new Image();
+    image.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      // Keep full native resolution for readable PDFs
+      const w = image.naturalWidth;
+      const h = image.naturalHeight;
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
+      ctx.drawImage(image,0,0,w,h);
+      res({dataUrl:canvas.toDataURL('image/jpeg',0.92),w,h});
+    };
+    image.src=img.dataUrl;
+  })));
+
+  // Minimal PDF structure
+  let pdf='%PDF-1.4\n';
+  const objs=[];
+  const addObj=(content)=>{objs.push(pdf.length);pdf+=`${objs.length} 0 obj\n${content}\nendobj\n`;return objs.length;};
+
+  // Catalog
+  const cat=addObj(`<< /Type /Catalog /Pages 2 0 R >>`);
+  // Pages (placeholder, will fill in)
+  const pagesPos=pdf.length;
+  pdf+=`2 0 obj\n<< /Type /Pages /Kids [`;
+  const kidsPlaceholderStart=pdf.length;
+
+  // Each page
+  const pageIds=[];
+  const imgObjs=[];
+  for(let i=0;i<pages.length;i++){
+    const p=pages[i];
+    const raw=atob(p.dataUrl.split(',')[1]);
+    const bytes=new Uint8Array(raw.length);
+    for(let j=0;j<raw.length;j++) bytes[j]=raw.charCodeAt(j);
+
+    // We'll write image + page after pages obj
+    imgObjs.push({bytes,w:p.w,h:p.h,idx:i});
+    pageIds.push(0); // placeholder
+  }
+
+  // Close pages obj placeholder -- we'll rebuild properly
+  // Simpler: collect all object positions in an array then build xref
+
+  // Reset and do it properly with a simple structure
+  // Use a blob URL approach instead -- much simpler for browser
+  const pdfParts=[];
+  pdfParts.push('%PDF-1.4\n%âãÏÓ\n');
+
+  const offsets=[];
+  let offset=pdfParts[0].length;
+
+  const enc=s=>s;
+  const writeObj=(n,dict,stream=null)=>{
+    const start=pdfParts.reduce((s,p)=>s+p.length,0);
+    offsets[n]=start;
+    let obj=`${n} 0 obj\n`;
+    obj+=dict+'\n';
+    if(stream!==null){
+      obj+=`stream\n`;
+      pdfParts.push(obj);
+      pdfParts.push(stream);
+      pdfParts.push(`\nendstream\nendobj\n`);
+    } else {
+      obj+=`endobj\n`;
+      pdfParts.push(obj);
+    }
+  };
+
+  // obj 1: catalog
+  // obj 2: pages
+  // then for each image: obj (3+i*2) = image XObject, obj (4+i*2) = page
+  const n=pages.length;
+  const imgBase=3;
+  const pageBase=imgBase+n;
+  const pageKids=Array.from({length:n},(_,i)=>`${pageBase+i} 0 R`).join(' ');
+
+  writeObj(1,`<< /Type /Catalog /Pages 2 0 R >>`);
+  writeObj(2,`<< /Type /Pages /Kids [${pageKids}] /Count ${n} >>`);
+
+  const imgStreams=await Promise.all(pages.map(p=>{
+    const raw=atob(p.dataUrl.split(',')[1]);
+    const arr=new Uint8Array(raw.length);
+    for(let j=0;j<raw.length;j++) arr[j]=raw.charCodeAt(j);
+    return arr;
+  }));
+
+  for(let i=0;i<n;i++){
+    const p=pages[i];
+    const imgN=imgBase+i;
+    const pageN=pageBase+i;
+    // image obj
+    const start=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
+    offsets[imgN]=start;
+    const imgDict=`${imgN} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgStreams[i].length} >>\nstream\n`;
+    pdfParts.push(imgDict);
+    pdfParts.push(imgStreams[i]);
+    pdfParts.push(`\nendstream\nendobj\n`);
+
+    // page obj
+    const pageStart=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
+    offsets[pageN]=pageStart;
+    const contN=pageN+n; // content stream obj
+    pdfParts.push(`${pageN} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${p.w} ${p.h}] /Resources << /XObject << /Img${i} ${imgN} 0 R >> >> /Contents ${contN} 0 R >>\nendobj\n`);
+  }
+
+  // Content streams
+  for(let i=0;i<n;i++){
+    const p=pages[i];
+    const contN=pageBase+n+i;
+    const stream=`q ${p.w} 0 0 ${p.h} 0 0 cm /Img${i} Do Q`;
+    const start=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
+    offsets[contN]=start;
+    pdfParts.push(`${contN} 0 obj\n<< /Length ${stream.length} >>\nstream\n${stream}\nendstream\nendobj\n`);
+  }
+
+  // xref
+  const xrefStart=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
+  const totalObjs=1+1+n+n+n+1; // catalog+pages+images+pages+contents
+  const maxObj=pageBase+n+n;
+  let xref=`xref\n0 ${maxObj+1}\n0000000000 65535 f \n`;
+  for(let i=1;i<=maxObj;i++){
+    xref+=`${String(offsets[i]||0).padStart(10,'0')} 00000 n \n`;
+  }
+  pdfParts.push(xref);
+  pdfParts.push(`trailer\n<< /Size ${maxObj+1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
+
+  // Combine all parts into a blob
+  const blobParts=pdfParts.map(p=>typeof p==='string'?new TextEncoder().encode(p):p);
+  const blob=new Blob(blobParts,{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById('pdf-status').textContent=`✓ ${filename} downloaded!`;
+}
+
+function loadPdfDropdown(){
+  const sel=document.getElementById('pdf-removal');
+  if(!sel) return;
+  sel.innerHTML=`<option value="">No removal selected</option>`+
+    DB.filter(r=>!HIST_STATUSES.includes(r.status)).map(r=>`<option value="${r.id}">${r.name} -- ${r.oid||r.asin}</option>`).join('');
+}
+
+// MODAL UTILS --
+function closeModal(id) { document.getElementById(id).classList.add('h'); }
+function closeBg(e, id) { if (e.target===document.getElementById(id)) closeModal(id); }
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(()=>{
+    const el = document.createElement('div');
+    el.className = 'copy-flash';
+    el.textContent = 'Copied: ' + text;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 1800);
+  });
+}
+
+// SEARCH & FILTER FUNCTIONS
+function filterActiveTable() {
+  const query = document.getElementById('search-active').value.toLowerCase();
+  const rows = document.querySelectorAll('#tbl-body tr');
+  
+  rows.forEach(row => {
+    const product = row.cells[1]?.textContent.toLowerCase()||'';
+    const asin = row.cells[2]?.textContent.toLowerCase()||'';
+    const removId = row.cells[4]?.textContent.toLowerCase()||'';
+    
+    const match = product.includes(query) || asin.includes(query) || removId.includes(query);
+    row.style.display = match ? '' : 'none';
+  });
+}
+
+function filterReimbCards() {
+  const query = document.getElementById('search-reimb').value.toLowerCase();
+  const cards = document.querySelectorAll('#reimb-cards .card');
+  
+  cards.forEach(card => {
+    const product = card.querySelector('[data-product]')?.textContent.toLowerCase()||'';
+    const asin = card.querySelector('[data-asin]')?.textContent.toLowerCase()||'';
+    const removId = card.querySelector('[data-removid]')?.textContent.toLowerCase()||'';
+    
+    const match = product.includes(query) || asin.includes(query) || removId.includes(query);
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+// INIT --
+seed();
+loadCaseLog();
+if(localStorage.getItem('sb-collapsed')==='1'){
+  const sb=document.getElementById('sidebar');
+  sb.classList.add('collapsed');
+  const btn=sb.querySelector('.sidebar-toggle');
+  if(btn) btn.textContent='›';
+}
+navTo('overview');
+</script>
+</body>
+</html>
