@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Removals Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#0a0d14;--bg2:#111520;--bg3:#181e2e;--bg4:#1e2638;--bg5:#252d3d;
@@ -728,6 +729,90 @@ let CURRENT_PAGE = 'active';
 let ACTIVE_FILTER = 'all';
 let REIMB_FILTER = 'all';
 
+// SUPABASE --
+const SUPABASE_URL = 'https://ffbdazepqrsyurhouxif.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmYmRhemVwcXJzeXVyaG91eGlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTM5MjIsImV4cCI6MjA5MDQ2OTkyMn0.BAuodLUDGzO9A7IfoRRn0HZ1MgWOXNPeYKPDBNaNWeg';
+let SUPABASE_READY = false;
+
+async function initSupabase() {
+  try {
+    if (!window.supabase) {
+      console.error('Supabase library not loaded');
+      return false;
+    }
+    window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✓ Supabase initialized');
+    SUPABASE_READY = true;
+    return true;
+  } catch (e) {
+    console.error('Failed to init Supabase:', e);
+    showError('Supabase init failed: ' + e.message);
+    return false;
+  }
+}
+
+// SUPABASE HELPERS --
+async function saveToSupabase(removal) {
+  if (!window.supabase) return;
+  try {
+    const { error } = await window.supabase.from('removals').insert([removal]);
+    if (error) {
+      console.error('Save error:', error);
+      showError('Failed to save: ' + error.message);
+    } else {
+      console.log('✓ Saved:', removal.name);
+    }
+  } catch (e) {
+    console.error('Supabase save error:', e);
+    showError('Save error: ' + e.message);
+  }
+}
+
+async function updateInSupabase(id, updates) {
+  if (!window.supabase) return;
+  try {
+    const { error } = await window.supabase
+      .from('removals')
+      .update(updates)
+      .eq('id', id);
+    if (error) {
+      console.error('Update error:', error);
+      showError('Failed to update: ' + error.message);
+    } else {
+      console.log('✓ Updated removal:', id);
+    }
+  } catch (e) {
+    console.error('Supabase update error:', e);
+    showError('Update error: ' + e.message);
+  }
+}
+
+async function deleteFromSupabase(id) {
+  if (!window.supabase) return;
+  try {
+    const { error } = await window.supabase.from('removals').delete().eq('id', id);
+    if (error) {
+      console.error('Delete error:', error);
+      showError('Failed to delete: ' + error.message);
+    } else {
+      console.log('✓ Deleted removal:', id);
+    }
+  } catch (e) {
+    console.error('Supabase delete error:', e);
+    showError('Delete error: ' + e.message);
+  }
+}
+
+function showError(msg) {
+  const el = document.createElement('div');
+  el.className = 'copy-flash';
+  el.textContent = '❌ ' + msg;
+  el.style.background = 'var(--red-bg)';
+  el.style.color = 'var(--red)';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 3000);
+}
+
 const STATUS_LIST = [
   {v:'transit',       l:'In transit',          cls:'ss-transit'},
   {v:'arrived',       l:'Arrived at BDL',      cls:'ss-arrived'},
@@ -781,7 +866,14 @@ function statusSel(r, onchange) {
 }
 
 function upd(id, key, val) {
-  const r = DB.find(x=>x.id===id); if (r) r[key] = val;
+  const r = DB.find(x=>x.id===id); 
+  if (r) {
+    r[key] = val;
+    // Save to Supabase async
+    if (SUPABASE_READY && window.supabase) {
+      updateInSupabase(id, { [key]: val });
+    }
+  }
 }
 
 function counts() {
@@ -1096,6 +1188,16 @@ function confirmReimbursed() {
   r.cog = parseFloat(cog)||0;
   r.ramt = parseFloat(ramt)||0;
   r.status = 'reimbursed';
+  
+  // Save to Supabase
+  if (SUPABASE_READY && window.supabase) {
+    updateInSupabase(id, { 
+      cog: r.cog, 
+      ramt: r.ramt, 
+      status: 'reimbursed' 
+    });
+  }
+  
   closeModal('markreimb-overlay');
   renderReimb();
   renderHist();
@@ -1107,6 +1209,11 @@ function moveRimbBack() {
   const r = DB.find(x=>x.id===id);
   if(!r) return;
   r.status = 'arrived';
+  
+  if (SUPABASE_READY && window.supabase) {
+    updateInSupabase(id, { status: 'arrived' });
+  }
+  
   closeModal('markreimb-overlay');
   renderActive();
   renderReimb();
@@ -1117,6 +1224,11 @@ function moveReimbToActive(id) {
   const r = DB.find(x=>x.id===id);
   if(!r) return;
   r.status = 'arrived';
+  
+  if (SUPABASE_READY && window.supabase) {
+    updateInSupabase(id, { status: 'arrived' });
+  }
+  
   renderReimb();
   renderActive();
   updateBadges();
@@ -1126,6 +1238,11 @@ function moveHistToReimb(id) {
   const r = DB.find(x=>x.id===id);
   if(!r) return;
   r.status = 'checkdiscord';
+  
+  if (SUPABASE_READY && window.supabase) {
+    updateInSupabase(id, { status: 'checkdiscord' });
+  }
+  
   renderHist();
   renderReimb();
   updateBadges();
@@ -1135,6 +1252,11 @@ function moveHistToActive(id) {
   const r = DB.find(x=>x.id===id);
   if(!r) return;
   r.status = 'arrived';
+  
+  if (SUPABASE_READY && window.supabase) {
+    updateInSupabase(id, { status: 'arrived' });
+  }
+  
   renderHist();
   renderActive();
   updateBadges();
@@ -1283,7 +1405,8 @@ function saveAdd() {
   const name = document.getElementById('a-name').value.trim();
   const asin = document.getElementById('a-asin').value.trim();
   if (!name || !asin) { alert('Product name and ASIN are required'); return; }
-  DB.unshift({
+  
+  const newRemoval = {
     id: Date.now(), name, asin,
     fnsku: document.getElementById('a-fnsku').value.trim(),
     sku:   document.getElementById('a-sku').value.trim(),
@@ -1293,15 +1416,21 @@ function saveAdd() {
     src:   document.getElementById('a-src').value,
     reason:'unknown',
     status:'transit',
-    // filled in later:
     msku:'',ean:'',shipid:'',tracking:'',amid:'',qdis:0,qcan:0,qpen:1,
     cog:0,lpn:'',disp:'Unsellable',cond:'Damaged',
     darr:'',dreim:'',cases:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:''
-  });
+  };
+  
+  DB.unshift(newRemoval);
   ['a-name','a-asin','a-fnsku','a-sku','a-oid'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-qord').value='1';
   closeModal('add-overlay');
   renderPage(CURRENT_PAGE);
+  
+  // Save to Supabase async (don't block UI)
+  if (SUPABASE_READY && window.supabase) {
+    saveToSupabase(newRemoval);
+  }
 }
 
 function renderDetailCases(id) {
@@ -1322,6 +1451,12 @@ function renderDetailCases(id) {
 function removeCase(rid, idx) {
   const r = DB.find(x=>x.id===rid); if(!r||!r.cases) return;
   r.cases.splice(idx,1);
+  
+  // Save to Supabase
+  if (SUPABASE_READY && window.supabase) {
+    updateInSupabase(rid, { cases: r.cases });
+  }
+  
   renderDetailCases(rid);
   renderPage(CURRENT_PAGE);
 }
@@ -1345,6 +1480,12 @@ function saveAddCase() {
     outcome: document.getElementById('ac-outcome').value,
     note: document.getElementById('ac-note').value.trim(),
   });
+  
+  // Save to Supabase
+  if (SUPABASE_READY && window.supabase) {
+    updateInSupabase(rid, { cases: r.cases });
+  }
+  
   closeModal('addcase-overlay');
   renderDetailCases(rid);
   renderPage(CURRENT_PAGE);
@@ -1478,23 +1619,38 @@ function checkinDecision(type) {
     return;
   }
   
+  const updates = {};
+  
   if(type === 'claim') {
     r.darr = r.darr || new Date().toISOString().split('T')[0];
     r.status = 'checkdiscord';
+    updates.darr = r.darr;
+    updates.status = 'checkdiscord';
     closeModal('checkin-overlay');
     setTimeout(() => navTo('reimb'), 100);
   } else if(type === 'new') {
     r.status='sentout';
     r.cond='New';
     r.darr=r.darr||new Date().toISOString().split('T')[0];
+    updates.status = 'sentout';
+    updates.cond = 'New';
+    updates.darr = r.darr;
     closeModal('checkin-overlay');
     setTimeout(() => { navTo('history'); }, 100);
   } else if(type === 'used') {
     r.status='sentout';
     r.cond='Used';
     r.darr=r.darr||new Date().toISOString().split('T')[0];
+    updates.status = 'sentout';
+    updates.cond = 'Used';
+    updates.darr = r.darr;
     closeModal('checkin-overlay');
     setTimeout(() => { navTo('history'); }, 100);
+  }
+  
+  // Save to Supabase
+  if (SUPABASE_READY && window.supabase && Object.keys(updates).length > 0) {
+    updateInSupabase(rid, updates);
   }
 }
 
@@ -1510,6 +1666,12 @@ function prefillCase(id) {
 
 function delR(id) {
   if (!confirm('Delete this removal? This cannot be undone.')) return;
+  
+  // Delete from Supabase
+  if (SUPABASE_READY && window.supabase) {
+    deleteFromSupabase(id);
+  }
+  
   DB = DB.filter(x=>x.id!==id);
   closeModal('detail-overlay');
   renderPage(CURRENT_PAGE);
@@ -2029,15 +2191,45 @@ function filterReimbCards() {
 }
 
 // INIT --
-seed();
-loadCaseLog();
-if(localStorage.getItem('sb-collapsed')==='1'){
-  const sb=document.getElementById('sidebar');
-  sb.classList.add('collapsed');
-  const btn=sb.querySelector('.sidebar-toggle');
-  if(btn) btn.textContent='›';
-}
-navTo('overview');
+(async () => {
+  // Initialize Supabase
+  const sbReady = await initSupabase();
+  
+  if (sbReady && window.supabase) {
+    // Load all removals from Supabase
+    try {
+      const { data, error } = await window.supabase
+        .from('removals')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Failed to load removals:', error);
+        showError('Failed to load data: ' + error.message);
+        DB = [];
+      } else {
+        DB = data || [];
+        console.log(`✓ Loaded ${DB.length} removals from Supabase`);
+      }
+    } catch (e) {
+      console.error('Supabase load error:', e);
+      showError('Load error: ' + e.message);
+      DB = [];
+    }
+  } else {
+    console.warn('Supabase not ready, running offline');
+    seed();
+  }
+  
+  loadCaseLog();
+  if(localStorage.getItem('sb-collapsed')==='1'){
+    const sb=document.getElementById('sidebar');
+    sb.classList.add('collapsed');
+    const btn=sb.querySelector('.sidebar-toggle');
+    if(btn) btn.textContent='›';
+  }
+  navTo('overview');
+})();
 </script>
 </body>
 </html>
