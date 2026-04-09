@@ -736,11 +736,16 @@ let SUPABASE_READY = false;
 
 async function initSupabase() {
   try {
-    if (!window.supabase) {
-      console.error('Supabase library not loaded');
-      return false;
+    // Wait for supabase library to load
+    let attempts = 0;
+    while (!window.supabase || !window.supabase.createClient) {
+      await new Promise(r => setTimeout(r, 100));
+      attempts++;
+      if (attempts > 50) throw new Error('Supabase library failed to load');
     }
-    window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Create the client
+    window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('✓ Supabase initialized');
     SUPABASE_READY = true;
     return true;
@@ -753,9 +758,9 @@ async function initSupabase() {
 
 // SUPABASE HELPERS --
 async function saveToSupabase(removal) {
-  if (!window.supabase) return;
+  if (!window.sbClient) return;
   try {
-    const { error } = await window.supabase.from('removals').insert([removal]);
+    const { error } = await window.sbClient.from('removals').insert([removal]);
     if (error) {
       console.error('Save error:', error);
       showError('Failed to save: ' + error.message);
@@ -769,9 +774,9 @@ async function saveToSupabase(removal) {
 }
 
 async function updateInSupabase(id, updates) {
-  if (!window.supabase) return;
+  if (!window.sbClient) return;
   try {
-    const { error } = await window.supabase
+    const { error } = await window.sbClient
       .from('removals')
       .update(updates)
       .eq('id', id);
@@ -788,9 +793,9 @@ async function updateInSupabase(id, updates) {
 }
 
 async function deleteFromSupabase(id) {
-  if (!window.supabase) return;
+  if (!window.sbClient) return;
   try {
-    const { error } = await window.supabase.from('removals').delete().eq('id', id);
+    const { error } = await window.sbClient.from('removals').delete().eq('id', id);
     if (error) {
       console.error('Delete error:', error);
       showError('Failed to delete: ' + error.message);
@@ -870,7 +875,7 @@ function upd(id, key, val) {
   if (r) {
     r[key] = val;
     // Save to Supabase async
-    if (SUPABASE_READY && window.supabase) {
+    if (SUPABASE_READY && window.sbClient) {
       updateInSupabase(id, { [key]: val });
     }
   }
@@ -1190,7 +1195,7 @@ function confirmReimbursed() {
   r.status = 'reimbursed';
   
   // Save to Supabase
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(id, { 
       cog: r.cog, 
       ramt: r.ramt, 
@@ -1210,7 +1215,7 @@ function moveRimbBack() {
   if(!r) return;
   r.status = 'arrived';
   
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(id, { status: 'arrived' });
   }
   
@@ -1225,7 +1230,7 @@ function moveReimbToActive(id) {
   if(!r) return;
   r.status = 'arrived';
   
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(id, { status: 'arrived' });
   }
   
@@ -1239,7 +1244,7 @@ function moveHistToReimb(id) {
   if(!r) return;
   r.status = 'checkdiscord';
   
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(id, { status: 'checkdiscord' });
   }
   
@@ -1253,7 +1258,7 @@ function moveHistToActive(id) {
   if(!r) return;
   r.status = 'arrived';
   
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(id, { status: 'arrived' });
   }
   
@@ -1428,7 +1433,7 @@ function saveAdd() {
   renderPage(CURRENT_PAGE);
   
   // Save to Supabase async (don't block UI)
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     saveToSupabase(newRemoval);
   }
 }
@@ -1453,7 +1458,7 @@ function removeCase(rid, idx) {
   r.cases.splice(idx,1);
   
   // Save to Supabase
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(rid, { cases: r.cases });
   }
   
@@ -1482,7 +1487,7 @@ function saveAddCase() {
   });
   
   // Save to Supabase
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(rid, { cases: r.cases });
   }
   
@@ -1649,7 +1654,7 @@ function checkinDecision(type) {
   }
   
   // Save to Supabase
-  if (SUPABASE_READY && window.supabase && Object.keys(updates).length > 0) {
+  if (SUPABASE_READY && window.sbClient && Object.keys(updates).length > 0) {
     updateInSupabase(rid, updates);
   }
 }
@@ -1668,7 +1673,7 @@ function delR(id) {
   if (!confirm('Delete this removal? This cannot be undone.')) return;
   
   // Delete from Supabase
-  if (SUPABASE_READY && window.supabase) {
+  if (SUPABASE_READY && window.sbClient) {
     deleteFromSupabase(id);
   }
   
@@ -2195,10 +2200,10 @@ function filterReimbCards() {
   // Initialize Supabase
   const sbReady = await initSupabase();
   
-  if (sbReady && window.supabase) {
+  if (sbReady && window.sbClient) {
     // Load all removals from Supabase
     try {
-      const { data, error } = await window.supabase
+      const { data, error } = await window.sbClient
         .from('removals')
         .select('*')
         .order('created_at', { ascending: false });
