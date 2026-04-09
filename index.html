@@ -744,13 +744,15 @@ async function initSupabase() {
       if (attempts > 50) throw new Error('Supabase library failed to load');
     }
     
-    // Create the client
-    window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log('✓ Supabase initialized');
+    // Create the client using the correct export
+    const { createClient } = window.supabase;
+    window.sbClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✓ Supabase initialized', window.sbClient);
     SUPABASE_READY = true;
     return true;
   } catch (e) {
     console.error('Failed to init Supabase:', e);
+    console.error('window.supabase:', window.supabase);
     showError('Supabase init failed: ' + e.message);
     return false;
   }
