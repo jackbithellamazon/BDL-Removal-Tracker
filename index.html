@@ -97,7 +97,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .tbl-scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 thead tr{background:var(--bg3)}
-th{padding:9px 12px;text-align:left;font-weight:500;color:var(--text3);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;border-bottom:1px solid var(--border)}
+th{padding:12px 12px;text-align:left;font-weight:700;color:var(--blue);font-size:12px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-bottom:2px solid var(--blue-dim);cursor:pointer;transition:all .15s}
+th:hover{color:var(--cyan);border-bottom-color:var(--cyan)}
 td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 tbody tr:last-child td{border-bottom:none}
 tbody tr{transition:background .1s}
@@ -393,7 +394,7 @@ tbody tr:hover{background:var(--bg3)}
           <div class="tbl-scroll">
             <table id="main-table">
               <thead><tr>
-                <th>Date</th>
+                <th onclick="toggleDateSort()">Date <span id="sort-indicator">↓</span></th>
                 <th style="min-width:200px">Product</th>
                 <th>ASIN</th>
                 <th>FNSKU</th>
@@ -727,6 +728,7 @@ tbody tr:hover{background:var(--bg3)}
 let DB = [];
 let CURRENT_PAGE = 'active';
 let ACTIVE_FILTER = 'all';
+let ACTIVE_SORT_DESC = true; // true = newest first
 let REIMB_FILTER = 'all';
 
 // SUPABASE --
@@ -926,14 +928,15 @@ function renderPage(page) {
 
 function updateBadges() {
   document.getElementById('nb-active').textContent = DB.filter(r=>ACTIVE_STATUSES.includes(r.status)).length;
-  document.getElementById('nb-reimb').textContent  = DB.filter(r=>REIMB_STATUSES.includes(r.status)).length;
+  const reimbCount = DB.filter(r=>REIMB_STATUSES.includes(r.status)).length;
+  document.getElementById('nb-reimb').textContent  = reimbCount;
   document.getElementById('nb-hist').textContent   = DB.filter(r=>HIST_STATUSES.includes(r.status)).length;
   const nbLog = document.getElementById('nb-caselog');
   if(nbLog) nbLog.textContent = CASE_LOG.length;
   const today = new Date().toISOString().split('T')[0];
   const overdue = DB.filter(r=>r.reupdate&&r.reupdate<=today&&!HIST_STATUSES.includes(r.status)).length;
   const alertDot = document.getElementById('reimb-alert');
-  if(alertDot) alertDot.style.display = overdue ? 'inline-block' : 'none';
+  if(alertDot) alertDot.style.display = (reimbCount > 0 && overdue > 0) ? 'inline-block' : 'none';
 }
 
 // ACTIVE PAGE --
@@ -947,13 +950,34 @@ function renderActive() {
   ).join('');
 
   let rows = ACTIVE_FILTER==='all' ? active : active.filter(r=>r.status===ACTIVE_FILTER);
+  
+  // Sort by date based on ACTIVE_SORT_DESC flag
+  rows.sort((a, b) => {
+    const dateA = new Date(a.dsub || '9999-12-31');
+    const dateB = new Date(b.dsub || '9999-12-31');
+    return ACTIVE_SORT_DESC ? dateB - dateA : dateA - dateB;
+  });
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '--';
+    const d = new Date(dateStr + 'T00:00:00');
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+  
+  const dateColor = (dateStr) => {
+    return 'var(--text)'; // White text
+  };
+  
   const lpn4 = lpn => { if(!lpn) return '<em style="color:var(--text3);font-size:11px">--</em>'; const m=lpn.match(/\d+/g); if(!m) return lpn; const digits=m.join(''); return `<span title="${lpn}" style="cursor:help;font-family:var(--mono);font-size:11px">${digits.slice(-4)}</span>`; };
   const statusBadge = r => {
     const s = STATUS_LIST.find(x=>x.v===r.status);
     return `<span class="sbadge sb-${r.status}">${s?.l||r.status}</span>`;
   };
   document.getElementById('tbl-body').innerHTML = rows.length ? rows.map(r=>`<tr>
-    <td style="color:var(--text3);white-space:nowrap;font-family:var(--mono);font-size:11px">${r.dsub||'--'}</td>
+    <td style="color:${dateColor(r.dsub)};white-space:nowrap;font-family:var(--mono);font-size:12px;font-weight:600">${formatDate(r.dsub)}</td>
     <td>
       <div style="font-weight:600;font-size:12px" title="${r.name}">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
       <div style="font-size:10px;color:var(--text3);margin-top:1px">${r.src==='amazon'?'Amazon auto':'Seller-initiated'}${r.reason?' · '+( REASON_LABELS[r.reason]||r.reason):''}</div>
@@ -980,6 +1004,12 @@ function renderActive() {
 }
 
 function setActiveFilter(f) { ACTIVE_FILTER = f; renderActive(); }
+
+function toggleDateSort() {
+  ACTIVE_SORT_DESC = !ACTIVE_SORT_DESC;
+  document.getElementById('sort-indicator').textContent = ACTIVE_SORT_DESC ? '↓' : '↑';
+  renderActive();
+}
 
 // REIMBURSEMENTS PAGE --
 const MSC_STATUS_LIST = [
