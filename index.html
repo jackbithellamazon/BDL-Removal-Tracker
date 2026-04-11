@@ -156,6 +156,8 @@ tbody tr:hover{background:var(--bg3)}
 .reimb-expand-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .inl-input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;font-family:var(--font);width:100%;outline:none;transition:border .12s}
 .inl-input:focus{border-color:var(--blue)}
+input[type="date"]::after,
+input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.2);cursor:pointer}
 
 /* Attempt rows */
 .attempt-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:var(--bg4);margin-bottom:4px;border:1px solid var(--border)}
@@ -542,9 +544,12 @@ tbody tr:hover{background:var(--bg3)}
           <button class="btn btn-primary" onclick="genCaseMsg()" style="width:100%;padding:10px;font-size:13px">Generate message</button>
 
           <div id="cg-out" style="display:none;margin-top:16px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
               <span style="font-size:13px;font-weight:600">Copy and paste this into Amazon → new case</span>
-              <button class="btn btn-blue btn-sm" onclick="copyCase()">📋 Copy message</button>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-blue btn-sm" onclick="copyCase()">📋 Copy message</button>
+                <a href="https://sellercentral.amazon.co.uk/help/center?redirectSource=HelpHub" target="_blank" class="btn btn-blue btn-sm" style="text-decoration:none;display:flex;align-items:center;gap:4px">🔗 Amazon Contact</a>
+              </div>
             </div>
             <div class="case-out" id="cg-msg"></div>
           </div>
@@ -1168,7 +1173,7 @@ function buildReimbCard(r, today) {
         <div class="rc-field-row"><span class="rc-field-name">Date in</span><span class="rc-field-val" style="font-family:var(--mono);color:var(--text2)">${r.darr||r.dsub||'--'}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'cog',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'ramt',+this.value);renderReimb()"></span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val">${caseDisplay}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="if(this.value){const c=this.value.trim();const cases=r.cases||[];if(cases.length){cases[cases.length-1].id=c;}else{r.cases=[{id:c,date:new Date().toISOString().split('T')[0],outcome:'',note:''}];}upd(${r.id},'cases',r.cases);renderReimb();}"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
         ${r.damage?`<div class="rc-field-row"><span class="rc-field-name">Notes</span><span class="rc-field-val" style="font-size:11px;color:var(--text2);text-align:right;max-width:200px">${r.damage}</span></div>`:''}
@@ -1834,10 +1839,10 @@ function onCgRemovalChange() {
 function genCaseMsg() {
   const name     = document.getElementById('cg-name').value.trim();
   const asin     = document.getElementById('cg-asin').value.trim();
+  const shipid   = document.getElementById('cg-shipid').value.trim();
   if(!name||!asin){alert('Please select a removal first');return;}
   const fnsku    = document.getElementById('cg-fnsku').value.trim();
   const oid      = document.getElementById('cg-oid').value.trim();
-  const shipid   = document.getElementById('cg-shipid').value.trim();
   const tracking = document.getElementById('cg-tracking').value.trim();
   const lpn4     = document.getElementById('cg-lpn4').value.trim();
 
@@ -1858,6 +1863,7 @@ function genCaseMsg() {
 
   if(!issues.length){alert('Please tick at least one issue type');return;}
 
+  // CLASSIFY ISSUE TYPE INTELLIGENTLY
   const hasMissing = issues.some(i=>i.id==='ci-missing');
   const hasDamaged = issues.some(i=>i.id==='ci-damaged');
   const hasWrong = issues.some(i=>i.id==='ci-wrong');
@@ -1868,16 +1874,25 @@ function genCaseMsg() {
 
   const primaryIssue = hasMissing ? 'missing' : hasDamaged ? 'damaged' : hasWrong ? 'wrong' : hasNotArrived ? 'notarrived' : hasPartial ? 'partial' : 'other';
 
+  // AI ANALYSIS - Extract what's missing from notes
+  const allNotes = issues.map(i=>i.txt).join(' ').toLowerCase();
+  const isBundle = name.toLowerCase().includes('bundle') || name.toLowerCase().includes('kit') || name.toLowerCase().includes('set') || name.match(/\d+\s*x\s*\w+/i);
+  const isMissingComponents = allNotes.includes('missing') && (allNotes.includes('tube') || allNotes.includes('cable') || allNotes.includes('fan') || allNotes.includes('scraper') || allNotes.includes('sandpaper') || allNotes.includes('receiver') || allNotes.includes('charger') || allNotes.includes('component'));
+  
   let msg = `Hi,\n\nI am writing regarding Removal Order ID: ${oid||'[Missing]'}, which has been received with an issue affecting the returned unit.\n\n`;
   
-  // Header - clean product info
-  msg += `Product: ${name}\nASIN: ${asin}\nFNSKU: ${fnsku}\nRemoval Order ID: ${oid||''}`;
-  if(lpn4) msg += `\nLPN (last 4 digits): ${lpn4}`;
-  else if(hasNoLpn) msg += `\nLPN: Not present on returned unit`;
-  if(tracking) msg += `\nTracking number: ${tracking}`;
-  if(hasNoTrack) msg += `\nTracking slip: Not included with the return`;
+  // HEADER - Auto-formatted product details
+  msg += `Product: ${name}\n`;
+  msg += `ASIN: ${asin}\n`;
+  msg += `FNSKU: ${fnsku}\n`;
+  msg += `Removal Order ID: ${oid||''}\n`;
+  if(shipid) msg += `Shipment ID: ${shipid}\n`;
+  if(lpn4) msg += `LPN (last 4 digits): ${lpn4}\n`;
+  else if(hasNoLpn) msg += `LPN: Not present on returned unit\n`;
+  if(tracking) msg += `Tracking number: ${tracking}\n`;
+  if(hasNoTrack) msg += `Tracking slip: Not included with the return\n`;
   
-  msg += `\n\nIssue Details\n`;
+  msg += `\nIssue Details\n`;
 
   const primaryNote = issues.find(i => {
     if(primaryIssue==='missing') return i.id==='ci-missing';
@@ -1890,20 +1905,14 @@ function genCaseMsg() {
 
   let note = primaryNote?.txt||'';
 
-  // SPELL-CHECK - Fix common typos
+  // SPELL-FIX
   const spellFix = {
-    'bottel': 'bottle',
-    'pacakaing': 'packaging',
-    'componet': 'component',
-    'damged': 'damaged',
-    'reciever': 'receiver',
-    'transmiter': 'transmitter',
-    'chargar': 'charger',
-    'recived': 'received',
-    'inclued': 'included',
-    'returnd': 'returned',
-    'conditio': 'condition',
-    'missin': 'missing'
+    'sadnapper': 'sandpaper', 'sadnaper': 'sandpaper', 'sadnapp': 'sandpaper',
+    'bottel': 'bottle', 'pacakaing': 'packaging', 'componet': 'component',
+    'damged': 'damaged', 'reciever': 'receiver', 'transmiter': 'transmitter',
+    'chargar': 'charger', 'recived': 'received', 'inclued': 'included',
+    'returnd': 'returned', 'conditio': 'condition', 'missin': 'missing',
+    'poliiifilla': 'polyfilla', 'polyiflla': 'polyfilla', 'scrapper': 'scraper'
   };
   
   for(const [wrong, correct] of Object.entries(spellFix)) {
@@ -1911,55 +1920,48 @@ function genCaseMsg() {
     note = note.replace(regex, correct);
   }
 
-  // DUPLICATE REMOVAL - Clean note to avoid "missing X missing"
-  // If note starts with "missing", remove it since we add "missing" in the sentence
-  note = note.replace(/^missing\s+/gi, '');
-  
-  // Remove any doubled words
+  // SMART DEDUPLICATION
+  note = note.replace(/^missing\s+/gi, '').replace(/^item\s+/gi, '').trim();
   note = note.replace(/\b(\w+)\s+\1\b/gi, '$1');
-  
-  // Clean up multiple spaces
   note = note.replace(/  +/g, ' ').trim();
 
-  // SMART ITEM NAMING - Upgrade vague terms
-  let itemName = note.toLowerCase();
-  if(itemName === 'usb' || itemName === 'usb adapter') itemName = 'USB adapter';
-  else if(itemName === 'bottle' || itemName === 'serum') itemName = 'bottle';
-  else if(itemName === 'lid' || itemName === 'top') itemName = 'top component';
-  else if(itemName === 'cable' || itemName === 'charger') itemName = itemName;
-  
-  // TEMPLATE A - Use for all issue types (99% are missing/empty returns)
+  // BUILD ISSUE PARAGRAPH INTELLIGENTLY
   if(primaryIssue === 'missing' || primaryIssue === 'damaged' || primaryIssue === 'partial') {
-    msg += `\nThe return has been received with packaging present but the ${itemName} missing, meaning the item has been returned as an empty unit.\n`;
-    msg += `\nThis is not in the condition sent by the distributor and the item has not been returned in the same condition as originally fulfilled.\n`;
-    msg += `\nAs a result, the item does not meet the criteria for sellable inventory, is unsellable in its current state, and cannot be relisted.`;
+    if(isMissingComponents) {
+      // Bundle/kit missing specific parts
+      msg += `The returned unit includes outer packaging only, with ${note || 'multiple key components missing'}.\n`;
+      msg += `This is an incomplete return and the item has not been returned in the same condition as originally fulfilled.\n`;
+      if(isBundle) {
+        msg += `As this is a bundled product and key components are missing, the unit is unsellable and cannot be relisted.`;
+      } else {
+        msg += `As key components are missing, the unit is unsellable and cannot be relisted.`;
+      }
+    } else {
+      // Full item missing or empty box
+      msg += `The returned item contains only the outer packaging, with the product itself missing${note ? ' (' + note + ')' : ''}. The unit has been returned as an empty box.\n`;
+      msg += `This is not the condition in which the item was originally sent to Amazon and does not meet the requirement of being returned in the same condition as fulfilled.\n`;
+      msg += `As a result, the item is unsellable and cannot be relisted or recovered.`;
+    }
   } else if(primaryIssue === 'wrong') {
-    msg += `\nThe returned unit is not the same product as originally fulfilled. ${note}.\n`;
-    msg += `\nThis is not in the condition sent by the distributor and the item has not been returned in the same condition as originally fulfilled.\n`;
-    msg += `\nAs a result, the item does not meet the criteria for sellable inventory and cannot be relisted.`;
+    msg += `The returned unit is not the same product as originally fulfilled. ${note || 'A different item was sent back'}.\n`;
+    msg += `This does not meet the requirement of being returned in the same condition as fulfilled.\n`;
+    msg += `As the returned item cannot be verified as matching the original inventory, it is unsellable and cannot be relisted.`;
   } else if(primaryIssue === 'notarrived') {
-    msg += `\nThe removal was dispatched but never arrived at our facility. ${note}.\n`;
-    msg += `\nAs a result, the inventory is missing and unaccounted for, representing lost inventory while under Amazon's control.`;
+    msg += `The removal was dispatched to our facility but never arrived. ${note || 'The shipment tracking shows no receipt at the destination'}.\n`;
+    msg += `This represents inventory that is missing and unaccounted for, creating lost inventory while under Amazon's control.`;
   }
 
   msg += `\n\nRequest\n\n`;
   
   if(primaryIssue === 'missing' || primaryIssue === 'damaged' || primaryIssue === 'partial') {
-    msg += `Please issue full reimbursement for this unit as the item has not been returned.`;
+    msg += `As the returned unit is ${isMissingComponents ? 'incomplete and does not contain all original components' : 'missing or effectively empty'}, I request full reimbursement for this item.`;
   } else if(primaryIssue === 'wrong') {
-    msg += `Please issue full reimbursement for this unit as the returned item does not match the original inventory and cannot be verified or resold.`;
+    msg += `As the returned item does not match the original inventory and cannot be verified or resold, I request full reimbursement for this unit.`;
   } else if(primaryIssue === 'notarrived') {
-    msg += `Please issue full reimbursement for this unit as it was not successfully delivered and is missing from our inventory.`;
+    msg += `As the inventory was lost during transit under Amazon's control, I request full reimbursement for this removal.`;
   }
-  
-  msg += `\n\nPhotos have been attached clearly showing the condition of the returned item.\n\nThank you for your assistance.`;
 
-  // CLEANUP - simple validation only
-  msg = msg.replace(/}\./g, '.');
-  msg = msg.replace(/}\n/g, '\n');
-  msg = msg.replace(/\.\./g, '.');
-  msg = msg.replace(/  +/g, ' ');
-  msg = msg.replace(/^([a-z])/gm, (match) => match.toUpperCase());
+  msg += `\n\nPhotos have been attached clearly showing the condition of the returned item.\n\nThank you for your assistance.`;
 
   document.getElementById('cg-msg').textContent = msg;
   document.getElementById('cg-out').style.display = 'block';
