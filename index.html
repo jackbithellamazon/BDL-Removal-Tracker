@@ -859,7 +859,7 @@ function seed() {
 // HELPERS --
 function deadline60(r) {
   if (HIST_STATUSES.includes(r.status)) return null;
-  const base = r.darr || r.dsub; if (!base) return null;
+  const base = r.ddeliv || r.darr || r.dsub; if (!base) return null;
   const d = new Date(base); d.setDate(d.getDate()+60);
   return Math.ceil((d - new Date()) / 86400000);
 }
@@ -1171,6 +1171,7 @@ function buildReimbCard(r, today) {
     <div class="rc-body">
       <div class="rc-left">
         <div class="rc-field-row"><span class="rc-field-name">Date in</span><span class="rc-field-val" style="font-family:var(--mono);color:var(--text2)">${r.darr||r.dsub||'--'}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Date Delivered</span><span class="rc-field-val"><input type="date" class="inl-input" style="width:140px;font-size:11px;padding-right:30px" value="${r.ddeliv||''}" onchange="upd(${r.id},'ddeliv',this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'cog',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'ramt',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="if(this.value){const c=this.value.trim();const cases=r.cases||[];if(cases.length){cases[cases.length-1].id=c;}else{r.cases=[{id:c,date:new Date().toISOString().split('T')[0],outcome:'',note:''}];}upd(${r.id},'cases',r.cases);renderReimb();}"></span></div>
@@ -1405,7 +1406,10 @@ function openDetail(id) {
     </div>
     <div class="fg g3" style="margin-top:10px">
       <div class="field"><label>Date submitted</label><input type="date" value="${r.dsub||''}" onchange="upd(${r.id},'dsub',this.value)"></div>
+      <div class="field"><label>Date Delivered</label><input type="date" value="${r.ddeliv||''}" onchange="upd(${r.id},'ddeliv',this.value)"></div>
       <div class="field"><label>COG £ (inc VAT)</label><input type="number" step="0.01" value="${r.cog||''}" onchange="upd(${r.id},'cog',+this.value)"></div>
+    </div>
+    <div class="fg g1" style="margin-top:10px">
       <div class="field"><label>Order source</label><select onchange="upd(${r.id},'src',this.value)"><option value="seller"${r.src==='seller'?' selected':''}>Seller-initiated</option><option value="amazon"${r.src==='amazon'?' selected':''}>Amazon auto</option></select></div>
     </div>
     <div class="sep"></div>
