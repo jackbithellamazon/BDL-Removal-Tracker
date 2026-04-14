@@ -785,9 +785,15 @@ async function saveToSupabase(removal) {
 async function updateInSupabase(id, updates) {
   if (!window.sbClient) return;
   try {
+    // Convert arrays to JSON strings for storage
+    const cleanUpdates = {};
+    for (const [key, val] of Object.entries(updates)) {
+      cleanUpdates[key] = Array.isArray(val) ? JSON.stringify(val) : val;
+    }
+    
     const { error } = await window.sbClient
       .from('removals')
-      .update(updates)
+      .update(cleanUpdates)
       .eq('id', id);
     if (error) {
       console.error('Update error:', error);
@@ -2221,7 +2227,7 @@ function filterActiveTable() {
 
 function filterReimbCards() {
   const query = document.getElementById('search-reimb').value.toLowerCase();
-  const cards = document.querySelectorAll('#reimb-cards .card');
+  const cards = document.querySelectorAll('#reimb-cards > div');
   
   cards.forEach(card => {
     const product = card.querySelector('[data-product]')?.textContent.toLowerCase()||'';
@@ -2251,7 +2257,11 @@ function filterReimbCards() {
         showError('Failed to load data: ' + error.message);
         DB = [];
       } else {
-        DB = data || [];
+        // Parse JSON fields that were stringified
+        DB = (data || []).map(r => ({
+          ...r,
+          cases: typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : (r.cases || [])
+        }));
         console.log(`✓ Loaded ${DB.length} removals from Supabase`);
       }
     } catch (e) {
