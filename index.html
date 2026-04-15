@@ -1577,10 +1577,11 @@ function renderOverview() {
     {v:needsDoc,    l:'Needs document',     sub:'Invoice required',     c:'tile-purple',tv:'tv-purple',click:"navTo('reimb')"},
     {v:escalated,   l:'Escalated to Jack',  sub:'Waiting on MD',        c:'tile-purple',tv:'tv-purple',click:"navTo('reimb')"},
     {v:approaching, l:'Deadline <14 days',  sub:'60-day window closing',c:'tile-amber', tv:'tv-amber', click:"navTo('active')"},
+    {v:checkedin,   l:'Needs Discord Check',sub:'Check photos & notes',  c:'tile-cyan',  tv:'tv-cyan',  click:""},
     {v:totalActive, l:'Total active',       sub:'All open removals',    c:'tile-blue',  tv:'tv-white', click:"navTo('active')"},
   ];
   document.getElementById('overview-tiles').innerHTML = tiles.map(t=>`
-    <div class="tile ${t.c}" onclick="${t.click}" title="Click to view">
+    <div class="tile ${t.c}" ${t.click?`onclick="${t.click}" title="Click to view"`:'style="cursor:default"'}>
       <div class="tile-v ${t.tv}">${t.v}</div>
       <div class="tile-l">${t.l}</div>
       <div class="tile-sub">${t.sub}</div>
@@ -1731,11 +1732,56 @@ function delR(id) {
 
 // CASE LOG --
 function saveCaseLog() {
+  // Save to localStorage as backup
   try { localStorage.setItem('removals-case-log', JSON.stringify(CASE_LOG)); } catch(e){}
+  
+  // Save to Supabase
+  if (SUPABASE_READY && window.sbClient) {
+    try {
+      window.sbClient
+        .from('case_log')
+        .upsert([{ id: 'main', data: JSON.stringify(CASE_LOG), updated_at: new Date().toISOString() }], { onConflict: 'id' })
+        .then(result => {
+          if (result.error) console.error('Case log save error:', result.error);
+          else console.log('✓ Case log saved to Supabase');
+        });
+    } catch(e) {
+      console.error('Supabase case log error:', e);
+    }
+  }
 }
 
-function loadCaseLog() {
-  try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
+async function loadCaseLog() {
+  // Try to load from Supabase first
+  if (SUPABASE_READY && window.sbClient) {
+    try {
+      const { data, error } = await window.sbClient
+        .from('case_log')
+        .select('data')
+        .eq('id', 'main')
+        .single();
+      
+      if (error) {
+        console.warn('Case log not in Supabase:', error);
+        // Fallback to localStorage
+        try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
+      } else if (data && data.data) {
+        try {
+          CASE_LOG = JSON.parse(data.data);
+          console.log('✓ Case log loaded from Supabase');
+        } catch(e) {
+          console.error('Failed to parse case log:', e);
+        }
+      }
+    } catch(e) {
+      console.error('Supabase case log error:', e);
+      // Fallback to localStorage
+      try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
+    }
+  } else {
+    // Offline mode - use localStorage
+    try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
+  }
 }
 
 function renderCaseLog() {
@@ -2274,7 +2320,7 @@ function filterReimbCards() {
     seed();
   }
   
-  loadCaseLog();
+  await loadCaseLog();
   if(localStorage.getItem('sb-collapsed')==='1'){
     const sb=document.getElementById('sidebar');
     sb.classList.add('collapsed');
