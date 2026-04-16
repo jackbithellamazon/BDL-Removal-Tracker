@@ -844,6 +844,7 @@ const STATUS_LIST = [
   {v:'mscdenied',     l:'MSC denied',          cls:'ss-mscdenied'},
   {v:'mscneedsdoc',   l:'Needs document',      cls:'ss-mscneedsdoc'},
   {v:'caseopen',      l:'Case opened',         cls:'ss-caseopen'},
+  {v:'reimbpending',  l:'Reimbursement pending',cls:'ss-reimbpending'},
   {v:'reimbursed',    l:'Reimbursed',          cls:'ss-reimbursed'},
   {v:'sentout',       l:'Sent back out',       cls:'ss-sentout'},
   {v:'writeoff',      l:'Written off',         cls:'ss-writeoff'},
@@ -852,7 +853,7 @@ const SL = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.l]));
 const SC = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.cls]));
 
 const ACTIVE_STATUSES = ['transit','arrived'];
-const REIMB_STATUSES  = ['checkdiscord','mscsubmit','mscreview','mscapproved','mscreduced','mscdenied','mscneedsdoc','caseopen'];
+const REIMB_STATUSES  = ['checkdiscord','mscsubmit','mscreview','mscapproved','mscreduced','mscdenied','mscneedsdoc','caseopen','reimbpending'];
 const HIST_STATUSES   = ['reimbursed','sentout','writeoff'];
 
 let PDF_IMAGES = []; // {dataUrl, name}
@@ -1032,6 +1033,7 @@ const MSC_STATUS_LIST = [
   {v:'mscdenied',     l:'MSC denied',           cls:'sb-mscdenied',    border:'#f05050'},
   {v:'mscneedsdoc',   l:'Needs document',       cls:'sb-mscneedsdoc',  border:'#9b7ff0'},
   {v:'caseopen',      l:'Case opened',          cls:'sb-caseopen',     border:'#22d3ee'},
+  {v:'reimbpending',  l:'Reimbursement pending',cls:'sb-reimbpending', border:'#06b6d4'},
 ];
 const MSC_BORDER = Object.fromEntries(MSC_STATUS_LIST.map(s=>[s.v,s.border]));
 
@@ -1045,6 +1047,7 @@ const STATE_CONFIG = {
   mscdenied:    {color:'#f05050', bar:0,   step:4, label:'MSC denied',          alert:{color:'#180303',border:'#f05050',text:'✗ MSC Denied -- set next MSC update date and open a case',btn:null}},
   mscneedsdoc:  {color:'#9b7ff0', bar:35,  step:2, label:'Needs document',      alert:{color:'#0d0620',border:'#9b7ff0',text:'📄 Document required -- find invoice in purchase sheet',btn:null}},
   caseopen:     {color:'#22d3ee', bar:100, step:5, label:'Case opened',         alert:null},
+  reimbpending: {color:'#06b6d4', bar:100, step:5, label:'Reimbursement pending',alert:{color:'#0a2027',border:'#06b6d4',text:'⏳ Waiting for reimbursement to appear in Amazon (4-5 days)',btn:null}},
   reimbursed:   {color:'#3dd68c', bar:100, step:5, label:'Reimbursed',          alert:null},
 };
 
