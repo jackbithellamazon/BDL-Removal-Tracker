@@ -1186,6 +1186,7 @@ function buildReimbCard(r, today) {
         <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="if(this.value){const c=this.value.trim();const cases=r.cases||[];if(cases.length){cases[cases.length-1].id=c;}else{r.cases=[{id:c,date:new Date().toISOString().split('T')[0],outcome:'',note:''}];}upd(${r.id},'cases',r.cases);renderReimb();}"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd(${r.id},'discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
         ${r.damage?`<div class="rc-field-row"><span class="rc-field-name">Notes</span><span class="rc-field-val" style="font-size:11px;color:var(--text2);text-align:right;max-width:200px">${r.damage}</span></div>`:''}
       </div>
       <div class="rc-right">
@@ -1441,7 +1442,8 @@ function openDetail(id) {
       </select></div>
       <div class="field"><label>MSC reupdate date</label><input type="date" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value)"></div>
     </div>
-    <div class="field" style="margin-top:10px"><label>General notes</label><textarea onchange="upd(${r.id},'mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
+    <div class="sep"></div>
+    <div class="field"><label>General notes</label><textarea onchange="upd(${r.id},'mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
     <div class="modal-foot">
       <button class="btn btn-primary" onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)">Save & close</button>
       <button class="btn btn-blue" onclick="closeModal('detail-overlay');openCaseGenModal(${r.id})">Generate case message</button>
@@ -1514,6 +1516,13 @@ function removeCase(rid, idx) {
   
   renderDetailCases(rid);
   renderPage(CURRENT_PAGE);
+}
+
+function openDiscordWithLink(webLink) {
+  if (!webLink) return;
+  // Convert https://discord.com/channels/... to discord://discord.com/channels/...
+  const discordLink = webLink.replace('https://', 'discord://');
+  window.location.href = discordLink;
 }
 
 function openAddCase(rid) {
@@ -1743,7 +1752,7 @@ function saveCaseLog() {
     try {
       window.sbClient
         .from('case_log')
-        .upsert([{ id: 'main', data: JSON.stringify(CASE_LOG), updated_at: new Date().toISOString() }], { onConflict: 'id' })
+        .upsert({ id: 'main', data: JSON.stringify(CASE_LOG), updated_at: new Date().toISOString() })
         .then(result => {
           if (result.error) console.error('Case log save error:', result.error);
           else console.log('✓ Case log saved to Supabase');
@@ -1761,20 +1770,18 @@ async function loadCaseLog() {
       const { data, error } = await window.sbClient
         .from('case_log')
         .select('data')
-        .eq('id', 'main')
-        .single();
+        .eq('id', 'main');
       
-      if (error) {
-        console.warn('Case log not in Supabase:', error);
-        // Fallback to localStorage
-        try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
-      } else if (data && data.data) {
+      if (!error && data && data.length > 0 && data[0].data) {
         try {
-          CASE_LOG = JSON.parse(data.data);
+          CASE_LOG = JSON.parse(data[0].data);
           console.log('✓ Case log loaded from Supabase');
         } catch(e) {
           console.error('Failed to parse case log:', e);
         }
+      } else {
+        // Fallback to localStorage
+        try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
       }
     } catch(e) {
       console.error('Supabase case log error:', e);
