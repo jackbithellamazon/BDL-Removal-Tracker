@@ -396,8 +396,9 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
           <div class="tbl-scroll">
             <table id="main-table">
               <thead><tr>
-                <th onclick="toggleDateSort()">Date <span id="sort-indicator">↓</span></th>
+                <th onclick="toggleDateSort()">Date <span id="sort-indicator">↑</span></th>
                 <th style="min-width:200px">Product</th>
+                <th>Unit Qty</th>
                 <th>ASIN</th>
                 <th>FNSKU</th>
                 <th>SKU</th>
@@ -643,6 +644,10 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
     <div class="field"><label>Removal Order ID</label><input id="a-oid" placeholder="2603261DDA"></div>
     <div class="field"><label>Quantity</label><input id="a-qord" type="number" value="1" min="1"></div>
   </div>
+  <div class="fg g2" style="margin-top:10px">
+    <div class="field"><label>MSC Checked Date (optional)</label><input id="a-dmsc_checked" type="date" title="When you checked MSC eligibility for this item"></div>
+    <div class="field"><label>MSC Status (if checked)</label><select id="a-msc_check_status"><option value="">Not checked</option><option value="eligible">Eligible</option><option value="ineligible">Ineligible</option><option value="review">Under review</option></select></div>
+  </div>
   <div class="modal-foot">
     <button class="btn btn-primary" onclick="saveAdd()">Log removal</button>
     <button class="btn" onclick="closeModal('add-overlay')">Cancel</button>
@@ -664,13 +669,30 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
       <div style="font-weight:600;color:var(--blue);margin-bottom:2px;pointer-events:none">↩ Send back as Used</div>
       <div style="font-size:11px;color:var(--text3);pointer-events:none">Item is sellable but not as new — relist as used</div>
     </button>
-    <button class="btn" style="padding:13px;text-align:left;border-color:var(--red-dim);background:var(--red-bg);cursor:pointer" onclick="checkinDecision('claim');event.stopPropagation()">
+    <button class="btn" style="padding:13px;text-align:left;border-color:var(--red-dim);background:var(--red-bg);cursor:pointer" onclick="openPartialCheckin();event.stopPropagation()">
       <div style="font-weight:600;color:var(--red);margin-bottom:2px;pointer-events:none">⚠ Claim reimbursement</div>
       <div style="font-size:11px;color:var(--text3);pointer-events:none">Item is damaged, missing or unsellable — open a case</div>
     </button>
   </div>
 </div>
 </div>
+
+<!-- PARTIAL QUANTITY CHECK-IN MODAL -->
+<div class="overlay h" id="partial-checkin-overlay" onclick="closeBg(event,'partial-checkin-overlay')">
+<div class="modal" style="max-width:400px">
+  <div class="modal-title">How many units arrived?</div>
+  <input type="hidden" id="partial-rid">
+  <div style="margin-bottom:16px">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px" id="partial-qty-display"></div>
+    <div class="fg g2">
+      <button class="btn btn-blue" style="font-weight:600;padding:10px" onclick="partialCheckinAll()">All</button>
+      <input type="number" id="partial-qty-input" min="1" placeholder="Or enter number..." style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);font-size:13px" onkeypress="if(event.key==='Enter') partialCheckinConfirm()">
+    </div>
+    <button class="btn btn-green" style="width:100%;margin-top:10px;font-weight:600" onclick="partialCheckinConfirm()">Confirm</button>
+  </div>
+</div>
+</div>
+
 <div class="overlay h" id="detail-overlay" onclick="closeBg(event,'detail-overlay')">
 <div class="modal" id="detail-modal"></div>
 </div>
@@ -734,7 +756,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
 let DB = [];
 let CURRENT_PAGE = 'active';
 let ACTIVE_FILTER = 'all';
-let ACTIVE_SORT_DESC = true; // true = newest first
+let ACTIVE_SORT_DESC = false; // false = oldest first (default)
 let REIMB_FILTER = 'all';
 
 // SUPABASE --
@@ -989,15 +1011,22 @@ function renderActive() {
     const s = STATUS_LIST.find(x=>x.v===r.status);
     return `<span class="sbadge sb-${r.status}">${s?.l||r.status}</span>`;
   };
-  document.getElementById('tbl-body').innerHTML = rows.length ? rows.map(r=>`<tr>
-    <td style="color:${dateColor(r.dsub)};white-space:nowrap;font-family:var(--mono);font-size:12px;font-weight:600">${formatDate(r.dsub)}</td>
+  document.getElementById('tbl-body').innerHTML = rows.length ? rows.map(r=>{
+    const daysOld = Math.ceil((new Date() - new Date(r.dsub||'2099-01-01'))/86400000);
+    const isOld = daysOld > 60;
+    return `<tr style="background:${isOld?'rgba(240,80,80,0.08)':''};border-left:${isOld?'3px solid #f05050':''} 0px solid"}'>
+    <td style="color:${isOld?'#f05050':dateColor(r.dsub)};white-space:nowrap;font-family:var(--mono);font-size:12px;font-weight:600">${formatDate(r.dsub)}</td>
     <td>
-      <div style="font-weight:600;font-size:12px" title="${r.name}">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
+      <div style="font-weight:600;font-size:12px;color:${isOld?'#f05050':''}" title="${r.name}">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
       <div style="font-size:10px;color:var(--text3);margin-top:1px">${r.src==='amazon'?'Amazon auto':'Seller-initiated'}${r.reason?' · '+( REASON_LABELS[r.reason]||r.reason):''}</div>
     </td>
-    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.asin}</td>
+    <td style="font-weight:600;color:var(--cyan);text-align:center">${r.qord||'--'}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer" onclick="copyText('${r.asin}')" title="Click to copy">${r.asin}</td>
     <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.fnsku||'--'}</td>
-    <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.sku||'--'}</td>
+    <td>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer" onclick="copyText('${r.sku}')" title="Click to copy">${r.sku||'--'}</div>
+      ${r.sku ? `<div style="font-family:var(--mono);font-size:10px;color:#f05050;cursor:pointer;margin-top:2px;font-weight:600" onclick="copyText('${generateRetSku(r.sku)}')" title="Click to copy RET SKU">${generateRetSku(r.sku)}</div>` : ''}
+    </td>
     <td style="font-family:var(--mono);font-size:11px">${r.oid?`<a href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank" style="color:var(--blue);text-decoration:none">${r.oid} ↗</a>`:'--'}</td>
     <td style="font-weight:600;color:${r.cog>0?'var(--amber)':'var(--text3)'}">${r.cog>0?'£'+Number(r.cog).toFixed(2):'--'}</td>
     <td>${lpn4(r.lpn)}</td>
@@ -1013,7 +1042,8 @@ function renderActive() {
         <button class="btn btn-sm btn-green" onclick="openCheckin(${r.id})">Check in</button>
       </div>
     </td>
-  </tr>`).join('') : `<tr class="empty-row"><td colspan="10">No removals in this status</td></tr>`;
+  </tr>`;
+  }).join('') : `<tr class="empty-row"><td colspan="10">No removals in this status</td></tr>`;
 }
 
 function setActiveFilter(f) { ACTIVE_FILTER = f; renderActive(); }
@@ -1184,7 +1214,7 @@ function buildReimbCard(r, today) {
         <div class="rc-field-row"><span class="rc-field-name">Date Delivered</span><span class="rc-field-val"><input type="date" class="inl-input" style="width:140px;font-size:11px;padding-right:30px" value="${r.ddeliv||''}" onchange="upd(${r.id},'ddeliv',this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'cog',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'ramt',+this.value);renderReimb()"></span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="if(this.value){const c=this.value.trim();const cases=r.cases||[];if(cases.length){cases[cases.length-1].id=c;}else{r.cases=[{id:c,date:new Date().toISOString().split('T')[0],outcome:'',note:''}];}upd(${r.id},'cases',r.cases);renderReimb();}"></span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="if(this.value){const c=this.value.trim();const cases=r.cases||[];if(cases.length){cases[cases.length-1].id=c;}else{r.cases=[{id:c,date:new Date().toISOString().split('T')[0],outcome:'',note:''}];}r.cases=cases;if(SUPABASE_READY&&window.sbClient){updateInSupabase(${r.id},{cases:r.cases});}}renderReimb();">${latestCase?.id ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${latestCase.id}" target="_blank" style="color:var(--blue);margin-left:6px;text-decoration:none;font-size:11px">Open ↗</a>` : ''}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd(${r.id},'discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
@@ -1243,12 +1273,18 @@ function confirmReimbursed() {
   r.ramt = parseFloat(ramt)||0;
   r.status = 'reimbursed';
   
+  // Add audit log entry for moving to reimbursed
+  const timestamp = new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  if (!r.status_log) r.status_log = [];
+  r.status_log.push(`${timestamp} — Moved to Reimbursements (status: reimbursed)`);
+  
   // Save to Supabase
   if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(id, { 
       cog: r.cog, 
       ramt: r.ramt, 
-      status: 'reimbursed' 
+      status: 'reimbursed',
+      status_log: r.status_log
     });
   }
   
@@ -1256,6 +1292,19 @@ function confirmReimbursed() {
   renderReimb();
   renderHist();
   updateBadges();
+  
+  // Navigate to Reimbursements page and scroll to the tile
+  navTo('reimb');
+  setTimeout(() => {
+    const tile = document.querySelector(`[data-removid="${r.oid}"]`);
+    if (tile) {
+      tile.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight the tile temporarily
+      const card = tile.closest('.card');
+      card.style.boxShadow = '0 0 20px rgba(34, 211, 238, 0.5)';
+      setTimeout(() => { card.style.boxShadow = ''; }, 2000);
+    }
+  }, 100);
 }
 
 function moveRimbBack() {
@@ -1411,7 +1460,26 @@ function setHistFilter(f) {
 
 // STATUS CHANGE --
 function changeStatus(id, val, page) {
-  upd(id, 'status', val);
+  const r = DB.find(x=>x.id===id);
+  if (r) {
+    // Create audit log entry
+    const timestamp = new Date().toISOString();
+    const oldStatus = r.status;
+    const logEntry = `${timestamp} | ${oldStatus} → ${val}`;
+    
+    // Initialize status log if it doesn't exist
+    if (!r.status_log) r.status_log = [];
+    r.status_log.push(logEntry);
+    
+    // Update status
+    upd(id, 'status', val);
+    
+    // Save log to Supabase
+    if (SUPABASE_READY && window.sbClient) {
+      updateInSupabase(id, { status_log: r.status_log });
+    }
+  }
+  
   if (page==='active') renderActive();
   if (page==='reimb') renderReimb();
   updateBadges();
@@ -1451,6 +1519,10 @@ function openDetail(id) {
     <div class="fg g1" style="margin-top:10px">
       <div class="field"><label>Order source</label><select onchange="upd(${r.id},'src',this.value)"><option value="seller"${r.src==='seller'?' selected':''}>Seller-initiated</option><option value="amazon"${r.src==='amazon'?' selected':''}>Amazon auto</option></select></div>
     </div>
+    <div class="fg g2" style="margin-top:10px">
+      <div class="field"><label>MSC Checked Date</label><input type="date" value="${r.dmsc_checked||''}" onchange="upd(${r.id},'dmsc_checked',this.value)" title="When you checked MSC eligibility — appeal window starts from this date if denied"></div>
+      <div class="field"><label>MSC Status (if checked)</label><select onchange="upd(${r.id},'msc_check_status',this.value)"><option value="">Not checked yet</option><option value="eligible"${r.msc_check_status==='eligible'?' selected':''}>Eligible</option><option value="ineligible"${r.msc_check_status==='ineligible'?' selected':''}>Ineligible</option><option value="review"${r.msc_check_status==='review'?' selected':''}>Under review</option></select></div>
+    </div>
     <div class="sep"></div>
     <div class="modal-sub">Damage / condition notes</div>
     <div class="field"><textarea onchange="upd(${r.id},'damage',this.value)" placeholder="Describe damage, missing parts, condition from Discord check-in...">${r.damage||''}</textarea></div>
@@ -1472,6 +1544,16 @@ function openDetail(id) {
       <div class="field"><label>MSC reupdate date</label><input type="date" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value)"></div>
     </div>
     <div class="sep"></div>
+    <div class="modal-sub">Audit Log</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;max-height:120px;overflow-y:auto;font-size:11px;font-family:var(--mono);color:var(--text3);line-height:1.6">
+      ${r.status_log && r.status_log.length ? r.status_log.map(log => {
+        const parts = log.split(' | ');
+        const ts = parts[0] ? new Date(parts[0]).toLocaleString('en-GB', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+        const change = parts[1] || '';
+        return `<div>${ts} — ${change}</div>`;
+      }).join('') : '<div style="color:var(--text4)">No status changes yet</div>'}
+    </div>
+    <div class="sep"></div>
     <div class="field"><label>General notes</label><textarea onchange="upd(${r.id},'mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
     <div class="modal-foot">
       <button class="btn btn-primary" onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)">Save & close</button>
@@ -1490,7 +1572,10 @@ function openAdd() {
 function saveAdd() {
   const name = document.getElementById('a-name').value.trim();
   const asin = document.getElementById('a-asin').value.trim();
+  const qord = +document.getElementById('a-qord').value;
+  
   if (!name || !asin) { alert('Product name and ASIN are required'); return; }
+  if (!qord || qord < 1) { alert('Unit Quantity is required (minimum 1)'); return; }
   
   const newRemoval = {
     id: Date.now(), name, asin,
@@ -1498,18 +1583,25 @@ function saveAdd() {
     sku:   document.getElementById('a-sku').value.trim(),
     oid:   document.getElementById('a-oid').value.trim(),
     dsub:  document.getElementById('a-dsub').value,
-    qord:  +document.getElementById('a-qord').value||1,
+    qord:  qord,
     src:   document.getElementById('a-src').value,
+    dmsc_checked: document.getElementById('a-dmsc_checked').value,
+    msc_check_status: document.getElementById('a-msc_check_status').value,
     reason:'unknown',
     status:'transit',
     msku:'',ean:'',shipid:'',tracking:'',amid:'',qdis:0,qcan:0,qpen:1,
     cog:0,lpn:'',disp:'Unsellable',cond:'Damaged',
-    darr:'',dreim:'',cases:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:''
+    darr:'',ddeliv:'',dreim:'',cases:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:'',discord_photos_link:'',
+    status_log: [
+      new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + ' — Added to system'
+    ]
   };
   
   DB.unshift(newRemoval);
   ['a-name','a-asin','a-fnsku','a-sku','a-oid'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-qord').value='1';
+  document.getElementById('a-dmsc_checked').value='';
+  document.getElementById('a-msc_check_status').value='';
   closeModal('add-overlay');
   renderPage(CURRENT_PAGE);
   
@@ -1529,7 +1621,7 @@ function renderDetailCases(id) {
       <span class="attempt-date">${c.date||'--'}</span>
       <span class="attempt-row-outcome ao-${c.outcome||'review'}">${c.outcome==='approved'?'✓ Approved':c.outcome==='denied'?'✗ Denied':c.outcome==='needsdoc'?'📄 Needs doc':'⏳ Review'}</span>
       <span class="attempt-note">${c.note||''}</span>
-      ${c.id?`<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?caseID=${c.id}" target="_blank" style="font-size:11px;color:var(--blue);white-space:nowrap;text-decoration:none">Case ${c.id} ↗</a>`:'<span style="font-size:11px;color:var(--text3)">No case ID</span>'}
+      ${c.id?`<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${c.id}" target="_blank" style="font-size:11px;color:var(--blue);white-space:nowrap;text-decoration:none">Case ${c.id} ↗</a>`:'<span style="font-size:11px;color:var(--text3)">No case ID</span>'}
       <button onclick="removeCase(${id},${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0 4px" title="Remove">×</button>
     </div>`).join('');
 }
@@ -1703,6 +1795,77 @@ function openCheckin(id) {
   CHECKIN_DECISION=null;
   document.getElementById('checkin-overlay').classList.remove('h');
   saveDb();
+}
+
+function openPartialCheckin() {
+  const rid = +document.getElementById('checkin-rid').value;
+  const r = DB.find(x=>x.id===rid);
+  if (!r) return;
+  
+  document.getElementById('partial-rid').value = rid;
+  document.getElementById('partial-qty-display').textContent = `Total units: ${r.qord || 1}`;
+  document.getElementById('partial-qty-input').value = '';
+  document.getElementById('partial-qty-input').max = r.qord || 1;
+  
+  closeModal('checkin-overlay');
+  document.getElementById('partial-checkin-overlay').classList.remove('h');
+}
+
+function partialCheckinAll() {
+  const rid = +document.getElementById('partial-rid').value;
+  const r = DB.find(x=>x.id===rid);
+  if (!r) return;
+  
+  document.getElementById('partial-qty-input').value = r.qord || 1;
+}
+
+function partialCheckinConfirm() {
+  const rid = +document.getElementById('partial-rid').value;
+  const arrivedQty = +document.getElementById('partial-qty-input').value;
+  const r = DB.find(x=>x.id===rid);
+  
+  if (!r || !arrivedQty || arrivedQty < 1 || arrivedQty > (r.qord||1)) {
+    alert('Please enter a valid quantity');
+    return;
+  }
+  
+  const totalQty = r.qord || 1;
+  
+  // If partial shipment
+  if (arrivedQty < totalQty) {
+    // Create new entry for arrived units
+    const arrivedRemoval = {
+      ...r,
+      id: Date.now(),
+      qord: arrivedQty,
+      status: 'checkdiscord',
+      darr: new Date().toISOString().split('T')[0],
+      status_log: [r.status_log ? r.status_log[r.status_log.length-1] : '']
+    };
+    
+    // Update original to remaining units
+    r.qord = totalQty - arrivedQty;
+    
+    // Save both
+    DB.push(arrivedRemoval);
+    updateInSupabase(rid, { qord: r.qord });
+    saveToSupabase(arrivedRemoval);
+  } else {
+    // All arrived - just update status
+    r.darr = new Date().toISOString().split('T')[0];
+    r.status = 'checkdiscord';
+    updateInSupabase(rid, { 
+      darr: r.darr, 
+      status: 'checkdiscord',
+      qord: r.qord
+    });
+  }
+  
+  closeModal('partial-checkin-overlay');
+  renderActive();
+  renderReimb();
+  updateBadges();
+  setTimeout(() => navTo('reimb'), 100);
 }
 
 function checkinDecision(type) {
@@ -2295,6 +2458,27 @@ function copyText(text) {
   });
 }
 
+function generateRetSku(sku) {
+  if (!sku) return '';
+  
+  // Pattern: [Channel]_[BuyCost]_[DATE-4digits]_[SellPrice]_[Source]_[Qty]
+  // RET SKU: [Channel]_[BuyCost]_[SellPrice]_[Source]_1_Ret
+  
+  const parts = sku.split('_');
+  if (parts.length < 6) return ''; // Invalid format
+  
+  const channel = parts[0];
+  const buyCost = parts[1];
+  const dateSegment = parts[2]; // This is the 4-digit date we remove
+  const sellPrice = parts[3];
+  const source = parts[4];
+  
+  // Check if parts[2] is a 4-digit date (to confirm format)
+  if (!/^\d{4}$/.test(dateSegment)) return ''; // Not a valid date segment
+  
+  return `${channel}_${buyCost}_${sellPrice}_${source}_1_Ret`;
+}
+
 // SEARCH & FILTER FUNCTIONS
 function filterActiveTable() {
   const query = document.getElementById('search-active').value.toLowerCase();
@@ -2339,7 +2523,8 @@ function filterReimbCards() {
         // Parse JSON fields that were stringified
         DB = (data || []).map(r => ({
           ...r,
-          cases: typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : (r.cases || [])
+          cases: typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : (r.cases || []),
+          status_log: typeof r.status_log === 'string' ? JSON.parse(r.status_log || '[]') : (r.status_log || [])
         }));
         console.log(`✓ Loaded ${DB.length} removals from Supabase`);
       }
