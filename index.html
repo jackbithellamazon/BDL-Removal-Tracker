@@ -1214,7 +1214,7 @@ function buildReimbCard(r, today) {
         <div class="rc-field-row"><span class="rc-field-name">Date Delivered</span><span class="rc-field-val"><input type="date" class="inl-input" style="width:140px;font-size:11px;padding-right:30px" value="${r.ddeliv||''}" onchange="upd(${r.id},'ddeliv',this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'cog',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'ramt',+this.value);renderReimb()"></span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="if(this.value){const c=this.value.trim();const cases=r.cases||[];if(cases.length){cases[cases.length-1].id=c;}else{r.cases=[{id:c,date:new Date().toISOString().split('T')[0],outcome:'',note:''}];}r.cases=cases;if(SUPABASE_READY&&window.sbClient){updateInSupabase(${r.id},{cases:r.cases});}}renderReimb();">${latestCase?.id ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${latestCase.id}" target="_blank" style="color:var(--blue);margin-left:6px;text-decoration:none;font-size:11px">Open ↗</a>` : ''}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="saveCaseId(${r.id}, this.value)">${latestCase?.id ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${latestCase.id}" target="_blank" style="color:var(--blue);margin-left:6px;text-decoration:none;font-size:11px">Open ↗</a>` : ''}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd(${r.id},'discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
@@ -2447,6 +2447,31 @@ function loadPdfDropdown(){
 // MODAL UTILS --
 function closeModal(id) { document.getElementById(id).classList.add('h'); }
 function closeBg(e, id) { if (e.target===document.getElementById(id)) closeModal(id); }
+
+function saveCaseId(removalId, caseIdValue) {
+  const r = DB.find(x => x.id === removalId);
+  if (!r) return;
+  
+  const c = caseIdValue.trim();
+  if (!c) return;
+  
+  // Initialize cases array if needed
+  if (!r.cases) r.cases = [];
+  
+  // Update or create latest case entry
+  if (r.cases.length > 0) {
+    r.cases[r.cases.length - 1].id = c;
+  } else {
+    r.cases = [{id: c, date: new Date().toISOString().split('T')[0], outcome: '', note: ''}];
+  }
+  
+  // Save to Supabase
+  if (SUPABASE_READY && window.sbClient) {
+    updateInSupabase(removalId, { cases: r.cases });
+  }
+  
+  renderReimb();
+}
 
 function copyText(text) {
   navigator.clipboard.writeText(text).then(()=>{
