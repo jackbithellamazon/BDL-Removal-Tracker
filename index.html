@@ -398,6 +398,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
               <thead><tr>
                 <th onclick="toggleDateSort()">Date <span id="sort-indicator">↑</span></th>
                 <th style="min-width:200px">Product</th>
+                <th>Reason</th>
                 <th>Unit Qty</th>
                 <th>ASIN</th>
                 <th>FNSKU</th>
@@ -644,6 +645,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
     <div class="field"><label>Removal Order ID</label><input id="a-oid" placeholder="2603261DDA"></div>
     <div class="field"><label>Quantity</label><input id="a-qord" type="number" value="1" min="1"></div>
   </div>
+  <div class="field" style="margin-top:10px"><label>Reason for removal *</label><input id="a-reason" type="text" placeholder="e.g. Amazon removed, Gated, Listings gone, Jack asked, Defective, Warehouse damage, Customer damage" title="Required - explain why this item is being removed"></div>
   <div class="fg g2" style="margin-top:10px">
     <div class="field"><label>MSC Checked Date (optional)</label><input id="a-dmsc_checked" type="date" title="When you checked MSC eligibility for this item"></div>
     <div class="field"><label>MSC Status (if checked)</label><select id="a-msc_check_status"><option value="">Not checked</option><option value="eligible">Eligible</option><option value="ineligible">Ineligible</option><option value="review">Under review</option></select></div>
@@ -1018,8 +1020,9 @@ function renderActive() {
     <td style="color:${isOld?'#f05050':dateColor(r.dsub)};white-space:nowrap;font-family:var(--mono);font-size:12px;font-weight:600">${formatDate(r.dsub)}</td>
     <td>
       <div style="font-weight:600;font-size:12px;color:${isOld?'#f05050':''}" title="${r.name}">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:1px">${r.src==='amazon'?'Amazon auto':'Seller-initiated'}${r.reason?' · '+( REASON_LABELS[r.reason]||r.reason):''}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:1px">${r.src==='amazon'?'Amazon auto':'Seller-initiated'}</div>
     </td>
+    <td style="font-size:11px;color:var(--text2);max-width:120px;word-wrap:break-word">${r.reason||'--'}</td>
     <td style="font-weight:600;color:var(--cyan);text-align:center">${r.qord||'--'}</td>
     <td style="font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer" onclick="copyText('${r.asin}')" title="Click to copy">${r.asin}</td>
     <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.fnsku||'--'}</td>
@@ -1292,19 +1295,7 @@ function confirmReimbursed() {
   renderReimb();
   renderHist();
   updateBadges();
-  
-  // Navigate to Reimbursements page and scroll to the tile
-  navTo('reimb');
-  setTimeout(() => {
-    const tile = document.querySelector(`[data-removid="${r.oid}"]`);
-    if (tile) {
-      tile.closest('.card').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // Highlight the tile temporarily
-      const card = tile.closest('.card');
-      card.style.boxShadow = '0 0 20px rgba(34, 211, 238, 0.5)';
-      setTimeout(() => { card.style.boxShadow = ''; }, 2000);
-    }
-  }, 100);
+  renderActive(); // Refresh Active page to show updates
 }
 
 function moveRimbBack() {
@@ -1573,9 +1564,11 @@ function saveAdd() {
   const name = document.getElementById('a-name').value.trim();
   const asin = document.getElementById('a-asin').value.trim();
   const qord = +document.getElementById('a-qord').value;
+  const reason = document.getElementById('a-reason').value.trim();
   
   if (!name || !asin) { alert('Product name and ASIN are required'); return; }
   if (!qord || qord < 1) { alert('Unit Quantity is required (minimum 1)'); return; }
+  if (!reason) { alert('Reason for removal is required'); return; }
   
   const newRemoval = {
     id: Date.now(), name, asin,
@@ -1587,7 +1580,7 @@ function saveAdd() {
     src:   document.getElementById('a-src').value,
     dmsc_checked: document.getElementById('a-dmsc_checked').value,
     msc_check_status: document.getElementById('a-msc_check_status').value,
-    reason:'unknown',
+    reason: reason,
     status:'transit',
     msku:'',ean:'',shipid:'',tracking:'',amid:'',qdis:0,qcan:0,qpen:1,
     cog:0,lpn:'',disp:'Unsellable',cond:'Damaged',
@@ -1598,7 +1591,7 @@ function saveAdd() {
   };
   
   DB.unshift(newRemoval);
-  ['a-name','a-asin','a-fnsku','a-sku','a-oid'].forEach(id=>document.getElementById(id).value='');
+  ['a-name','a-asin','a-fnsku','a-sku','a-oid','a-reason'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-qord').value='1';
   document.getElementById('a-dmsc_checked').value='';
   document.getElementById('a-msc_check_status').value='';
@@ -1817,6 +1810,8 @@ function partialCheckinAll() {
   if (!r) return;
   
   document.getElementById('partial-qty-input').value = r.qord || 1;
+  // Auto-confirm after setting value
+  setTimeout(() => partialCheckinConfirm(), 100);
 }
 
 function partialCheckinConfirm() {
