@@ -46,6 +46,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .nav-item.active .nav-icon{opacity:1}
 .nav-label{overflow:hidden;text-overflow:ellipsis;flex:1}
 .sidebar.collapsed .nav-label,.sidebar.collapsed .nav-badge,.sidebar.collapsed .nav-alert-dot{display:none}
+.sidebar.collapsed #sync-text-wrap{display:none}
+.sidebar.collapsed #sync-bar{justify-content:center;padding:10px 0}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.sync-spinning{animation:spin .8s linear infinite}
 .sidebar.collapsed .nav-item{justify-content:center;padding:10px}
 .nav-badge{font-size:10px;background:var(--bg5);color:var(--text2);padding:1px 6px;border-radius:20px;font-weight:500;flex-shrink:0}
 .nav-item.active .nav-badge{background:var(--blue-dim);color:var(--blue)}
@@ -205,6 +209,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
 .b-red{background:var(--red-bg);color:var(--red)}
 .b-amber{background:var(--amber-bg);color:var(--amber)}
 .b-blue{background:var(--blue-bg);color:var(--blue)}
+.b-cyan{background:var(--cyan-bg);color:var(--cyan)}
 .b-gray{background:var(--bg5);color:var(--text3)}
 .b-purple{background:var(--purple-bg);color:var(--purple)}
 .cg-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}
@@ -332,7 +337,20 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
         <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         <span class="nav-label">PDF Builder</span>
       </button>
+      <button class="nav-item" id="nav-auditlog" onclick="navTo('auditlog')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="nav-label">Audit Log</span>
+      </button>
     </nav>
+    <!-- SYNC STATUS -->
+    <div id="sync-bar" style="margin:8px 8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);padding:10px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background .15s" onclick="manualSync()" title="Click to sync now">
+      <div id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s"></div>
+      <div style="flex:1;min-width:0;overflow:hidden" id="sync-text-wrap">
+        <div id="sync-label" style="font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap">Connecting...</div>
+        <div id="sync-time" style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap"></div>
+      </div>
+      <svg id="sync-spin" viewBox="0 0 16 16" fill="none" style="width:12px;height:12px;color:var(--text3);flex-shrink:0;display:none"><path d="M8 2a6 6 0 1 0 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </div>
   </div>
 
   <!-- MAIN -->
@@ -620,6 +638,37 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
         </div>
       </div>
 
+      <!-- AUDIT LOG PAGE -->
+      <div id="page-auditlog" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="text" id="audit-search" placeholder="Search by product name, status, or date..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);font-size:13px" oninput="renderAuditLog()">
+          <select id="audit-filter-status" style="padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);font-size:12px" onchange="renderAuditLog()">
+            <option value="">All statuses</option>
+            <option value="reimbursed">→ Reimbursed</option>
+            <option value="caseopen">→ Case opened</option>
+            <option value="mscdenied">→ MSC denied</option>
+            <option value="mscapproved">→ MSC approved</option>
+            <option value="checkdiscord">→ Check Discord</option>
+          </select>
+          <button class="btn btn-sm" onclick="renderAuditLog()" title="Refresh">↻ Refresh</button>
+        </div>
+        <div id="audit-summary" style="font-size:11px;color:var(--text3);margin-bottom:12px"></div>
+        <div class="tbl-wrap">
+          <div class="tbl-scroll">
+            <table>
+              <thead><tr>
+                <th style="cursor:default">Timestamp</th>
+                <th style="cursor:default">Product</th>
+                <th style="cursor:default">Change</th>
+                <th style="cursor:default">ASIN</th>
+                <th style="cursor:default">Order ID</th>
+              </tr></thead>
+              <tbody id="audit-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -761,6 +810,113 @@ let ACTIVE_FILTER = 'all';
 let ACTIVE_SORT_DESC = false; // false = oldest first (default)
 let REIMB_FILTER = 'all';
 
+// SYNC STATE --
+let SYNC_STATE = 'connecting'; // connecting | ok | pending | error
+let SYNC_LAST_OK = null;
+let SYNC_POLL_INTERVAL = null;
+let SYNC_PENDING_COUNT = 0;
+
+function setSyncState(state, detail) {
+  SYNC_STATE = state;
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  const timeEl = document.getElementById('sync-time');
+  const spin = document.getElementById('sync-spin');
+  if (!dot) return;
+  
+  spin.classList.remove('sync-spinning');
+  spin.style.display = 'none';
+  
+  if (state === 'ok') {
+    SYNC_LAST_OK = new Date();
+    dot.style.background = '#3dd68c';
+    dot.style.boxShadow = '0 0 6px #3dd68c88';
+    label.style.color = '#3dd68c';
+    label.textContent = 'Synced';
+    timeEl.textContent = 'Just now · click to refresh';
+    // Start fading the "just now" to a time
+    setTimeout(() => updateSyncTimeAgo(), 30000);
+  } else if (state === 'pending') {
+    dot.style.background = '#f5a623';
+    dot.style.boxShadow = '0 0 6px #f5a62388';
+    label.style.color = '#f5a623';
+    label.textContent = detail || 'Saving...';
+    timeEl.textContent = 'Write in progress';
+    spin.style.display = 'block';
+    spin.classList.add('sync-spinning');
+  } else if (state === 'error') {
+    dot.style.background = '#f05050';
+    dot.style.boxShadow = '0 0 6px #f0505088';
+    label.style.color = '#f05050';
+    label.textContent = 'Sync error';
+    timeEl.textContent = (detail || 'Failed') + ' · click to retry';
+  } else if (state === 'connecting') {
+    dot.style.background = 'var(--text3)';
+    dot.style.boxShadow = 'none';
+    label.style.color = 'var(--text2)';
+    label.textContent = 'Connecting...';
+    timeEl.textContent = '';
+    spin.style.display = 'block';
+    spin.classList.add('sync-spinning');
+  } else if (state === 'offline') {
+    dot.style.background = '#f05050';
+    dot.style.boxShadow = 'none';
+    label.style.color = 'var(--text3)';
+    label.textContent = 'Offline mode';
+    timeEl.textContent = 'Changes saved locally';
+  }
+}
+
+function updateSyncTimeAgo() {
+  if (!SYNC_LAST_OK || SYNC_STATE !== 'ok') return;
+  const mins = Math.floor((new Date() - SYNC_LAST_OK) / 60000);
+  const timeEl = document.getElementById('sync-time');
+  if (!timeEl) return;
+  if (mins < 1) timeEl.textContent = 'Just now · click to refresh';
+  else if (mins === 1) timeEl.textContent = '1 min ago · click to refresh';
+  else timeEl.textContent = `${mins} mins ago · click to refresh`;
+  setTimeout(() => updateSyncTimeAgo(), 60000);
+}
+
+async function manualSync() {
+  if (!SUPABASE_READY || !window.sbClient) return;
+  setSyncState('pending', 'Syncing...');
+  await pullFromSupabase();
+}
+
+async function pullFromSupabase() {
+  if (!window.sbClient) return;
+  try {
+    const { data, error } = await window.sbClient
+      .from('removals')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      setSyncState('error', error.message.slice(0, 30));
+      return;
+    }
+    const fresh = (data || []).map(r => ({
+      ...r,
+      cases: typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : (r.cases || []),
+      status_log: typeof r.status_log === 'string' ? JSON.parse(r.status_log || '[]') : (r.status_log || [])
+    }));
+    DB = fresh;
+    setSyncState('ok');
+    renderPage(CURRENT_PAGE);
+  } catch(e) {
+    setSyncState('error', e.message.slice(0, 30));
+  }
+}
+
+function startSyncPolling() {
+  // Poll every 30 seconds to pick up changes from the other user
+  if (SYNC_POLL_INTERVAL) clearInterval(SYNC_POLL_INTERVAL);
+  SYNC_POLL_INTERVAL = setInterval(async () => {
+    if (SYNC_STATE === 'pending') return; // don't poll mid-write
+    await pullFromSupabase();
+  }, 30000);
+}
+
 // SUPABASE --
 const SUPABASE_URL = 'https://ffbdazepqrsyurhouxif.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmYmRhemVwcXJzeXVyaG91eGlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTM5MjIsImV4cCI6MjA5MDQ2OTkyMn0.BAuodLUDGzO9A7IfoRRn0HZ1MgWOXNPeYKPDBNaNWeg';
@@ -793,41 +949,51 @@ async function initSupabase() {
 // SUPABASE HELPERS --
 async function saveToSupabase(removal) {
   if (!window.sbClient) return;
+  setSyncState('pending', 'Saving new...');
   try {
-    const { error } = await window.sbClient.from('removals').insert([removal]);
+    const cleanRemoval = {};
+    for (const [key, val] of Object.entries(removal)) {
+      cleanRemoval[key] = Array.isArray(val) ? JSON.stringify(val) : val;
+    }
+    const { error } = await window.sbClient.from('removals').upsert([cleanRemoval]);
     if (error) {
       console.error('Save error:', error);
+      setSyncState('error', error.message.slice(0, 30));
       showError('Failed to save: ' + error.message);
     } else {
       console.log('✓ Saved:', removal.name);
+      setSyncState('ok');
     }
   } catch (e) {
     console.error('Supabase save error:', e);
+    setSyncState('error', e.message.slice(0, 20));
     showError('Save error: ' + e.message);
   }
 }
 
 async function updateInSupabase(id, updates) {
   if (!window.sbClient) return;
+  setSyncState('pending', 'Saving...');
   try {
-    // Convert arrays to JSON strings for storage
     const cleanUpdates = {};
     for (const [key, val] of Object.entries(updates)) {
       cleanUpdates[key] = Array.isArray(val) ? JSON.stringify(val) : val;
     }
-    
     const { error } = await window.sbClient
       .from('removals')
       .update(cleanUpdates)
       .eq('id', id);
     if (error) {
       console.error('Update error:', error);
+      setSyncState('error', error.message.slice(0, 30));
       showError('Failed to update: ' + error.message);
     } else {
       console.log('✓ Updated removal:', id);
+      setSyncState('ok');
     }
   } catch (e) {
     console.error('Supabase update error:', e);
+    setSyncState('error', e.message.slice(0, 20));
     showError('Update error: ' + e.message);
   }
 }
@@ -859,27 +1025,29 @@ function showError(msg) {
 }
 
 const STATUS_LIST = [
-  {v:'transit',       l:'In transit',          cls:'ss-transit'},
-  {v:'arrived',       l:'Arrived at BDL',      cls:'ss-arrived'},
-  {v:'checkdiscord',  l:'Check Discord',       cls:'ss-checkdiscord'},
-  {v:'mscsubmit',     l:'MSC submitted',       cls:'ss-mscsubmit'},
-  {v:'mscreview',     l:'MSC under review',    cls:'ss-mscreview'},
-  {v:'mscapproved',   l:'MSC approved',        cls:'ss-mscapproved'},
-  {v:'mscreduced',    l:'Reduced MSC approved',cls:'ss-mscreduced'},
-  {v:'mscdenied',     l:'MSC denied',          cls:'ss-mscdenied'},
-  {v:'mscneedsdoc',   l:'Needs document',      cls:'ss-mscneedsdoc'},
-  {v:'caseopen',      l:'Case opened',         cls:'ss-caseopen'},
-  {v:'reimbpending',  l:'Reimbursement pending',cls:'ss-reimbpending'},
-  {v:'reimbursed',    l:'Reimbursed',          cls:'ss-reimbursed'},
-  {v:'sentout',       l:'Sent back out',       cls:'ss-sentout'},
-  {v:'writeoff',      l:'Written off',         cls:'ss-writeoff'},
+  {v:'transit',       l:'In transit',              cls:'ss-transit'},
+  {v:'arrived',       l:'Arrived at BDL',          cls:'ss-arrived'},
+  {v:'checkdiscord',  l:'Check Discord',           cls:'ss-checkdiscord'},
+  {v:'mscsubmit',     l:'MSC submitted',           cls:'ss-mscsubmit'},
+  {v:'mscreview',     l:'MSC under review',        cls:'ss-mscreview'},
+  {v:'mscapproved',   l:'MSC approved',            cls:'ss-mscapproved'},
+  {v:'mscreduced',    l:'Reduced MSC approved',    cls:'ss-mscreduced'},
+  {v:'mscdenied',     l:'MSC denied',              cls:'ss-mscdenied'},
+  {v:'mscneedsdoc',   l:'Needs document',          cls:'ss-mscneedsdoc'},
+  {v:'caseopen',      l:'Case opened',             cls:'ss-caseopen'},
+  {v:'reimbpending',  l:'Reimbursement pending',   cls:'ss-reimbpending'},
+  {v:'reimbursed',    l:'Reimbursed',              cls:'ss-reimbursed'},
+  {v:'sentnew',       l:'Sent back as New',        cls:'ss-sentout'},
+  {v:'sentused',      l:'Sent back as Used',       cls:'ss-sentout'},
+  {v:'sentout',       l:'Sent back out',           cls:'ss-sentout'},
+  {v:'writeoff',      l:'Written off',             cls:'ss-writeoff'},
 ];
 const SL = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.l]));
 const SC = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.cls]));
 
 const ACTIVE_STATUSES = ['transit','arrived'];
 const REIMB_STATUSES  = ['checkdiscord','mscsubmit','mscreview','mscapproved','mscreduced','mscdenied','mscneedsdoc','caseopen','reimbpending'];
-const HIST_STATUSES   = ['reimbursed','sentout','writeoff'];
+const HIST_STATUSES   = ['reimbursed','sentnew','sentused','sentout','writeoff'];
 
 let PDF_IMAGES = []; // {dataUrl, name}
 let CASE_LOG = []; // {id, ts, removalName, removalOid, issues:[{label,note}], message}
@@ -932,7 +1100,7 @@ function counts() {
 // NAVIGATION --
 function navTo(page) {
   CURRENT_PAGE = page;
-  const pages = ['overview','active','reimb','case','hist','caselog','pdf'];
+  const pages = ['overview','active','reimb','case','hist','caselog','pdf','auditlog'];
   pages.forEach(p => {
     document.getElementById(`page-${p}`).style.display = p===page ? 'block' : 'none';
     document.getElementById(`nav-${p}`)?.classList.toggle('active', p===page);
@@ -944,7 +1112,8 @@ function navTo(page) {
     case:['Case Generator','Build and copy Amazon Seller Support message'],
     hist:['History','Reimbursed, sent back out, written off'],
     caselog:['Case Log','Every generated case message -- review and improve'],
-    pdf:['PDF Builder','Bundle Discord photos into one PDF for Seller Central']
+    pdf:['PDF Builder','Bundle Discord photos into one PDF for Seller Central'],
+    auditlog:['Audit Log','Every status change across all removals — full history']
   };
   const t = titles[page];
   document.getElementById('page-title').textContent = t[0];
@@ -960,6 +1129,7 @@ function renderPage(page) {
   if (page==='case')     loadCaseDropdown();
   if (page==='caselog')  renderCaseLog();
   if (page==='pdf')      loadPdfDropdown();
+  if (page==='auditlog') renderAuditLog();
   updateBadges();
 }
 
@@ -1225,7 +1395,7 @@ function buildReimbCard(r, today) {
       </div>
       <div class="rc-right">
         <div class="rc-right-label" style="margin-bottom:4px">Update status</div>
-        <select class="inl-input" style="margin-bottom:12px;font-size:11px" onchange="upd(${r.id},'status',this.value);updateBadges();renderReimb()">${statusOpts}</select>
+        <select class="inl-input" style="margin-bottom:12px;font-size:11px" onchange="changeStatus(${r.id},this.value,'reimb')">${statusOpts}</select>
         ${showMscDate && r.status!=='mscdenied' ? `<div class="rc-right-label">Next MSC update date</div><input type="date" class="rc-msc-date-input" style="border-color:${col}44;color:${col}" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value);renderReimb()">` : ''}
         ${rightContent}
       </div>
@@ -1276,18 +1446,19 @@ function confirmReimbursed() {
   r.ramt = parseFloat(ramt)||0;
   r.status = 'reimbursed';
   
-  // Add audit log entry for moving to reimbursed
-  const timestamp = new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  const timestamp = new Date().toISOString();
+  r.status_changed_at = timestamp;
   if (!r.status_log) r.status_log = [];
-  r.status_log.push(`${timestamp} — Moved to Reimbursements (status: reimbursed)`);
+  r.status_log.push(`${timestamp} | → reimbursed (COG: £${r.cog.toFixed(2)}, Reimb: £${r.ramt.toFixed(2)})`);
   
-  // Save to Supabase
+  // Single atomic write — everything in one call
   if (SUPABASE_READY && window.sbClient) {
-    updateInSupabase(id, { 
-      cog: r.cog, 
-      ramt: r.ramt, 
+    updateInSupabase(id, {
+      cog: r.cog,
+      ramt: r.ramt,
       status: 'reimbursed',
-      status_log: r.status_log
+      status_log: r.status_log,
+      status_changed_at: timestamp
     });
   }
   
@@ -1434,7 +1605,7 @@ function renderHist() {
     <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.sku||'--'}</td>
     <td style="font-family:var(--mono);font-size:11px">${r.oid||'--'}</td>
     <td style="font-weight:500">£${Number(r.cog||0).toFixed(2)}</td>
-    <td><span class="badge ${r.status==='reimbursed'?'b-green':r.status==='sentout'?'b-purple':'b-gray'}">${SL[r.status]||r.status}</span></td>
+    <td><span class="badge ${r.status==='reimbursed'?'b-green':r.status==='sentnew'?'b-cyan':r.status==='sentused'?'b-blue':r.status==='sentout'?'b-purple':'b-gray'}">${SL[r.status]||r.status}</span></td>
     <td style="color:${r.ramt>0?'var(--green)':'var(--text3)'};font-weight:500">${r.ramt>0?'£'+Number(r.ramt).toFixed(2):'--'}</td>
     <td style="font-weight:500;color:${netPL<0?'#f05050':netPL>0?'#3dd68c':'var(--text3)'}">£${Number(netPL).toFixed(2)}</td>
     <td style="font-size:11px;display:flex;flex-direction:column;gap:6px;align-items:center">
@@ -1453,24 +1624,22 @@ function setHistFilter(f) {
 function changeStatus(id, val, page) {
   const r = DB.find(x=>x.id===id);
   if (r) {
-    // Create audit log entry
     const timestamp = new Date().toISOString();
     const oldStatus = r.status;
     const logEntry = `${timestamp} | ${oldStatus} → ${val}`;
-    
-    // Initialize status log if it doesn't exist
     if (!r.status_log) r.status_log = [];
     r.status_log.push(logEntry);
-    
-    // Update status
-    upd(id, 'status', val);
-    
-    // Save log to Supabase
+    r.status = val;
+    r.status_changed_at = timestamp;
+    // Single atomic write — status + log + timestamp together, no race
     if (SUPABASE_READY && window.sbClient) {
-      updateInSupabase(id, { status_log: r.status_log });
+      updateInSupabase(id, {
+        status: val,
+        status_log: r.status_log,
+        status_changed_at: timestamp
+      });
     }
   }
-  
   if (page==='active') renderActive();
   if (page==='reimb') renderReimb();
   updateBadges();
@@ -1571,7 +1740,7 @@ function saveAdd() {
   if (!reason) { alert('Reason for removal is required'); return; }
   
   const newRemoval = {
-    id: Date.now(), name, asin,
+    id: crypto.randomUUID(), name, asin,
     fnsku: document.getElementById('a-fnsku').value.trim(),
     sku:   document.getElementById('a-sku').value.trim(),
     oid:   document.getElementById('a-oid').value.trim(),
@@ -1831,7 +2000,7 @@ function partialCheckinConfirm() {
     // Create new entry for arrived units
     const arrivedRemoval = {
       ...r,
-      id: Date.now(),
+      id: crypto.randomUUID(),
       qord: arrivedQty,
       status: 'checkdiscord',
       darr: new Date().toISOString().split('T')[0],
@@ -1866,41 +2035,52 @@ function partialCheckinConfirm() {
 function checkinDecision(type) {
   const rid = +document.getElementById('checkin-rid').value;
   const r = DB.find(x=>x.id===rid);
-  if(!r) {
-    console.error('Item not found:', rid);
-    return;
-  }
+  if(!r) { console.error('Item not found:', rid); return; }
   
   const updates = {};
-  
+  const timestamp = new Date().toISOString();
+  if (!r.status_log) r.status_log = [];
+
   if(type === 'claim') {
     r.darr = r.darr || new Date().toISOString().split('T')[0];
     r.status = 'checkdiscord';
+    r.status_changed_at = timestamp;
+    r.status_log.push(`${timestamp} | arrived → checkdiscord (Sent to Reimbursements)`);
     updates.darr = r.darr;
     updates.status = 'checkdiscord';
+    updates.status_changed_at = timestamp;
+    updates.status_log = r.status_log;
     closeModal('checkin-overlay');
     setTimeout(() => navTo('reimb'), 100);
   } else if(type === 'new') {
-    r.status='sentout';
-    r.cond='New';
-    r.darr=r.darr||new Date().toISOString().split('T')[0];
-    updates.status = 'sentout';
+    r.status = 'sentnew';
+    r.cond = 'New';
+    r.darr = r.darr || new Date().toISOString().split('T')[0];
+    r.status_changed_at = timestamp;
+    r.status_log.push(`${timestamp} | → sentnew (Sent back as New)`);
+    updates.status = 'sentnew';
     updates.cond = 'New';
     updates.darr = r.darr;
+    updates.status_changed_at = timestamp;
+    updates.status_log = r.status_log;
     closeModal('checkin-overlay');
     setTimeout(() => { navTo('history'); }, 100);
   } else if(type === 'used') {
-    r.status='sentout';
-    r.cond='Used';
-    r.darr=r.darr||new Date().toISOString().split('T')[0];
-    updates.status = 'sentout';
+    r.status = 'sentused';
+    r.cond = 'Used';
+    r.darr = r.darr || new Date().toISOString().split('T')[0];
+    r.status_changed_at = timestamp;
+    r.status_log.push(`${timestamp} | → sentused (Sent back as Used)`);
+    updates.status = 'sentused';
     updates.cond = 'Used';
     updates.darr = r.darr;
+    updates.status_changed_at = timestamp;
+    updates.status_log = r.status_log;
     closeModal('checkin-overlay');
     setTimeout(() => { navTo('history'); }, 100);
   }
   
-  // Save to Supabase
+  // Single atomic write
   if (SUPABASE_READY && window.sbClient && Object.keys(updates).length > 0) {
     updateInSupabase(rid, updates);
   }
@@ -1931,10 +2111,6 @@ function delR(id) {
 
 // CASE LOG --
 function saveCaseLog() {
-  // Save to localStorage as backup
-  try { localStorage.setItem('removals-case-log', JSON.stringify(CASE_LOG)); } catch(e){}
-  
-  // Save to Supabase
   if (SUPABASE_READY && window.sbClient) {
     try {
       window.sbClient
@@ -1951,14 +2127,12 @@ function saveCaseLog() {
 }
 
 async function loadCaseLog() {
-  // Try to load from Supabase first
   if (SUPABASE_READY && window.sbClient) {
     try {
       const { data, error } = await window.sbClient
         .from('case_log')
         .select('data')
         .eq('id', 'main');
-      
       if (!error && data && data.length > 0 && data[0].data) {
         try {
           CASE_LOG = JSON.parse(data[0].data);
@@ -1966,18 +2140,10 @@ async function loadCaseLog() {
         } catch(e) {
           console.error('Failed to parse case log:', e);
         }
-      } else {
-        // Fallback to localStorage
-        try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
       }
     } catch(e) {
       console.error('Supabase case log error:', e);
-      // Fallback to localStorage
-      try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
     }
-  } else {
-    // Offline mode - use localStorage
-    try { const d=localStorage.getItem('removals-case-log'); if(d) CASE_LOG=JSON.parse(d); } catch(e){}
   }
 }
 
@@ -2522,13 +2688,114 @@ function filterReimbCards() {
   });
 }
 
+// AUDIT LOG PAGE --
+function renderAuditLog() {
+  const searchQ = (document.getElementById('audit-search')?.value || '').toLowerCase();
+  const filterStatus = document.getElementById('audit-filter-status')?.value || '';
+
+  // Flatten all status_log entries across all removals into one list
+  const entries = [];
+  DB.forEach(r => {
+    const logs = r.status_log || [];
+    logs.forEach(entry => {
+      if (!entry) return;
+      // Parse ISO timestamp entries: "2024-01-15T10:30:00.000Z | arrived → reimbursed"
+      const isoMatch = entry.match(/^(\d{4}-\d{2}-\d{2}T[\d:.Z]+)\s*\|\s*(.+)$/);
+      let ts = '', change = entry;
+      if (isoMatch) {
+        ts = isoMatch[1];
+        change = isoMatch[2].trim();
+      }
+      entries.push({ r, ts, change, raw: entry });
+    });
+  });
+
+  // Sort newest first
+  entries.sort((a, b) => {
+    if (!a.ts && !b.ts) return 0;
+    if (!a.ts) return 1;
+    if (!b.ts) return -1;
+    return new Date(b.ts) - new Date(a.ts);
+  });
+
+  // Filter
+  const filtered = entries.filter(e => {
+    const matchSearch = !searchQ ||
+      e.r.name.toLowerCase().includes(searchQ) ||
+      (e.r.asin||'').toLowerCase().includes(searchQ) ||
+      (e.r.oid||'').toLowerCase().includes(searchQ) ||
+      e.change.toLowerCase().includes(searchQ) ||
+      e.ts.includes(searchQ);
+    const matchStatus = !filterStatus || e.change.includes(filterStatus);
+    return matchSearch && matchStatus;
+  });
+
+  const summary = document.getElementById('audit-summary');
+  if (summary) summary.textContent = `${filtered.length} entries across ${new Set(filtered.map(e=>e.r.id)).size} removals`;
+
+  const STATUS_COLOR = {
+    reimbursed:'#3dd68c', caseopen:'#22d3ee', mscapproved:'#3dd68c',
+    mscdenied:'#f05050', mscneedsdoc:'#9b7ff0', mscreduced:'#f5a623',
+    checkdiscord:'#a78bfa', transit:'#4d8ef0', arrived:'#f5a623',
+    mscsubmit:'#4d8ef0', mscreview:'#f5a623', reimbpending:'#06b6d4',
+    sentout:'#9b7ff0', writeoff:'#4e5870'
+  };
+
+  function changeHtml(change) {
+    // Try to colour the → target status
+    const arrowMatch = change.match(/^(.+?)\s*→\s*(.+)$/);
+    if (arrowMatch) {
+      const from = arrowMatch[1].trim();
+      const to = arrowMatch[2].split('(')[0].trim();
+      const col = STATUS_COLOR[to] || 'var(--text2)';
+      const fromLabel = SL[from] || from;
+      const toLabel = SL[to] || to;
+      const extra = arrowMatch[2].includes('(') ? ' <span style="color:var(--text3);font-size:10px">' + arrowMatch[2].split('(')[1].replace(')','') + '</span>' : '';
+      return `<span style="color:var(--text3)">${fromLabel}</span> <span style="color:var(--text2)">→</span> <span style="color:${col};font-weight:600">${toLabel}</span>${extra}`;
+    }
+    return `<span style="color:var(--text2)">${change}</span>`;
+  }
+
+  const tbody = document.getElementById('audit-body');
+  if (!tbody) return;
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No audit entries found</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(e => {
+    let dateStr = '--', timeStr = '';
+    if (e.ts) {
+      try {
+        const d = new Date(e.ts);
+        dateStr = d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+        timeStr = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+      } catch(_) {}
+    }
+    const rowBg = e.change.includes('reimbursed') ? 'rgba(61,214,140,0.05)' :
+                  e.change.includes('mscdenied')   ? 'rgba(240,80,80,0.05)' : '';
+    return `<tr style="background:${rowBg}">
+      <td style="font-family:var(--mono);font-size:11px;white-space:nowrap;color:var(--text2)">
+        <div>${dateStr}</div><div style="color:var(--text3)">${timeStr}</div>
+      </td>
+      <td>
+        <div style="font-size:12px;font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.r.name}">${e.r.name}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:1px">${SL[e.r.status]||e.r.status}</div>
+      </td>
+      <td style="font-size:12px">${changeHtml(e.change)}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${e.r.asin||'--'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${e.r.oid||'--'}</td>
+    </tr>`;
+  }).join('');
+}
+
 // INIT --
 (async () => {
-  // Initialize Supabase
+  setSyncState('connecting');
   const sbReady = await initSupabase();
   
   if (sbReady && window.sbClient) {
-    // Load all removals from Supabase
     try {
       const { data, error } = await window.sbClient
         .from('removals')
@@ -2537,24 +2804,28 @@ function filterReimbCards() {
       
       if (error) {
         console.error('Failed to load removals:', error);
+        setSyncState('error', error.message.slice(0, 30));
         showError('Failed to load data: ' + error.message);
         DB = [];
       } else {
-        // Parse JSON fields that were stringified
         DB = (data || []).map(r => ({
           ...r,
           cases: typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : (r.cases || []),
           status_log: typeof r.status_log === 'string' ? JSON.parse(r.status_log || '[]') : (r.status_log || [])
         }));
         console.log(`✓ Loaded ${DB.length} removals from Supabase`);
+        setSyncState('ok');
+        startSyncPolling();
       }
     } catch (e) {
       console.error('Supabase load error:', e);
+      setSyncState('error', e.message.slice(0, 30));
       showError('Load error: ' + e.message);
       DB = [];
     }
   } else {
     console.warn('Supabase not ready, running offline');
+    setSyncState('offline');
     seed();
   }
   
