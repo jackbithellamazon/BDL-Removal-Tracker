@@ -909,10 +909,12 @@ async function pullFromSupabase() {
 }
 
 function startSyncPolling() {
-  // Poll every 30 seconds to pick up changes from the other user
   if (SYNC_POLL_INTERVAL) clearInterval(SYNC_POLL_INTERVAL);
   SYNC_POLL_INTERVAL = setInterval(async () => {
-    if (SYNC_STATE === 'pending') return; // don't poll mid-write
+    if (SYNC_STATE === 'pending') return;
+    // Don't disrupt user if they're actively typing in any input or textarea
+    const active = document.activeElement;
+    if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
     await pullFromSupabase();
   }, 30000);
 }
@@ -1148,6 +1150,10 @@ function updateBadges() {
 
 // ACTIVE PAGE --
 function renderActive() {
+  // Preserve search value before rebuilding DOM
+  const searchEl = document.getElementById('search-active');
+  const currentSearch = searchEl ? searchEl.value : '';
+
   const active = DB.filter(r => ACTIVE_STATUSES.includes(r.status));
   const today = new Date().toISOString().split('T')[0];
 
@@ -1204,19 +1210,25 @@ function renderActive() {
     <td style="font-weight:600;color:${r.cog>0?'var(--amber)':'var(--text3)'}">${r.cog>0?'£'+Number(r.cog).toFixed(2):'--'}</td>
     <td>${lpn4(r.lpn)}</td>
     <td>
-      <select class="status-sel sb-${r.status}" onchange="upd(${r.id},'status',this.value);updateBadges();renderActive()" onclick="event.stopPropagation()" style="font-size:11px">
+      <select class="status-sel sb-${r.status}" onchange="changeStatus('${r.id}',this.value,'active')" onclick="event.stopPropagation()" style="font-size:11px">
         ${STATUS_LIST.filter(s=>ACTIVE_STATUSES.includes(s.v)||s.v===r.status).map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('')}
       </select>
     </td>
     <td>${deadlineCell(r)}</td>
     <td>
       <div style="display:flex;gap:4px">
-        <button class="btn btn-sm" onclick="openDetail(${r.id})">Edit</button>
-        <button class="btn btn-sm btn-green" onclick="openCheckin(${r.id})">Check in</button>
+        <button class="btn btn-sm" onclick="openDetail('${r.id}')">Edit</button>
+        <button class="btn btn-sm btn-green" onclick="openCheckin('${r.id}')">Check in</button>
       </div>
     </td>
   </tr>`;
   }).join('') : `<tr class="empty-row"><td colspan="10">No removals in this status</td></tr>`;
+
+  // Restore search value and re-apply filter if user was searching
+  if (currentSearch) {
+    const el = document.getElementById('search-active');
+    if (el) { el.value = currentSearch; filterActiveTable(); }
+  }
 }
 
 function setActiveFilter(f) { ACTIVE_FILTER = f; renderActive(); }
@@ -1256,6 +1268,9 @@ const STATE_CONFIG = {
 };
 
 function renderReimb() {
+  const searchEl = document.getElementById('search-reimb');
+  const currentSearch = searchEl ? searchEl.value : '';
+
   const reimb = DB.filter(r => REIMB_STATUSES.includes(r.status));
   const filterDefs = [{v:'all',l:'All'},...MSC_STATUS_LIST.map(s=>({v:s.v,l:s.l}))];
   document.getElementById('reimb-filter-row').innerHTML = filterDefs.map(f=>`
@@ -1271,6 +1286,11 @@ function renderReimb() {
   }
 
   document.getElementById('reimb-cards').innerHTML = rows.map(r => buildReimbCard(r, today)).join('');
+
+  if (currentSearch) {
+    const el = document.getElementById('search-reimb');
+    if (el) { el.value = currentSearch; filterReimbCards(); }
+  }
 }
 
 function buildReimbCard(r, today) {
@@ -1350,7 +1370,7 @@ function buildReimbCard(r, today) {
     rightContent=`<div class="rc-right-label">Recovery</div><div class="rc-right-val" style="color:#f5a623">${p}%</div><div class="rc-right-sub">£${ramt.toFixed(2)} of £${cog.toFixed(2)}</div><div style="background:rgba(255,255,255,.08);border-radius:4px;height:8px;margin-top:8px;overflow:hidden"><div style="background:#f5a623;width:${p}%;height:100%;border-radius:4px;box-shadow:0 0 8px #f5a62344"></div></div>`;
   } else if(r.status==='mscdenied'){
     rightContent = `<div class="rc-right-label">Appeal window</div><div class="rc-right-val" style="color:#f05050">18 days</div><div class="rc-right-sub">Open a case. Set next MSC update:</div>
-      <input type="date" class="rc-msc-date-input" style="border-color:#f0505044;color:#f05050" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value);renderReimb()">`;
+      <input type="date" class="rc-msc-date-input" style="border-color:#f0505044;color:#f05050" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value);renderReimb()">`;
   } else if(r.status==='mscneedsdoc'){
     rightContent = `<div class="rc-right-label">Blocked</div><div class="rc-right-val" style="color:#9b7ff0;font-size:16px">Invoice needed</div><div class="rc-right-sub">Find in purchase sheet</div>`;
   } else if(r.status==='caseopen'){
@@ -1384,29 +1404,29 @@ function buildReimbCard(r, today) {
     <div class="rc-body">
       <div class="rc-left">
         <div class="rc-field-row"><span class="rc-field-name">Date in</span><span class="rc-field-val" style="font-family:var(--mono);color:var(--text2)">${r.darr||r.dsub||'--'}</span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Date Delivered</span><span class="rc-field-val"><input type="date" class="inl-input" style="width:140px;font-size:11px;padding-right:30px" value="${r.ddeliv||''}" onchange="upd(${r.id},'ddeliv',this.value);renderReimb()"></span></div>
-        <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'cog',+this.value);renderReimb()"></span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd(${r.id},'ramt',+this.value);renderReimb()"></span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Date Delivered</span><span class="rc-field-val"><input type="date" class="inl-input" style="width:140px;font-size:11px;padding-right:30px" value="${r.ddeliv||''}" onchange="upd('${r.id}','ddeliv',this.value);renderReimb()"></span></div>
+        <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd('${r.id}','cog',+this.value);renderReimb()"></span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd('${r.id}','ramt',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="saveCaseId(${r.id}, this.value)">${latestCase?.id ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${latestCase.id}" target="_blank" style="color:var(--blue);margin-left:6px;text-decoration:none;font-size:11px">Open ↗</a>` : ''}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd(${r.id},'discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd('${r.id}','discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
         ${r.damage?`<div class="rc-field-row"><span class="rc-field-name">Notes</span><span class="rc-field-val" style="font-size:11px;color:var(--text2);text-align:right;max-width:200px">${r.damage}</span></div>`:''}
       </div>
       <div class="rc-right">
         <div class="rc-right-label" style="margin-bottom:4px">Update status</div>
-        <select class="inl-input" style="margin-bottom:12px;font-size:11px" onchange="changeStatus(${r.id},this.value,'reimb')">${statusOpts}</select>
-        ${showMscDate && r.status!=='mscdenied' ? `<div class="rc-right-label">Next MSC update date</div><input type="date" class="rc-msc-date-input" style="border-color:${col}44;color:${col}" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value);renderReimb()">` : ''}
+        <select class="inl-input" style="margin-bottom:12px;font-size:11px" onchange="changeStatus('${r.id}',this.value,'reimb')">${statusOpts}</select>
+        ${showMscDate && r.status!=='mscdenied' ? `<div class="rc-right-label">Next MSC update date</div><input type="date" class="rc-msc-date-input" style="border-color:${col}44;color:${col}" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value);renderReimb()">` : ''}
         ${rightContent}
       </div>
     </div>
     <div class="rc-footer">
       <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase(${r.id}),50)">Case msg</button>
-      <button class="btn btn-sm" onclick="openAddCase(${r.id})">+ Log attempt</button>
-      <button class="btn btn-sm" onclick="openDetail(${r.id})">Details</button>
+      <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Log attempt</button>
+      <button class="btn btn-sm" onclick="openDetail('${r.id}')">Details</button>
       <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive(${r.id})">← Move to Active</button>
       <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed(${r.id})">✓ Mark as Reimbursed</button>
-      <input class="inl-input" style="flex:1;font-size:11px;min-width:0" value="${r.mscnotes||''}" placeholder="Notes / urgent action..." onchange="upd(${r.id},'mscnotes',this.value)">
+      <input class="inl-input" style="flex:1;font-size:11px;min-width:0" value="${r.mscnotes||''}" placeholder="Notes / urgent action..." onchange="upd('${r.id}','mscnotes',this.value)">
       <span class="rc-age" style="background:${ageColor}22;color:${ageColor};border:1px solid ${ageColor}44">${ageLabel}</span>
     </div>
   </div>`;
@@ -1438,7 +1458,7 @@ function confirmReimbursed() {
     return;
   }
   
-  const id = +document.getElementById('markreimb-rid').value;
+  const id = document.getElementById('markreimb-rid').value;
   const r = DB.find(x=>x.id===id);
   if(!r) return;
   
@@ -1470,7 +1490,7 @@ function confirmReimbursed() {
 }
 
 function moveRimbBack() {
-  const id = +document.getElementById('markreimb-rid').value;
+  const id = document.getElementById('markreimb-rid').value;
   const r = DB.find(x=>x.id===id);
   if(!r) return;
   r.status = 'arrived';
@@ -1550,6 +1570,9 @@ function filterHistTable() {
 }
 
 function renderHist() {
+  const searchEl = document.getElementById('search-hist');
+  const currentSearch = searchEl ? searchEl.value : '';
+
   const now = new Date();
   const filterDefs = [
     {v:'month',      l:'This month'},
@@ -1609,10 +1632,15 @@ function renderHist() {
     <td style="color:${r.ramt>0?'var(--green)':'var(--text3)'};font-weight:500">${r.ramt>0?'£'+Number(r.ramt).toFixed(2):'--'}</td>
     <td style="font-weight:500;color:${netPL<0?'#f05050':netPL>0?'#3dd68c':'var(--text3)'}">£${Number(netPL).toFixed(2)}</td>
     <td style="font-size:11px;display:flex;flex-direction:column;gap:6px;align-items:center">
-      ${r.status==='reimbursed'?`<button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600;padding:4px 8px" onclick="moveHistToReimb(${r.id})">→ Reimb</button>`:``}
-      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600;padding:4px 8px" onclick="moveHistToActive(${r.id})">→ Active</button>
+      ${r.status==='reimbursed'?`<button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600;padding:4px 8px" onclick="moveHistToReimb('${r.id}')">→ Reimb</button>`:``}
+      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600;padding:4px 8px" onclick="moveHistToActive('${r.id}')">→ Active</button>
     </td>
   </tr>`}).join('') : `<tr class="empty-row"><td colspan="12">No closed removals in this period</td></tr>`;
+
+  if (currentSearch) {
+    const el = document.getElementById('search-hist');
+    if (el) { el.value = currentSearch; filterHistTable(); }
+  }
 }
 
 function setHistFilter(f) {
@@ -1655,53 +1683,53 @@ function openDetail(id) {
     </div>
     <div class="modal-sub">Product info</div>
     <div class="fg g3">
-      <div class="field"><label>Product name</label><input value="${r.name}" onchange="upd(${r.id},'name',this.value)"></div>
-      <div class="field"><label>ASIN</label><input value="${r.asin}" onchange="upd(${r.id},'asin',this.value)"></div>
-      <div class="field"><label>FNSKU</label><input value="${r.fnsku||''}" onchange="upd(${r.id},'fnsku',this.value)"></div>
+      <div class="field"><label>Product name</label><input value="${r.name}" onchange="upd('${r.id}','name',this.value)"></div>
+      <div class="field"><label>ASIN</label><input value="${r.asin}" onchange="upd('${r.id}','asin',this.value)"></div>
+      <div class="field"><label>FNSKU</label><input value="${r.fnsku||''}" onchange="upd('${r.id}','fnsku',this.value)"></div>
     </div>
     <div class="fg g2" style="margin-top:10px">
-      <div class="field"><label>LPN (from photo)</label><input value="${r.lpn||''}" placeholder="e.g. 2825" onchange="upd(${r.id},'lpn',this.value)"></div>
-      <div class="field"><label>Quantity</label><input type="number" value="${r.qord||1}" onchange="upd(${r.id},'qord',+this.value)"></div>
+      <div class="field"><label>LPN (from photo)</label><input value="${r.lpn||''}" placeholder="e.g. 2825" onchange="upd('${r.id}','lpn',this.value)"></div>
+      <div class="field"><label>Quantity</label><input type="number" value="${r.qord||1}" onchange="upd('${r.id}','qord',+this.value)"></div>
     </div>
     <div class="modal-sub">Order details</div>
     <div class="fg g3">
-      <div class="field"><label>Removal Order ID</label><input value="${r.oid||''}" onchange="upd(${r.id},'oid',this.value)">
+      <div class="field"><label>Removal Order ID</label><input value="${r.oid||''}" onchange="upd('${r.id}','oid',this.value)">
         ${r.oid?`<div style="margin-top:4px"><a href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank" style="font-size:11px;color:var(--blue)">Open in Seller Central ↗</a></div>`:''}
       </div>
-      <div class="field"><label>Shipment ID</label><input value="${r.shipid||''}" onchange="upd(${r.id},'shipid',this.value)"></div>
-      <div class="field"><label>Tracking number</label><input value="${r.tracking||''}" onchange="upd(${r.id},'tracking',this.value)"></div>
+      <div class="field"><label>Shipment ID</label><input value="${r.shipid||''}" onchange="upd('${r.id}','shipid',this.value)"></div>
+      <div class="field"><label>Tracking number</label><input value="${r.tracking||''}" onchange="upd('${r.id}','tracking',this.value)"></div>
     </div>
     <div class="fg g3" style="margin-top:10px">
-      <div class="field"><label>Date submitted</label><input type="date" value="${r.dsub||''}" onchange="upd(${r.id},'dsub',this.value)"></div>
-      <div class="field"><label>Date Delivered</label><input type="date" value="${r.ddeliv||''}" onchange="upd(${r.id},'ddeliv',this.value)"></div>
-      <div class="field"><label>COG £ (inc VAT)</label><input type="number" step="0.01" value="${r.cog||''}" onchange="upd(${r.id},'cog',+this.value)"></div>
+      <div class="field"><label>Date submitted</label><input type="date" value="${r.dsub||''}" onchange="upd('${r.id}','dsub',this.value)"></div>
+      <div class="field"><label>Date Delivered</label><input type="date" value="${r.ddeliv||''}" onchange="upd('${r.id}','ddeliv',this.value)"></div>
+      <div class="field"><label>COG £ (inc VAT)</label><input type="number" step="0.01" value="${r.cog||''}" onchange="upd('${r.id}','cog',+this.value)"></div>
     </div>
     <div class="fg g1" style="margin-top:10px">
-      <div class="field"><label>Order source</label><select onchange="upd(${r.id},'src',this.value)"><option value="seller"${r.src==='seller'?' selected':''}>Seller-initiated</option><option value="amazon"${r.src==='amazon'?' selected':''}>Amazon auto</option></select></div>
+      <div class="field"><label>Order source</label><select onchange="upd('${r.id}','src',this.value)"><option value="seller"${r.src==='seller'?' selected':''}>Seller-initiated</option><option value="amazon"${r.src==='amazon'?' selected':''}>Amazon auto</option></select></div>
     </div>
     <div class="fg g2" style="margin-top:10px">
-      <div class="field"><label>MSC Checked Date</label><input type="date" value="${r.dmsc_checked||''}" onchange="upd(${r.id},'dmsc_checked',this.value)" title="When you checked MSC eligibility — appeal window starts from this date if denied"></div>
-      <div class="field"><label>MSC Status (if checked)</label><select onchange="upd(${r.id},'msc_check_status',this.value)"><option value="">Not checked yet</option><option value="eligible"${r.msc_check_status==='eligible'?' selected':''}>Eligible</option><option value="ineligible"${r.msc_check_status==='ineligible'?' selected':''}>Ineligible</option><option value="review"${r.msc_check_status==='review'?' selected':''}>Under review</option></select></div>
+      <div class="field"><label>MSC Checked Date</label><input type="date" value="${r.dmsc_checked||''}" onchange="upd('${r.id}','dmsc_checked',this.value)" title="When you checked MSC eligibility — appeal window starts from this date if denied"></div>
+      <div class="field"><label>MSC Status (if checked)</label><select onchange="upd('${r.id}','msc_check_status',this.value)"><option value="">Not checked yet</option><option value="eligible"${r.msc_check_status==='eligible'?' selected':''}>Eligible</option><option value="ineligible"${r.msc_check_status==='ineligible'?' selected':''}>Ineligible</option><option value="review"${r.msc_check_status==='review'?' selected':''}>Under review</option></select></div>
     </div>
     <div class="sep"></div>
     <div class="modal-sub">Damage / condition notes</div>
-    <div class="field"><textarea onchange="upd(${r.id},'damage',this.value)" placeholder="Describe damage, missing parts, condition from Discord check-in...">${r.damage||''}</textarea></div>
+    <div class="field"><textarea onchange="upd('${r.id}','damage',this.value)" placeholder="Describe damage, missing parts, condition from Discord check-in...">${r.damage||''}</textarea></div>
     <div class="sep"></div>
     <div class="modal-sub">Case attempts</div>
     <div id="dm-cases-${r.id}"></div>
-    <button class="btn btn-sm" style="margin-top:8px" onclick="openAddCase(${r.id})">+ Log new attempt</button>
+    <button class="btn btn-sm" style="margin-top:8px" onclick="openAddCase('${r.id}')">+ Log new attempt</button>
     <div class="sep"></div>
     <div class="modal-sub">Reimbursement</div>
     <div class="fg g3">
-      <div class="field"><label>Amount reimbursed £</label><input type="number" step="0.01" value="${r.ramt||''}" onchange="upd(${r.id},'ramt',+this.value)"></div>
-      <div class="field"><label>Reimbursement ID</label><input value="${r.reimbid||''}" onchange="upd(${r.id},'reimbid',this.value)"></div>
-      <div class="field"><label>Date reimbursed</label><input type="date" value="${r.dreim||''}" onchange="upd(${r.id},'dreim',this.value)"></div>
+      <div class="field"><label>Amount reimbursed £</label><input type="number" step="0.01" value="${r.ramt||''}" onchange="upd('${r.id}','ramt',+this.value)"></div>
+      <div class="field"><label>Reimbursement ID</label><input value="${r.reimbid||''}" onchange="upd('${r.id}','reimbid',this.value)"></div>
+      <div class="field"><label>Date reimbursed</label><input type="date" value="${r.dreim||''}" onchange="upd('${r.id}','dreim',this.value)"></div>
     </div>
     <div class="fg g2" style="margin-top:10px">
-      <div class="field"><label>Status</label><select onchange="upd(${r.id},'status',this.value);updateBadges()">
+      <div class="field"><label>Status</label><select onchange="upd('${r.id}','status',this.value);updateBadges()">
         ${STATUS_LIST.map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('')}
       </select></div>
-      <div class="field"><label>MSC reupdate date</label><input type="date" value="${r.reupdate||''}" onchange="upd(${r.id},'reupdate',this.value)"></div>
+      <div class="field"><label>MSC reupdate date</label><input type="date" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value)"></div>
     </div>
     <div class="sep"></div>
     <div class="modal-sub">Audit Log</div>
@@ -1714,7 +1742,7 @@ function openDetail(id) {
       }).join('') : '<div style="color:var(--text4)">No status changes yet</div>'}
     </div>
     <div class="sep"></div>
-    <div class="field"><label>General notes</label><textarea onchange="upd(${r.id},'mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
+    <div class="field"><label>General notes</label><textarea onchange="upd('${r.id}','mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
     <div class="modal-foot">
       <button class="btn btn-primary" onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)">Save & close</button>
       <button class="btn btn-blue" onclick="closeModal('detail-overlay');openCaseGenModal(${r.id})">Generate case message</button>
@@ -1818,7 +1846,7 @@ function openAddCase(rid) {
 }
 
 function saveAddCase() {
-  const rid = +document.getElementById('addcase-rid').value;
+  const rid = document.getElementById('addcase-rid').value;
   const r = DB.find(x=>x.id===rid); if(!r) return;
   if(!r.cases) r.cases=[];
   r.cases.push({
@@ -1906,7 +1934,7 @@ function renderOverview() {
   });
 
   document.getElementById('overview-actions').innerHTML = actions.length ? actions.map(({r,dot,label,meta,note})=>`
-    <div class="action-item" onclick="openDetail(${r.id})">
+    <div class="action-item" onclick="openDetail('${r.id}')">
       <div class="action-dot ${dot}"></div>
       <div class="action-info">
         <div class="action-name">${r.name}</div>
@@ -1921,7 +1949,7 @@ function renderOverview() {
     .sort((a,b)=>a.reupdate.localeCompare(b.reupdate)).slice(0,6);
   document.getElementById('overview-reupdates').innerHTML = upcoming.length ? upcoming.map(r=>{
     const days=Math.ceil((new Date(r.reupdate)-new Date())/86400000);
-    return `<div class="action-item" onclick="openDetail(${r.id})">
+    return `<div class="action-item" onclick="openDetail('${r.id}')">
       <div class="action-dot ad-amber"></div>
       <div class="action-info">
         <div class="action-name">${r.name}</div>
@@ -1936,7 +1964,7 @@ function renderOverview() {
     .sort((a,b)=>deadline60(a)-deadline60(b));
   document.getElementById('overview-deadlines').innerHTML = deadlines.length ? deadlines.map(r=>{
     const d=deadline60(r);
-    return `<div class="action-item" onclick="openDetail(${r.id})">
+    return `<div class="action-item" onclick="openDetail('${r.id}')">
       <div class="action-dot ${d<=7?'ad-red':'ad-amber'}"></div>
       <div class="action-info">
         <div class="action-name">${r.name}</div>
@@ -1956,11 +1984,10 @@ function openCheckin(id) {
   document.getElementById('checkin-title').textContent = `${r.name} -- what's the verdict?`;
   CHECKIN_DECISION=null;
   document.getElementById('checkin-overlay').classList.remove('h');
-  saveDb();
 }
 
 function openPartialCheckin() {
-  const rid = +document.getElementById('checkin-rid').value;
+  const rid = document.getElementById('checkin-rid').value;
   const r = DB.find(x=>x.id===rid);
   if (!r) return;
   
@@ -1974,7 +2001,7 @@ function openPartialCheckin() {
 }
 
 function partialCheckinAll() {
-  const rid = +document.getElementById('partial-rid').value;
+  const rid = document.getElementById('partial-rid').value;
   const r = DB.find(x=>x.id===rid);
   if (!r) return;
   
@@ -1984,7 +2011,7 @@ function partialCheckinAll() {
 }
 
 function partialCheckinConfirm() {
-  const rid = +document.getElementById('partial-rid').value;
+  const rid = document.getElementById('partial-rid').value;
   const arrivedQty = +document.getElementById('partial-qty-input').value;
   const r = DB.find(x=>x.id===rid);
   
@@ -2027,13 +2054,11 @@ function partialCheckinConfirm() {
   
   closeModal('partial-checkin-overlay');
   renderActive();
-  renderReimb();
   updateBadges();
-  setTimeout(() => navTo('reimb'), 100);
 }
 
 function checkinDecision(type) {
-  const rid = +document.getElementById('checkin-rid').value;
+  const rid = document.getElementById('checkin-rid').value;
   const r = DB.find(x=>x.id===rid);
   if(!r) { console.error('Item not found:', rid); return; }
   
@@ -2051,7 +2076,8 @@ function checkinDecision(type) {
     updates.status_changed_at = timestamp;
     updates.status_log = r.status_log;
     closeModal('checkin-overlay');
-    setTimeout(() => navTo('reimb'), 100);
+    renderActive();
+    updateBadges();
   } else if(type === 'new') {
     r.status = 'sentnew';
     r.cond = 'New';
@@ -2064,7 +2090,8 @@ function checkinDecision(type) {
     updates.status_changed_at = timestamp;
     updates.status_log = r.status_log;
     closeModal('checkin-overlay');
-    setTimeout(() => { navTo('history'); }, 100);
+    renderActive();
+    updateBadges();
   } else if(type === 'used') {
     r.status = 'sentused';
     r.cond = 'Used';
@@ -2077,7 +2104,8 @@ function checkinDecision(type) {
     updates.status_changed_at = timestamp;
     updates.status_log = r.status_log;
     closeModal('checkin-overlay');
-    setTimeout(() => { navTo('history'); }, 100);
+    renderActive();
+    updateBadges();
   }
   
   // Single atomic write
