@@ -1421,11 +1421,11 @@ function buildReimbCard(r, today) {
       </div>
     </div>
     <div class="rc-footer">
-      <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase(${r.id}),50)">Case msg</button>
+      <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase('${r.id}'),50)">Case msg</button>
       <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Log attempt</button>
       <button class="btn btn-sm" onclick="openDetail('${r.id}')">Details</button>
-      <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive(${r.id})">← Move to Active</button>
-      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed(${r.id})">✓ Mark as Reimbursed</button>
+      <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive('${r.id}')">← Move to Active</button>
+      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed('${r.id}')">✓ Mark as Reimbursed</button>
       <input class="inl-input" style="flex:1;font-size:11px;min-width:0" value="${r.mscnotes||''}" placeholder="Notes / urgent action..." onchange="upd('${r.id}','mscnotes',this.value)">
       <span class="rc-age" style="background:${ageColor}22;color:${ageColor};border:1px solid ${ageColor}44">${ageLabel}</span>
     </div>
@@ -1745,8 +1745,8 @@ function openDetail(id) {
     <div class="field"><label>General notes</label><textarea onchange="upd('${r.id}','mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
     <div class="modal-foot">
       <button class="btn btn-primary" onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)">Save & close</button>
-      <button class="btn btn-blue" onclick="closeModal('detail-overlay');openCaseGenModal(${r.id})">Generate case message</button>
-      <button class="btn btn-red btn-sm" style="margin-left:auto" onclick="delR(${r.id})">Delete</button>
+      <button class="btn btn-blue" onclick="closeModal('detail-overlay');openCaseGenModal('${r.id}')">Generate case message</button>
+      <button class="btn btn-red btn-sm" style="margin-left:auto" onclick="delR('${r.id}')">Delete</button>
     </div>`;
   document.getElementById('detail-overlay').classList.remove('h');
   renderDetailCases(r.id);
