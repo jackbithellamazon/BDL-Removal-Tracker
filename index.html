@@ -897,10 +897,25 @@ async function pullFromSupabase() {
     }
     const fresh = (data || []).map(r => ({
       ...r,
-      cases: typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : (r.cases || []),
+      cases: Array.isArray(r.cases) ? r.cases : (typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : []),
       status_log: typeof r.status_log === 'string' ? JSON.parse(r.status_log || '[]') : (r.status_log || [])
     }));
-    DB = fresh;
+
+    // Protect any records written locally in the last 15 seconds —
+    // Supabase may return stale data for these (write hasn't propagated yet)
+    const now = Date.now();
+    const SAFE_WINDOW_MS = 15000;
+    DB = fresh.map(freshRecord => {
+      const localRecord = DB.find(x => x.id === freshRecord.id);
+      if (!localRecord) return freshRecord;
+      // If local record was written recently, keep local version
+      const localWriteTime = localRecord._localWriteAt || 0;
+      if ((now - localWriteTime) < SAFE_WINDOW_MS) {
+        return localRecord; // protect from stale overwrite
+      }
+      return freshRecord;
+    });
+
     setSyncState('ok');
     renderPage(CURRENT_PAGE);
   } catch(e) {
@@ -952,10 +967,21 @@ async function initSupabase() {
 async function saveToSupabase(removal) {
   if (!window.sbClient) return;
   setSyncState('pending', 'Saving new...');
+
+  // Stamp so poll doesn't overwrite before confirmed
+  const localRecord = DB.find(x => x.id === removal.id);
+  if (localRecord) localRecord._localWriteAt = Date.now();
+
   try {
     const cleanRemoval = {};
     for (const [key, val] of Object.entries(removal)) {
-      cleanRemoval[key] = Array.isArray(val) ? JSON.stringify(val) : val;
+      if (key === 'cases') {
+        cleanRemoval[key] = Array.isArray(val) ? val : (typeof val === 'string' ? JSON.parse(val || '[]') : val);
+      } else if (Array.isArray(val)) {
+        cleanRemoval[key] = JSON.stringify(val);
+      } else {
+        cleanRemoval[key] = val;
+      }
     }
     const { error } = await window.sbClient.from('removals').upsert([cleanRemoval]);
     if (error) {
@@ -964,6 +990,8 @@ async function saveToSupabase(removal) {
       showError('Failed to save: ' + error.message);
     } else {
       console.log('✓ Saved:', removal.name);
+      const rec = DB.find(x => x.id === removal.id);
+      if (rec) delete rec._localWriteAt;
       setSyncState('ok');
     }
   } catch (e) {
@@ -976,10 +1004,23 @@ async function saveToSupabase(removal) {
 async function updateInSupabase(id, updates) {
   if (!window.sbClient) return;
   setSyncState('pending', 'Saving...');
+
+  // Stamp the local record so the poll doesn't overwrite it before Supabase confirms
+  const localRecord = DB.find(x => x.id === id);
+  if (localRecord) localRecord._localWriteAt = Date.now();
+
   try {
     const cleanUpdates = {};
     for (const [key, val] of Object.entries(updates)) {
-      cleanUpdates[key] = Array.isArray(val) ? JSON.stringify(val) : val;
+      // cases is jsonb in Supabase — send as object, not string
+      // status_log is text — send as string
+      if (key === 'cases') {
+        cleanUpdates[key] = Array.isArray(val) ? val : (typeof val === 'string' ? JSON.parse(val) : val);
+      } else if (Array.isArray(val)) {
+        cleanUpdates[key] = JSON.stringify(val);
+      } else {
+        cleanUpdates[key] = val;
+      }
     }
     const { error } = await window.sbClient
       .from('removals')
@@ -991,6 +1032,9 @@ async function updateInSupabase(id, updates) {
       showError('Failed to update: ' + error.message);
     } else {
       console.log('✓ Updated removal:', id);
+      // Clear the write protection — Supabase now has the correct data
+      const rec = DB.find(x => x.id === id);
+      if (rec) delete rec._localWriteAt;
       setSyncState('ok');
     }
   } catch (e) {
@@ -1407,7 +1451,7 @@ function buildReimbCard(r, today) {
         <div class="rc-field-row"><span class="rc-field-name">Date Delivered</span><span class="rc-field-val"><input type="date" class="inl-input" style="width:140px;font-size:11px;padding-right:30px" value="${r.ddeliv||''}" onchange="upd('${r.id}','ddeliv',this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd('${r.id}','cog',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd('${r.id}','ramt',+this.value);renderReimb()"></span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="saveCaseId(${r.id}, this.value)">${latestCase?.id ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${latestCase.id}" target="_blank" style="color:var(--blue);margin-left:6px;text-decoration:none;font-size:11px">Open ↗</a>` : ''}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="saveCaseId('${r.id}', this.value)">${latestCase?.id ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${latestCase.id}" target="_blank" style="color:var(--blue);margin-left:6px;text-decoration:none;font-size:11px">Open ↗</a>` : ''}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd('${r.id}','discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
@@ -1421,7 +1465,7 @@ function buildReimbCard(r, today) {
       </div>
     </div>
     <div class="rc-footer">
-      <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase('${r.id}'),50)">Case msg</button>
+      <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase('${r.id}'),150)">Case msg</button>
       <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Log attempt</button>
       <button class="btn btn-sm" onclick="openDetail('${r.id}')">Details</button>
       <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive('${r.id}')">← Move to Active</button>
@@ -1812,7 +1856,7 @@ function renderDetailCases(id) {
       <span class="attempt-row-outcome ao-${c.outcome||'review'}">${c.outcome==='approved'?'✓ Approved':c.outcome==='denied'?'✗ Denied':c.outcome==='needsdoc'?'📄 Needs doc':'⏳ Review'}</span>
       <span class="attempt-note">${c.note||''}</span>
       ${c.id?`<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${c.id}" target="_blank" style="font-size:11px;color:var(--blue);white-space:nowrap;text-decoration:none">Case ${c.id} ↗</a>`:'<span style="font-size:11px;color:var(--text3)">No case ID</span>'}
-      <button onclick="removeCase(${id},${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0 4px" title="Remove">×</button>
+      <button onclick="removeCase('${id}',${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0 4px" title="Remove">×</button>
     </div>`).join('');
 }
 
@@ -2121,7 +2165,17 @@ function checkinConfirm() {
 // PREFILL CASE FROM REIMB PAGE --
 function prefillCase(id) {
   const sel = document.getElementById('cg-removal');
-  if(sel) { sel.value=id; onCgRemovalChange(); }
+  if (!sel) return;
+  // Rebuild dropdown first to make sure the option exists
+  loadCaseDropdown();
+  // Now set the value and trigger change
+  sel.value = id;
+  if (sel.value !== id) {
+    // Option not found - try again after a tick
+    setTimeout(() => { loadCaseDropdown(); sel.value = id; onCgRemovalChange(); }, 100);
+  } else {
+    onCgRemovalChange();
+  }
 }
 
 function delR(id) {
@@ -2434,7 +2488,7 @@ function copyCase() {
   });
 }
 
-function openCaseGenModal(id) { navTo('case'); setTimeout(()=>prefillCase(id),50); }
+function openCaseGenModal(id) { navTo('case'); setTimeout(()=>prefillCase(id), 150); }
 function copyCaseModal(){} // legacy stub
 function updateCaseModal(){} // legacy stub
 function buildCaseMsg(){} // legacy stub
@@ -2838,7 +2892,7 @@ function renderAuditLog() {
       } else {
         DB = (data || []).map(r => ({
           ...r,
-          cases: typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : (r.cases || []),
+          cases: Array.isArray(r.cases) ? r.cases : (typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : []),
           status_log: typeof r.status_log === 'string' ? JSON.parse(r.status_log || '[]') : (r.status_log || [])
         }));
         console.log(`✓ Loaded ${DB.length} removals from Supabase`);
