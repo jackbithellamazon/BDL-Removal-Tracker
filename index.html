@@ -1002,6 +1002,7 @@ async function saveToSupabase(removal) {
   try {
     const cleanRemoval = {};
     for (const [key, val] of Object.entries(removal)) {
+      if (key === '_localWriteAt') continue; // in-memory only, never save to Supabase
       if (key === 'cases') {
         cleanRemoval[key] = Array.isArray(val) ? val : (typeof val === 'string' ? JSON.parse(val || '[]') : val);
       } else if (Array.isArray(val)) {
@@ -1039,8 +1040,7 @@ async function updateInSupabase(id, updates) {
   try {
     const cleanUpdates = {};
     for (const [key, val] of Object.entries(updates)) {
-      // cases is jsonb in Supabase — send as object, not string
-      // status_log is text — send as string
+      if (key === '_localWriteAt') continue; // in-memory only, never save to Supabase
       if (key === 'cases') {
         cleanUpdates[key] = Array.isArray(val) ? val : (typeof val === 'string' ? JSON.parse(val) : val);
       } else if (Array.isArray(val)) {
