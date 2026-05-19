@@ -1011,7 +1011,7 @@ async function saveToSupabase(removal) {
         cleanRemoval[key] = val;
       }
     }
-    const { error } = await window.sbClient.from('removals').upsert([cleanRemoval]);
+    const { error } = await window.sbClient.from('removals').insert([cleanRemoval]);
     if (error) {
       console.error('Save error:', error);
       setSyncState('error', error.message.slice(0, 30));
