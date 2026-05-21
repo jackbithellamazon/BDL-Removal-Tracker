@@ -4,13 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Removals Tracker</title>
+<link rel="icon" href="data:,">
+<style>
+.fin-tile{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:16px 18px}
+.fin-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.fin-val{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.fin-sub{font-size:11px;color:var(--text2);margin-top:5px;font-weight:500}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#0a0d14;--bg2:#111520;--bg3:#181e2e;--bg4:#1e2638;--bg5:#252d3d;
   --border:#222840;--border2:#2e3a55;
-  --text:#e8eaf0;--text2:#8b93a8;--text3:#4e5870;
+  --text:#e8eaf0;--text2:#b0b8cc;--text3:#6e7a94;
   --blue:#4d8ef0;--blue-bg:#0f1f3d;--blue-dim:#1a2d52;
   --green:#3dd68c;--green-bg:#0a2b1c;--green-dim:#0f2e1f;
   --amber:#f5a623;--amber-bg:#2e1f08;--amber-dim:#241808;
@@ -74,19 +81,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .content{flex:1;overflow-y:auto;padding:20px 24px}
 
 /* Tiles */
-.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px}
-.tile{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
-.tile:hover{border-color:var(--border2);transform:translateY(-1px)}
-.tile::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
-.tile-blue::before{background:var(--blue)}
-.tile-green::before{background:var(--green)}
-.tile-amber::before{background:var(--amber)}
-.tile-red::before{background:var(--red)}
-.tile-purple::before{background:var(--purple)}
-.tile-cyan::before{background:var(--cyan)}
-.tile-v{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1;margin-bottom:5px}
-.tile-l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-weight:500}
-.tile-sub{font-size:11px;color:var(--text2);margin-top:3px}
+.tile-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:14px}
+.tile{background:var(--bg2);border:1px solid var(--border);border-left-width:3px;border-radius:10px;padding:14px 14px 12px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.tile:hover{background:var(--bg3);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.tile-blue  {border-left-color:var(--blue)}
+.tile-amber {border-left-color:var(--amber)}
+.tile-red   {border-left-color:var(--red)}
+.tile-purple{border-left-color:var(--purple)}
+.tile-cyan  {border-left-color:var(--cyan)}
+.tile-green {border-left-color:var(--green)}
+.tile-v{font-size:28px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-bottom:5px}
+.tile-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+.tile-sub{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3}
 .tv-blue{color:var(--blue)}.tv-green{color:var(--green)}.tv-amber{color:var(--amber)}.tv-red{color:var(--red)}.tv-purple{color:var(--purple)}.tv-cyan{color:var(--cyan)}.tv-white{color:var(--text)}
 
 /* Action list */
@@ -96,7 +102,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .action-item:last-child{border-bottom:none}
 .action-item:hover{background:var(--bg3)}
 .action-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.ad-red{background:var(--red)}.ad-amber{background:var(--amber)}.ad-purple{background:var(--purple)}.ad-blue{background:var(--blue)}.ad-cyan{background:var(--cyan)}
+.ad-red{background:var(--red)}.ad-amber{background:var(--amber)}.ad-purple{background:var(--purple)}.ad-blue{background:var(--blue)}.ad-cyan{background:var(--cyan)}.ad-pink{background:var(--pink)}
 .action-info{flex:1;min-width:0}
 .action-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .action-desc{font-size:11px;color:var(--text3);margin-top:1px}
@@ -250,7 +256,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
 .rc-mscreduced  {background:#1a1000;border-color:#f5a62377}
 .rc-mscdenied   {background:#180303;border-color:#f0505077}
 .rc-mscneedsdoc {background:#0d0620;border-color:#9b7ff077}
-.rc-caseopen    {background:#061518;border-color:#22d3ee66}
+.rc-escalated   {background:#1a0820;border-color:#f472b655}
 
 body.light-mode .rc-checkdiscord {background:#f0eeff;border-color:#a78bfa88}
 body.light-mode .rc-mscsubmit   {background:#eff4ff;border-color:#2563eb66}
@@ -259,7 +265,7 @@ body.light-mode .rc-mscapproved {background:#f0fdf4;border-color:#16a34a88}
 body.light-mode .rc-mscreduced  {background:#fffbeb;border-color:#d9770888}
 body.light-mode .rc-mscdenied   {background:#fef2f2;border-color:#dc262688}
 body.light-mode .rc-mscneedsdoc {background:#f5f3ff;border-color:#7c3aed88}
-body.light-mode .rc-caseopen    {background:#ecfeff;border-color:#0891b288}
+body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
 .rc-header{padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border)}
 .rc-header-left{flex:1;min-width:0}
 .rc-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:5px;user-select:text}
@@ -387,7 +393,16 @@ body.light-mode .rc-caseopen    {background:#ecfeff;border-color:#0891b288}
         <h2 id="page-title">Overview</h2>
         <p id="page-sub">Your removals at a glance</p>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="https://app.sellerfuse.com/your-orders?status=Removal+Order" target="_blank"
+          id="sellerfuse-btn"
+          style="display:inline-flex;align-items:center;gap:7px;padding:7px 13px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:6px;color:var(--blue);text-decoration:none;font-size:12px;font-weight:600;transition:all .15s"
+          onmouseover="this.style.background='var(--blue-dim)'" onmouseout="this.style.background='var(--blue-bg)'"
+          title="Open SellerFuse to check for new removal orders">
+          <span style="font-size:13px">📋</span>
+          <span>SellerFuse</span>
+          <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </a>
         <button class="btn btn-primary" onclick="openAdd()">+ Add removal</button>
       </div>
     </div>
@@ -395,28 +410,106 @@ body.light-mode .rc-caseopen    {background:#ecfeff;border-color:#0891b288}
 
       <!-- OVERVIEW PAGE -->
       <div id="page-overview">
-        <div style="margin-bottom:16px">
-          <a href="https://app.sellerfuse.com/your-orders?status=Removal+Order" target="_blank" style="display:inline-block;padding:8px 16px;background:#4d8ef0;color:white;border-radius:6px;font-weight:600;font-size:12px;text-decoration:none;border:1px solid #4d8ef055">📋 Check SellerFuse for new removals</a>
+
+        <!-- RECOVERY COMMAND BAR -->
+        <div id="overview-financials"></div>
+
+        <!-- URGENT ALERT BANNER -->
+        <div id="overview-alert-banner"></div>
+
+        <!-- KPI TILES with ACTION/WAITING split labels -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;padding:0 4px">
+          <div style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);animation:pulse 2s infinite"></span>
+            Action Required
+            <span style="color:var(--text3);font-weight:500;letter-spacing:0;text-transform:none;margin-left:4px">— Sarah does these</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">
+            <span style="width:5px;height:5px;border-radius:50%;background:var(--text3)"></span>
+            Waiting / Monitoring
+            <span style="color:var(--text3);font-weight:500;letter-spacing:0;text-transform:none;margin-left:4px">— informational</span>
+          </div>
         </div>
         <div class="tile-grid" id="overview-tiles"></div>
-        <div class="action-list" id="overview-action-list">
-          <div class="action-list-hdr">
-            <span style="color:var(--red)">●</span> Sarah's action list
+
+        <!-- MAIN BODY: Sarah's list + right panel -->
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:14px">
+
+          <!-- SARAH'S ACTION LIST -->
+          <div class="tbl-wrap" style="border:2px solid var(--red);border-radius:10px;box-shadow:0 0 0 4px var(--red-bg)">
+            <div style="padding:12px 16px;border-bottom:2px solid var(--red);background:linear-gradient(90deg,var(--red-bg),var(--bg2));display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;box-shadow:0 0 10px var(--red);animation:pulse 2s infinite"></span>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em">Your Tasks Today</div>
+                  <div style="font-size:10px;color:var(--text3);margin-top:1px">Work top to bottom — most urgent first</div>
+                </div>
+              </div>
+              <span id="actions-count" style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg4);border:1px solid var(--border2);border-radius:14px;padding:3px 10px"></span>
+            </div>
+            <div id="overview-actions" style="max-height:calc(100vh - 380px);overflow-y:auto"></div>
           </div>
-          <div id="overview-actions"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div class="tbl-wrap">
-            <div style="padding:11px 16px;border-bottom:1px solid var(--border);font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">⏰ Upcoming reupdates</div>
-            <div id="overview-reupdates"></div>
-          </div>
-          <div class="tbl-wrap">
-            <div style="padding:11px 16px;border-bottom:1px solid var(--border);font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">⏱ Approaching 60-day deadline</div>
-            <div id="overview-deadlines"></div>
+
+          <!-- RIGHT PANEL -->
+          <div style="display:flex;flex-direction:column;gap:10px">
+
+            <!-- RE-UPDATE SCHEDULE -->
+            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
+              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+                <div>
+                  <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
+                    <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M3 6h10M3 6V4a1 1 0 011-1h8a1 1 0 011 1v2M3 6v7a1 1 0 001 1h8a1 1 0 001-1V6M5 2v2M11 2v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    Re-update Schedule
+                  </div>
+                  <div style="font-size:9px;color:var(--text3);margin-top:1px">Upcoming MSC re-updates by day</div>
+                </div>
+                <button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:1px solid var(--border2);font-size:10px;color:var(--text2);cursor:pointer;font-weight:600;border-radius:5px;padding:3px 8px">View all →</button>
+              </div>
+              <div id="overview-reupdates"></div>
+            </div>
+
+            <!-- 60-DAY DEADLINES -->
+            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
+              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+                <div>
+                  <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
+                    <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                    60-Day Deadlines
+                  </div>
+                  <div style="font-size:9px;color:var(--text3);margin-top:1px">Reimbursement window closing</div>
+                </div>
+                <button onclick="navTo('active')" style="background:none;border:1px solid var(--border2);font-size:10px;color:var(--text2);cursor:pointer;font-weight:600;border-radius:5px;padding:3px 8px">View Active →</button>
+              </div>
+              <div id="overview-deadlines"></div>
+            </div>
+
+            <!-- PIPELINE FUNNEL -->
+            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
+              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3)">
+                <div style="font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
+                  <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M2 3h12l-3 5v4l-6 2V8L2 3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+                  Pipeline Flow
+                </div>
+                <div style="font-size:9px;color:var(--text3);margin-top:1px">Items at each stage</div>
+              </div>
+              <div id="overview-funnel"></div>
+            </div>
+
+            <!-- QUICK STATS -->
+            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
+              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3)">
+                <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
+                  <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M3 14V8M7 14V3M11 14v-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                  Quick Stats
+                </div>
+                <div style="font-size:9px;color:var(--text3);margin-top:1px">Pipeline state breakdown</div>
+              </div>
+              <div id="overview-quickstats"></div>
+            </div>
+
           </div>
         </div>
       </div>
-
       <!-- ACTIVE PAGE -->
       <div id="page-active" style="display:none">
         <div class="qlinks">
@@ -780,30 +873,89 @@ body.light-mode .rc-caseopen    {background:#ecfeff;border-color:#0891b288}
 <div class="modal" id="casegen-modal"></div>
 </div>
 
+<!-- LOG MSC ATTEMPT MODAL -->
+<div class="overlay h" id="addmsc-overlay" onclick="closeBg(event,'addmsc-overlay')">
+<div class="modal" style="max-width:520px">
+  <div class="modal-title" id="addmsc-title">Log MSC Submission</div>
+  <input type="hidden" id="addmsc-rid">
+  <input type="hidden" id="addmsc-idx"> <!-- -1 = new, else edit index -->
+  <div class="fg g2">
+    <div class="field"><label>Date Submitted</label><input type="date" id="am-date"></div>
+    <div class="field"><label>Attempt #</label><input type="number" id="am-attempt" min="1" max="10" value="1" style="width:80px"></div>
+  </div>
+  <div class="fg g2" style="margin-top:10px">
+    <div class="field"><label>COG Submitted £</label><input type="number" id="am-cog" step="0.01" placeholder="e.g. 91.91"></div>
+    <div class="field"><label>Outcome</label>
+      <select id="am-outcome" onchange="onMscOutcomeChange()">
+        <option value="pending">Pending / Submitted</option>
+        <option value="approved">Approved ✓</option>
+        <option value="approved-reduced">Approved (reduced amount)</option>
+        <option value="denied">Denied ✗</option>
+        <option value="review">Under review</option>
+        <option value="error">Error / Too many attempts</option>
+      </select>
+    </div>
+  </div>
+  <div id="am-denial-section" style="display:none;margin-top:10px">
+    <div class="fg g2">
+      <div class="field"><label>Denial Date</label><input type="date" id="am-denial-date" onchange="onMscDenialDateChange()"></div>
+      <div class="field"><label>Next Submit Date <span style="color:var(--green);font-size:10px">(auto +30d)</span></label><input type="date" id="am-next-date"></div>
+    </div>
+    <div style="font-size:11px;color:var(--amber);margin-top:6px;padding:8px;background:var(--amber-bg);border-radius:6px;border:1px solid var(--amber)">⏰ Amazon requires 30-day wait between MSC submissions. Next submit date auto-calculated.</div>
+  </div>
+  <div id="am-approved-section" style="display:none;margin-top:10px">
+    <div class="field"><label>Amount Approved £ <span style="color:var(--text3);font-size:10px">(if different from COG submitted)</span></label><input type="number" id="am-approved-amt" step="0.01" placeholder="Leave blank if full COG approved"></div>
+  </div>
+  <div class="field" style="margin-top:10px"><label>Notes</label>
+    <textarea id="am-note" placeholder="e.g. Denied — policy mismatch. Will reduce COG by 20% on resubmission." style="min-height:60px"></textarea>
+  </div>
+  <div class="modal-foot">
+    <button class="btn btn-primary" onclick="saveMscAttempt()">Save MSC Attempt</button>
+    <button class="btn" onclick="closeModal('addmsc-overlay')">Cancel</button>
+  </div>
+</div>
+</div>
+
 <!-- ADD CASE ATTEMPT MODAL -->
 <div class="overlay h" id="addcase-overlay" onclick="closeBg(event,'addcase-overlay')">
-<div class="modal" style="max-width:480px">
-  <div class="modal-title">Log case attempt</div>
+<div class="modal" style="max-width:520px">
+  <div class="modal-title">Log MSC / Case Attempt</div>
   <input type="hidden" id="addcase-rid">
   <div class="fg g2">
     <div class="field"><label>Date</label><input type="date" id="ac-date"></div>
-    <div class="field"><label>Outcome</label>
-      <select id="ac-outcome">
-        <option value="review">Under review</option>
-        <option value="approved">Approved</option>
-        <option value="denied">Denied</option>
-        <option value="needsdoc">Needs document</option>
+    <div class="field"><label>Type</label>
+      <select id="ac-type" onchange="updateCaseTypeUI()">
+        <option value="msc">MSC Submission</option>
+        <option value="msc-resubmit">MSC Re-submission</option>
+        <option value="case">Amazon Case</option>
+        <option value="escalation">Escalation</option>
+        <option value="update">Status Update</option>
+        <option value="doc">Document Sent</option>
       </select>
     </div>
+  </div>
+  <div class="field" style="margin-top:10px"><label>Outcome</label>
+    <select id="ac-outcome">
+      <option value="review">Under review</option>
+      <option value="approved">Approved ✓</option>
+      <option value="denied">Denied ✗</option>
+      <option value="needsdoc">Needs document</option>
+      <option value="resubmit">Needs resubmission</option>
+      <option value="escalated">Escalated</option>
+      <option value="pending">Pending response</option>
+    </select>
   </div>
   <div class="field" style="margin-top:10px"><label>Amazon Case ID (optional)</label>
     <input id="ac-caseid" placeholder="e.g. 12261286012">
   </div>
-  <div class="field" style="margin-top:10px"><label>Notes (COG submitted, denial reason, etc.)</label>
-    <textarea id="ac-note" placeholder="e.g. COG £35.90 submitted — denied, policy mismatch" style="min-height:70px"></textarea>
+  <div class="field" style="margin-top:10px"><label>COG submitted (£)</label>
+    <input id="ac-cog-submitted" type="number" step="0.01" placeholder="e.g. 35.90">
+  </div>
+  <div class="field" style="margin-top:10px"><label>Notes (denial reason, next steps, etc.)</label>
+    <textarea id="ac-note" placeholder="e.g. Denied — policy mismatch. Will resubmit with invoice." style="min-height:70px"></textarea>
   </div>
   <div class="modal-foot">
-    <button class="btn btn-primary" onclick="saveAddCase()">Save attempt</button>
+    <button class="btn btn-primary" onclick="saveAddCase()">Save</button>
     <button class="btn" onclick="closeModal('addcase-overlay')">Cancel</button>
   </div>
 </div>
@@ -925,6 +1077,7 @@ async function pullFromSupabase() {
     const fresh = (data || []).map(r => ({
       ...r,
       cases: Array.isArray(r.cases) ? r.cases : (typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : []),
+      msc_attempts: Array.isArray(r.msc_attempts) ? r.msc_attempts : (typeof r.msc_attempts === 'string' ? JSON.parse(r.msc_attempts || '[]') : []),
       status_log: typeof r.status_log === 'string' ? JSON.parse(r.status_log || '[]') : (r.status_log || [])
     }));
 
@@ -1005,6 +1158,8 @@ async function saveToSupabase(removal) {
       if (key === '_localWriteAt') continue; // in-memory only, never save to Supabase
       if (key === 'cases') {
         cleanRemoval[key] = Array.isArray(val) ? val : (typeof val === 'string' ? JSON.parse(val || '[]') : val);
+      } else if (key === 'msc_attempts') {
+        cleanRemoval[key] = Array.isArray(val) ? JSON.stringify(val) : (val||'[]');
       } else if (Array.isArray(val)) {
         cleanRemoval[key] = JSON.stringify(val);
       } else {
@@ -1043,6 +1198,8 @@ async function updateInSupabase(id, updates) {
       if (key === '_localWriteAt') continue; // in-memory only, never save to Supabase
       if (key === 'cases') {
         cleanUpdates[key] = Array.isArray(val) ? val : (typeof val === 'string' ? JSON.parse(val) : val);
+      } else if (key === 'msc_attempts') {
+        cleanUpdates[key] = Array.isArray(val) ? JSON.stringify(val) : val;
       } else if (Array.isArray(val)) {
         cleanUpdates[key] = JSON.stringify(val);
       } else {
@@ -1107,6 +1264,7 @@ const STATUS_LIST = [
   {v:'mscreduced',    l:'Reduced MSC approved',    cls:'ss-mscreduced'},
   {v:'mscdenied',     l:'MSC denied',              cls:'ss-mscdenied'},
   {v:'mscneedsdoc',   l:'Needs document',          cls:'ss-mscneedsdoc'},
+  {v:'escalated',     l:'Escalated to Jack',       cls:'ss-escalated'},
   {v:'caseopen',      l:'Case opened',             cls:'ss-caseopen'},
   {v:'reimbpending',  l:'Reimbursement pending',   cls:'ss-reimbpending'},
   {v:'reimbursed',    l:'Reimbursed',              cls:'ss-reimbursed'},
@@ -1119,7 +1277,7 @@ const SL = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.l]));
 const SC = Object.fromEntries(STATUS_LIST.map(s=>[s.v,s.cls]));
 
 const ACTIVE_STATUSES = ['transit','arrived'];
-const REIMB_STATUSES  = ['checkdiscord','mscsubmit','mscreview','mscapproved','mscreduced','mscdenied','mscneedsdoc','caseopen','reimbpending'];
+const REIMB_STATUSES  = ['checkdiscord','mscsubmit','mscreview','mscapproved','mscreduced','mscdenied','mscneedsdoc','escalated','caseopen','reimbpending'];
 const HIST_STATUSES   = ['reimbursed','sentnew','sentused','sentout','writeoff'];
 
 let PDF_IMAGES = []; // {dataUrl, name}
@@ -1278,7 +1436,7 @@ function renderActive() {
       ${r.sku ? `<div style="font-family:var(--mono);font-size:10px;color:#f05050;cursor:pointer;margin-top:2px;font-weight:600" onclick="copyText('${generateRetSku(r.sku)}')" title="Click to copy RET SKU">${generateRetSku(r.sku)}</div>` : ''}
     </td>
     <td style="font-family:var(--mono);font-size:11px">${r.oid?`<a href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank" style="color:var(--blue);text-decoration:none">${r.oid} ↗</a>`:'--'}</td>
-    <td style="font-weight:600;color:${r.cog>0?'var(--amber)':'var(--text3)'}">${r.cog>0?'£'+Number(r.cog).toFixed(2):'--'}</td>
+    <td style="font-weight:600;color:${r.cog>0?'var(--amber)':'var(--text3)'}">${r.cog>0?fmtMoney(r.cog):'--'}</td>
     <td>${lpn4(r.lpn)}</td>
     <td>
       <select class="status-sel sb-${r.status}" onchange="changeStatus('${r.id}',this.value,'active')" onclick="event.stopPropagation()" style="font-size:11px">
@@ -1312,15 +1470,18 @@ function toggleDateSort() {
 
 // REIMBURSEMENTS PAGE --
 const MSC_STATUS_LIST = [
-  {v:'checkdiscord',  l:'Check Discord',        cls:'sb-checkdiscord', border:'#a78bfa'},
-  {v:'mscsubmit',     l:'MSC submitted',        cls:'sb-mscsubmit',    border:'#4d8ef0'},
-  {v:'mscreview',     l:'MSC under review',     cls:'sb-mscreview',    border:'#f5a623'},
-  {v:'mscapproved',   l:'MSC approved',         cls:'sb-mscapproved',  border:'#3dd68c'},
-  {v:'mscreduced',    l:'Reduced MSC approved', cls:'sb-mscreduced',   border:'#3dd68c'},
-  {v:'mscdenied',     l:'MSC denied',           cls:'sb-mscdenied',    border:'#f05050'},
-  {v:'mscneedsdoc',   l:'Needs document',       cls:'sb-mscneedsdoc',  border:'#9b7ff0'},
-  {v:'caseopen',      l:'Case opened',          cls:'sb-caseopen',     border:'#22d3ee'},
-  {v:'reimbpending',  l:'Reimbursement pending',cls:'sb-reimbpending', border:'#06b6d4'},
+  {v:'all',          l:'All',                  cls:'',               border:'var(--border2)'},
+  {v:'overdue',      l:'Overdue re-updates',   cls:'sb-mscdenied',   border:'#f05050'},
+  {v:'checkdiscord', l:'Check Discord',        cls:'sb-checkdiscord',border:'#a78bfa'},
+  {v:'mscsubmit',    l:'MSC submitted',        cls:'sb-mscsubmit',   border:'#4d8ef0'},
+  {v:'mscreview',    l:'MSC under review',     cls:'sb-mscreview',   border:'#f5a623'},
+  {v:'mscapproved',  l:'MSC approved',         cls:'sb-mscapproved', border:'#3dd68c'},
+  {v:'mscreduced',   l:'Reduced MSC approved', cls:'sb-mscreduced',  border:'#3dd68c'},
+  {v:'mscdenied',    l:'MSC denied',           cls:'sb-mscdenied',   border:'#f05050'},
+  {v:'mscneedsdoc',  l:'Needs document',       cls:'sb-mscneedsdoc', border:'#9b7ff0'},
+  {v:'escalated',    l:'Escalated to Jack',    cls:'sb-escalated',   border:'#f472b6'},
+  {v:'caseopen',     l:'Case opened',          cls:'sb-caseopen',    border:'#22d3ee'},
+  {v:'reimbpending', l:'Reimbursement pending',cls:'sb-reimbpending',border:'#06b6d4'},
 ];
 const MSC_BORDER = Object.fromEntries(MSC_STATUS_LIST.map(s=>[s.v,s.border]));
 
@@ -1333,6 +1494,7 @@ const STATE_CONFIG = {
   mscreduced:   {color:'#f5a623', bar:80,  step:4, label:'Reduced MSC approved',alert:{color:'#1a1000',border:'#f5a623',text:'⚠ Reduced MSC -- open a case to claim or appeal',btn:null}},
   mscdenied:    {color:'#f05050', bar:0,   step:4, label:'MSC denied',          alert:{color:'#180303',border:'#f05050',text:'✗ MSC Denied -- set next MSC update date and open a case',btn:null}},
   mscneedsdoc:  {color:'#9b7ff0', bar:35,  step:2, label:'Needs document',      alert:{color:'#0d0620',border:'#9b7ff0',text:'📄 Document required -- find invoice in purchase sheet',btn:null}},
+  escalated:    {color:'#f472b6', bar:60,  step:3, label:'Escalated to Jack',   alert:{color:'#2d1028',border:'#f472b6',text:'⬆ Escalated to Jack / MD — awaiting response',btn:null}},
   caseopen:     {color:'#22d3ee', bar:100, step:5, label:'Case opened',         alert:null},
   reimbpending: {color:'#06b6d4', bar:100, step:5, label:'Reimbursement pending',alert:{color:'#0a2027',border:'#06b6d4',text:'⏳ Waiting for reimbursement to appear in Amazon (4-5 days)',btn:null}},
   reimbursed:   {color:'#3dd68c', bar:100, step:5, label:'Reimbursed',          alert:null},
@@ -1342,17 +1504,26 @@ function renderReimb() {
   const searchEl = document.getElementById('search-reimb');
   const currentSearch = searchEl ? searchEl.value : '';
 
-  const reimb = DB.filter(r => REIMB_STATUSES.includes(r.status));
-  const filterDefs = [{v:'all',l:'All'},...MSC_STATUS_LIST.map(s=>({v:s.v,l:s.l}))];
-  document.getElementById('reimb-filter-row').innerHTML = filterDefs.map(f=>`
-    <button class="chip${REIMB_FILTER===f.v?' on':''}" onclick="setReimbFilter('${f.v}')">${f.l}<span class="chip-n">${f.v==='all'?reimb.length:DB.filter(r=>r.status===f.v).length}</span></button>`
-  ).join('');
-
   const today = new Date().toISOString().split('T')[0];
-  let rows = REIMB_FILTER==='all' ? reimb : reimb.filter(r=>r.status===REIMB_FILTER);
+  const reimb = DB.filter(r => REIMB_STATUSES.includes(r.status));
+  
+  // Build filter tabs — overdue is a special filter, not a status
+  const filterDefs = MSC_STATUS_LIST;
+  document.getElementById('reimb-filter-row').innerHTML = filterDefs.map(f=>{
+    let count;
+    if (f.v==='all') count = reimb.length;
+    else if (f.v==='overdue') count = reimb.filter(r=>r.reupdate&&r.reupdate<today).length;
+    else count = reimb.filter(r=>r.status===f.v).length;
+    return `<button class="chip${REIMB_FILTER===f.v?' on':''}" onclick="setReimbFilter('${f.v}')">${f.l}<span class="chip-n">${count}</span></button>`;
+  }).join('');
+
+  let rows;
+  if (REIMB_FILTER==='all') rows = reimb;
+  else if (REIMB_FILTER==='overdue') rows = reimb.filter(r=>r.reupdate&&r.reupdate<today).sort((a,b)=>new Date(a.reupdate)-new Date(b.reupdate));
+  else rows = reimb.filter(r=>r.status===REIMB_FILTER);
 
   if(!rows.length){
-    document.getElementById('reimb-cards').innerHTML=`<div style="text-align:center;padding:60px;font-size:12px;color:var(--text3)">No removals in reimbursement</div>`;
+    document.getElementById('reimb-cards').innerHTML=`<div style="text-align:center;padding:60px;font-size:12px;color:var(--text3)">No removals in this filter</div>`;
     return;
   }
 
@@ -1362,6 +1533,22 @@ function renderReimb() {
     const el = document.getElementById('search-reimb');
     if (el) { el.value = currentSearch; filterReimbCards(); }
   }
+}
+
+function buildMscSummaryBar(r) {
+  const attempts = r.msc_attempts||[];
+  if(!attempts.length) return '';
+  const last = attempts[attempts.length-1];
+  const OLABELS = {'pending':'Pending','approved':'Approved','approved-reduced':'Approved (reduced)','denied':'Denied','review':'Review','error':'Error'};
+  const OCOLS = {'pending':'var(--cyan)','approved':'var(--green)','approved-reduced':'var(--amber)','denied':'var(--red)','review':'var(--blue)','error':'var(--red)'};
+  const nextDue = last.next_date;
+  const daysToNext = nextDue ? Math.ceil((new Date(nextDue)-new Date())/86400000) : null;
+  return `<div style="background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:100%;margin-bottom:4px">
+    <span style="color:var(--text3)">MSC: ${attempts.length} attempt${attempts.length!==1?'s':''}</span>
+    <span style="color:${OCOLS[last.outcome]||'var(--text2)'};font-weight:600">${OLABELS[last.outcome]||last.outcome}</span>
+    ${last.cog?`<span style="color:var(--amber)">Last COG: ${fmtMoney(last.cog)}</span>`:''}
+    ${daysToNext!==null?`<span style="color:${daysToNext<0?'var(--red)':daysToNext<=7?'var(--amber)':'var(--green)'};font-weight:700;margin-left:auto">${daysToNext<0?`${Math.abs(daysToNext)}d overdue`:daysToNext===0?'Due today':`Next in ${daysToNext}d`} (${fmtDate(nextDue)})</span>`:''}
+  </div>`;
 }
 
 function buildReimbCard(r, today) {
@@ -1392,12 +1579,32 @@ function buildReimbCard(r, today) {
   const reasonTag = r.reason && r.reason!=='unknown' ? `<span class="rc-tag" style="background:var(--bg5);color:var(--text2)">${REASON_LABELS[r.reason]||r.reason}</span>` : '';
   const statusTag = `<span class="rc-tag" style="background:${col}28;color:${col};border:1px solid ${col}55">${sc.label}</span>`;
 
-  // Alert banner
-  const alertHtml = sc.alert ? `
+  // Alert banner — with 5-day urgency overlay
+  const statusChangedAt = r.status_changed_at ? new Date(r.status_changed_at) : null;
+  const daysSinceStatusChange = statusChangedAt ? Math.floor((new Date()-statusChangedAt)/86400000) : null;
+  
+  let urgencyAlert = '';
+  if (r.status==='mscreview'||r.status==='mscsubmit') {
+    if (daysSinceStatusChange!==null && daysSinceStatusChange>=5) {
+      urgencyAlert = `<div class="rc-alert" style="background:#f5a62322;border-bottom:2px solid #f5a623">
+        <span style="color:#f5a623;font-size:12px;font-weight:700">⏰ ${daysSinceStatusChange} days since submitted — CHECK MSC RESULT NOW</span>
+      </div>`;
+    }
+  }
+  if (r.status==='reimbpending') {
+    if (daysSinceStatusChange!==null && daysSinceStatusChange>=5) {
+      urgencyAlert = `<div class="rc-alert" style="background:#06b6d422;border-bottom:2px solid #06b6d4">
+        <span style="color:#06b6d4;font-size:12px;font-weight:700">💰 ${daysSinceStatusChange} days — CHECK AMAZON: reimbursement should have reflected</span>
+        ${r.reimbid?`<a href="https://sellercentral.amazon.co.uk/reportcentral/REIMBURSEMENTS/0/%7B%22filters%22:[%22%22,%22%22,%22${r.reimbid}%22,%22%22],%22pageOffset%22:1,%22searchDays%22:365%7D" target="_blank" style="background:#06b6d422;border:1px solid #06b6d455;color:#06b6d4;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">Check Reimb ↗</a>`:''}
+      </div>`;
+    }
+  }
+
+  const alertHtml = urgencyAlert || (sc.alert ? `
     <div class="rc-alert" style="background:${col}18;border-bottom:2px solid ${col}66">
       <span style="flex:1;color:${col};font-size:12px">${sc.alert.text}</span>
       ${sc.alert.btn ? `<button class="btn btn-sm" style="background:${col}22;border-color:${col}55;color:${col};font-size:11px;font-weight:600">${sc.alert.btn}</button>` : ''}
-    </div>` : '';
+    </div>` : '');
 
   // Case ID
   const latestCase = (r.cases||[]).slice(-1)[0];
@@ -1407,16 +1614,19 @@ function buildReimbCard(r, today) {
 
   // Shortfall
   const shortfallDisplay = cog>0&&ramt>0
-    ? (shortfall>0.01 ? `<span style="color:#f05050;font-weight:700">-£${shortfall.toFixed(2)}</span>` : `<span style="color:#3dd68c;font-weight:700">None ✓</span>`)
+    ? (shortfall>0.01 ? `<span style="color:#f05050;font-weight:700">-${fmtMoney(shortfall)}</span>` : `<span style="color:#3dd68c;font-weight:700">None ✓</span>`)
     : `<span style="color:var(--text3)">--</span>`;
 
   // COG/Reimb display
-  const cogDisplay = cog>0 ? `<span style="color:#f5a623;font-weight:700">£${cog.toFixed(2)}</span>` : `<span style="color:var(--text3)">--</span>`;
-  const ramtDisplay = ramt>0 ? `<span style="color:#3dd68c;font-weight:700">£${ramt.toFixed(2)}</span>` : `<span style="color:var(--text3)">--</span>`;
+  const cogDisplay = cog>0 ? `<span style="color:#f5a623;font-weight:700">${fmtMoney(cog)}</span>` : `<span style="color:var(--text3)">--</span>`;
+  const ramtDisplay = ramt>0 ? `<span style="color:#3dd68c;font-weight:700">${fmtMoney(ramt)}</span>` : `<span style="color:var(--text3)">--</span>`;
 
   // Reupdate / Next MSC update
+  const reupdateOverdueDays = r.reupdate && r.reupdate < today ? Math.ceil((new Date()-new Date(r.reupdate))/86400000) : 0;
   const reupdateHtml = r.reupdate
-    ? (r.reupdate<=today ? `<span style="color:#f05050;font-weight:700">⚠ ${r.reupdate}</span>` : `<span style="color:#f5a623">⏰ ${r.reupdate}</span>`)
+    ? (r.reupdate<=today
+        ? `<span style="color:#f05050;font-weight:700">⚠ ${fmtDate(r.reupdate)}</span><span style="display:inline-block;background:#f0505022;border:1px solid #f0505066;color:#f05050;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700;margin-left:6px">${reupdateOverdueDays}d overdue</span>`
+        : `<span style="color:#f5a623">⏰ ${fmtDate(r.reupdate)}</span>`)
     : `<span style="color:var(--text3)">--</span>`;
 
   // Age / deadline
@@ -1431,18 +1641,41 @@ function buildReimbCard(r, today) {
     rightContent = `<div class="rc-right-label">Action needed</div>
       <div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">Check Discord #removals for Jack's photos, LPN and damage notes. Fill in COG, then update status.</div>
       <div class="rc-right-label">COG at risk</div>
-      <div class="rc-right-val" style="color:#f5a623">${cog>0?'£'+cog.toFixed(2):'--'}</div>`;
+      <div class="rc-right-val" style="color:#f5a623">${cog>0?fmtMoney(cog):'--'}</div>`;
   } else if(r.status==='mscsubmit'||r.status==='mscreview'){
     rightContent = `<div class="rc-right-label">Days open</div><div class="rc-right-val" style="color:${col}">${daysOpen??'--'}</div><div class="rc-right-sub">Since arrival${r.status==='mscreview'?' · ~7 day SLA':''}</div>`;
   } else if(r.status==='mscapproved'){
     rightContent = `<div class="rc-right-label">Recovered</div><div class="rc-right-val" style="color:#3dd68c">100%</div><div class="rc-right-sub" style="color:#3dd68c88">Open a case to claim</div>`;
   } else if(r.status==='mscreduced'){
     const p=cog>0?Math.round((ramt/cog)*100):0;
-    rightContent=`<div class="rc-right-label">Recovery</div><div class="rc-right-val" style="color:#f5a623">${p}%</div><div class="rc-right-sub">£${ramt.toFixed(2)} of £${cog.toFixed(2)}</div><div style="background:var(--bg5);border-radius:4px;height:8px;margin-top:8px;overflow:hidden"><div style="background:#f5a623;width:${p}%;height:100%;border-radius:4px;box-shadow:0 0 8px #f5a62344"></div></div>`;
+    rightContent=`<div class="rc-right-label">Recovery</div><div class="rc-right-val" style="color:#f5a623">${p}%</div><div class="rc-right-sub">${fmtMoney(ramt)} of ${fmtMoney(cog)}</div><div style="background:var(--bg5);border-radius:4px;height:8px;margin-top:8px;overflow:hidden"><div style="background:#f5a623;width:${p}%;height:100%;border-radius:4px;box-shadow:0 0 8px #f5a62344"></div></div>`;
   } else if(r.status==='mscdenied'){
-    rightContent = `<div class="rc-right-label">Appeal window</div><div class="rc-right-val" style="color:#f05050">18 days</div><div class="rc-right-sub">Open a case. Set next MSC update:</div>
-      <input type="date" class="rc-msc-date-input" style="border-color:#f0505044;color:#f05050" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value);renderReimb()">`;
-  } else if(r.status==='mscneedsdoc'){
+    // 30-day appeal window from denial date
+    const denialDate = r.dmsc_checked || r.reupdate || '';
+    let appealHtml = '';
+    if (denialDate) {
+      const appealDeadline = new Date(denialDate);
+      appealDeadline.setDate(appealDeadline.getDate() + 30);
+      const daysLeft = Math.ceil((appealDeadline - new Date()) / 86400000);
+      const appealStr = appealDeadline.toISOString().split('T')[0];
+      const col30 = daysLeft <= 7 ? '#f05050' : daysLeft <= 14 ? '#f5a623' : '#3dd68c';
+      appealHtml = daysLeft > 0
+        ? `<div class="rc-right-val" style="color:${col30};font-size:20px;font-weight:800">${daysLeft}d left</div>
+           <div class="rc-right-sub">Appeal by ${fmtDate(appealStr)}</div>`
+        : `<div class="rc-right-val" style="color:#f05050;font-size:16px;font-weight:800">⚠ EXPIRED</div>
+           <div class="rc-right-sub">30-day window passed on ${fmtDate(appealStr)}</div>`;
+    } else {
+      appealHtml = `<div style="font-size:11px;color:var(--red)">Enter denial date to calculate appeal window ↓</div>`;
+    }
+    rightContent = `
+      <div class="rc-right-label">Denial Date</div>
+      <input type="date" class="rc-msc-date-input" style="border-color:#f0505044;color:var(--text);margin-bottom:8px" 
+        value="${r.dmsc_checked||''}" 
+        onchange="upd('${r.id}','dmsc_checked',this.value);upd('${r.id}','reupdate',new Date(new Date(this.value).getTime()+30*864e5).toISOString().split('T')[0]);renderReimb()" 
+        placeholder="When was it denied?">
+      <div class="rc-right-label" style="margin-top:4px">30-Day Appeal Window</div>
+      ${appealHtml}
+      <div class="rc-right-sub" style="margin-top:6px">Open a case to appeal</div>`;  } else if(r.status==='mscneedsdoc'){
     rightContent = `<div class="rc-right-label">Blocked</div><div class="rc-right-val" style="color:#9b7ff0;font-size:16px">Invoice needed</div><div class="rc-right-sub">Find in purchase sheet</div>`;
   } else if(r.status==='caseopen'){
     rightContent = `<div class="rc-right-label">Case status</div><div class="rc-right-val" style="color:#22d3ee;font-size:16px">Open</div><div class="rc-right-sub">Log case ID + reimb when received</div>`;
@@ -1493,11 +1726,13 @@ function buildReimbCard(r, today) {
       </div>
     </div>
     <div class="rc-footer">
+      ${buildMscSummaryBar(r)}
       <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase('${r.id}'),150)">Case msg</button>
-      <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Log attempt</button>
+      <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Case attempt</button>
+      <button class="btn btn-sm" style="background:var(--amber-bg);border-color:var(--amber);color:var(--amber)" onclick="openDetail('${r.id}');setTimeout(()=>openAddMsc('${r.id}'),200)">+ MSC</button>
       <button class="btn btn-sm" onclick="openDetail('${r.id}')">Details</button>
-      <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive('${r.id}')">← Move to Active</button>
-      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed('${r.id}')">✓ Mark as Reimbursed</button>
+      <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive('${r.id}')">← Active</button>
+      <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed('${r.id}')">✓ Reimbursed</button>
       <input class="inl-input" style="flex:1;font-size:11px;min-width:0" value="${r.mscnotes||''}" placeholder="Notes / urgent action..." onchange="upd('${r.id}','mscnotes',this.value)">
       <span class="rc-age" style="background:${ageColor}22;color:${ageColor};border:1px solid ${ageColor}44">${ageLabel}</span>
     </div>
@@ -1541,7 +1776,7 @@ function confirmReimbursed() {
   const timestamp = new Date().toISOString();
   r.status_changed_at = timestamp;
   if (!r.status_log) r.status_log = [];
-  r.status_log.push(`${timestamp} | → reimbursed (COG: £${r.cog.toFixed(2)}, Reimb: £${r.ramt.toFixed(2)})`);
+  r.status_log.push(`${timestamp} | → reimbursed (COG: ${fmtMoney(r.cog)}, Reimb: ${fmtMoney(r.ramt)})`);
   
   // Single atomic write — everything in one call
   if (SUPABASE_READY && window.sbClient) {
@@ -1680,7 +1915,7 @@ function renderHist() {
 
   const totCog = filtered.reduce((s,r)=>s+Number(r.cog||0),0);
   const totRec = filtered.reduce((s,r)=>s+Number(r.ramt||0),0);
-  document.getElementById('hist-summary').textContent = `${filtered.length} removals -- COG: £${totCog.toFixed(2)} · Recovered: £${totRec.toFixed(2)}`;
+  document.getElementById('hist-summary').textContent = `${filtered.length} removals -- COG: ${fmtMoney(totCog)} · Recovered: ${fmtMoney(totRec)}`;
   
   // Sort by date
   const sorted = filtered.sort((a, b) => {
@@ -1699,10 +1934,10 @@ function renderHist() {
     <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.fnsku||'--'}</td>
     <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${r.sku||'--'}</td>
     <td style="font-family:var(--mono);font-size:11px">${r.oid||'--'}</td>
-    <td style="font-weight:500">£${Number(r.cog||0).toFixed(2)}</td>
+    <td style="font-weight:500">${fmtMoney(Number(r.cog||0))}</td>
     <td><span class="badge ${r.status==='reimbursed'?'b-green':r.status==='sentnew'?'b-cyan':r.status==='sentused'?'b-blue':r.status==='sentout'?'b-purple':'b-gray'}">${SL[r.status]||r.status}</span></td>
-    <td style="color:${r.ramt>0?'var(--green)':'var(--text3)'};font-weight:500">${r.ramt>0?'£'+Number(r.ramt).toFixed(2):'--'}</td>
-    <td style="font-weight:500;color:${netPL<0?'#f05050':netPL>0?'#3dd68c':'var(--text3)'}">£${Number(netPL).toFixed(2)}</td>
+    <td style="color:${r.ramt>0?'var(--green)':'var(--text3)'};font-weight:500">${r.ramt>0?fmtMoney(r.ramt):'--'}</td>
+    <td style="font-weight:500;color:${netPL<0?'#f05050':netPL>0?'#3dd68c':'var(--text3)'}">${fmtMoney(Number(netPL))}</td>
     <td style="font-size:11px;display:flex;flex-direction:column;gap:6px;align-items:center">
       ${r.status==='reimbursed'?`<button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600;padding:4px 8px" onclick="moveHistToReimb('${r.id}')">→ Reimb</button>`:``}
       <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600;padding:4px 8px" onclick="moveHistToActive('${r.id}')">→ Active</button>
@@ -1746,13 +1981,152 @@ function changeStatus(id, val, page) {
 }
 
 // DETAIL MODAL --
+function buildDetailBanner(r) {
+  const today = new Date().toISOString().split('T')[0];
+  const nowMs = Date.now();
+  const attempts = r.msc_attempts || [];
+  const lastAttempt = attempts.length ? attempts[attempts.length-1] : null;
+  const nextAttemptNum = attempts.length + 1;
+  const suggestedCog = lastAttempt?.cog ? (lastAttempt.cog * 0.8).toFixed(2) : null;
+  const daysSinceStatus = r.status_changed_at ? Math.floor((nowMs - new Date(r.status_changed_at))/86400000) : null;
+
+  let banner = '', color = '', icon = '', message = '', nextStep = '';
+
+  if (r.status === 'transit') {
+    color='var(--blue)'; icon='🚚';
+    message = 'Item is in transit to BDL.';
+    nextStep = 'No action needed — wait for arrival, then check in.';
+
+  } else if (r.status === 'arrived') {
+    color='var(--amber)'; icon='📦';
+    message = 'Item has arrived at BDL — needs checking in.';
+    nextStep = 'Go to Active page → click Check In → choose verdict.';
+
+  } else if (r.status === 'checkdiscord') {
+    color='var(--purple)'; icon='📱';
+    message = 'Check Discord #removals for photos, LPN and damage notes.';
+    nextStep = 'Fill in COG, then update status to MSC Submitted.';
+
+  } else if (r.status === 'mscsubmit') {
+    const days = daysSinceStatus;
+    if (days !== null && days >= 5) {
+      color='var(--amber)'; icon='⏰';
+      message = `MSC submitted ${days} days ago — result should be ready.`;
+      nextStep = 'Check MSC tool in Seller Central → update status to result.';
+    } else {
+      color='var(--blue)'; icon='⏳';
+      message = `MSC submitted${days!==null?' '+days+' days ago':''} — waiting for result (up to 5 days).`;
+      nextStep = 'Check MSC tool after 5 days and update status.';
+    }
+
+  } else if (r.status === 'mscreview') {
+    const days = daysSinceStatus;
+    if (days !== null && days >= 5) {
+      color='var(--amber)'; icon='⏰';
+      message = `MSC under review for ${days} days — should have a result by now.`;
+      nextStep = 'Check MSC tool in Seller Central → update status to approved/denied.';
+    } else {
+      color='var(--blue)'; icon='⏳';
+      message = `MSC under review${days!==null?' — day '+days+' of 5':''}.`;
+      nextStep = `Check on day 5${days!==null?' ('+(5-days)+' days away)':''}.`;
+    }
+
+  } else if (r.status === 'mscdenied') {
+    const denialDate = r.dmsc_checked;
+    if (denialDate) {
+      const appealDeadline = new Date(denialDate);
+      appealDeadline.setDate(appealDeadline.getDate() + 30);
+      const daysLeft = Math.ceil((appealDeadline - new Date()) / 86400000);
+      if (daysLeft < 0) {
+        color='var(--red)'; icon='🔴';
+        message = `30-day appeal window EXPIRED ${Math.abs(daysLeft)} days ago.`;
+        nextStep = 'Escalate to Jack — window may have passed.';
+      } else if (daysLeft <= 7) {
+        color='var(--red)'; icon='⚠';
+        message = `MSC denied — only ${daysLeft} days left in appeal window!`;
+        nextStep = `Resubmit MSC attempt #${nextAttemptNum}${suggestedCog?' with COG £'+suggestedCog+' (20% reduced)':''} URGENTLY.`;
+      } else {
+        color='var(--amber)'; icon='🔄';
+        message = `MSC denied — ${daysLeft} days until resubmission window (${fmtDate(appealDeadline.toISOString().split('T')[0])}).`;
+        nextStep = `On that date: submit attempt #${nextAttemptNum}${suggestedCog?' with COG £'+suggestedCog+' (20% reduced)':''}.`;
+      }
+    } else {
+      color='var(--red)'; icon='✗';
+      message = 'MSC denied — enter the denial date below to calculate your 30-day resubmission window.';
+      nextStep = 'Enter denial date in MSC Submissions section ↓';
+    }
+
+  } else if (r.status === 'escalated') {
+    color='var(--pink)'; icon='⬆';
+    message = 'Escalated to Jack / MD — awaiting their response.';
+    nextStep = 'Once Jack responds, update status and log next steps.';
+
+  } else if (r.status === 'mscapproved' || r.status === 'mscreduced') {
+    color='var(--green)'; icon='✓';
+    message = r.status === 'mscapproved' ? 'MSC Approved — open a Seller Support case to claim.' : 'MSC Approved (reduced amount) — open a case to claim.';
+    nextStep = 'Use "Case msg" button to generate message → open case → log case attempt below.';
+
+  } else if (r.status === 'mscneedsdoc') {
+    color='var(--purple)'; icon='📄';
+    message = 'Document required — Amazon needs an invoice or evidence.';
+    nextStep = 'Find invoice in purchase sheet → upload to case → update status.';
+
+  } else if (r.status === 'caseopen') {
+    const days = daysSinceStatus;
+    color='var(--cyan)'; icon='📋';
+    message = `Case open${days!==null?' — day '+days:''}.`;
+    nextStep = 'Wait for Amazon response → log outcome in Case Attempts below → update status.';
+
+  } else if (r.status === 'reimbpending') {
+    const days = daysSinceStatus;
+    if (days !== null && days >= 5) {
+      color='var(--cyan)'; icon='💰';
+      message = `Reimbursement pending for ${days} days — should have reflected by now.`;
+      nextStep = r.reimbid
+        ? `Check Amazon reimbursements report for ID ${r.reimbid} → confirm received → change status to Reimbursed.`
+        : 'Check Amazon reimbursements report → enter Reimb ID when confirmed → change status to Reimbursed.';
+    } else {
+      color='var(--cyan)'; icon='⏳';
+      message = `Reimbursement pending${days!==null?' — day '+days+' of 5':''} — Amazon processing.`;
+      nextStep = 'Check Amazon reimbursements report after 5 days.';
+    }
+
+  } else if (r.status === 'reimbursed') {
+    color='var(--green)'; icon='✅';
+    message = 'Reimbursement confirmed and received.';
+    nextStep = 'No further action needed.';
+  }
+
+  // Overdue reupdate override (always show if overdue, regardless of status)
+  if (r.reupdate && r.reupdate < today && !['reimbursed','sentnew','sentused','sentout','writeoff'].includes(r.status)) {
+    const daysOverdue = Math.ceil((new Date() - new Date(r.reupdate)) / 86400000);
+    color='var(--red)'; icon='⏰';
+    message = `MSC reupdate overdue by ${daysOverdue} day${daysOverdue!==1?'s':''} — was due ${fmtDate(r.reupdate)}.`;
+    nextStep = `Submit MSC attempt #${nextAttemptNum}${suggestedCog?' with COG £'+suggestedCog+' (20% reduced)':''} now → log in MSC Submissions below.`;
+  }
+
+  if (!message) return '';
+
+  return `<div style="background:${color}18;border:2px solid ${color}66;border-radius:8px;padding:12px 16px;margin-bottom:16px">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:18px;flex-shrink:0">${icon}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:${color};margin-bottom:4px">${message}</div>
+        <div style="font-size:12px;color:var(--text2)">👉 <strong>Next step:</strong> ${nextStep}</div>
+        ${lastAttempt ? `<div style="font-size:11px;color:var(--text3);margin-top:4px">MSC: ${attempts.length} attempt${attempts.length!==1?'s':''} logged · Last: ${lastAttempt.outcome} on ${fmtDate(lastAttempt.date)}${lastAttempt.cog?' · COG £'+Number(lastAttempt.cog).toFixed(2):''}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
 function openDetail(id) {
   const r = DB.find(x=>x.id===id);
   document.getElementById('detail-modal').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div class="modal-title" style="margin-bottom:0">${r.name}</div>
       <button onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:0 4px;line-height:1" title="Close">×</button>
     </div>
+    ${buildDetailBanner(r)}
     <div class="modal-sub">Product info</div>
     <div class="fg g3">
       <div class="field"><label>Product name</label><input value="${r.name}" onchange="upd('${r.id}','name',this.value)"></div>
@@ -1787,9 +2161,15 @@ function openDetail(id) {
     <div class="modal-sub">Damage / condition notes</div>
     <div class="field"><textarea onchange="upd('${r.id}','damage',this.value)" placeholder="Describe damage, missing parts, condition from Discord check-in...">${r.damage||''}</textarea></div>
     <div class="sep"></div>
-    <div class="modal-sub">Case attempts</div>
+    <div class="modal-sub" style="color:var(--amber)">MSC Submissions</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Each MSC submission tracked separately. 30-day wait enforced between attempts. COG reduced ~20% on resubmission.</div>
+    <div id="dm-msc-${r.id}"></div>
+    <button class="btn btn-sm" style="margin-top:8px;background:var(--amber-bg);border-color:var(--amber);color:var(--amber)" onclick="openAddMsc('${r.id}')">+ Log MSC Submission</button>
+    <div class="sep"></div>
+    <div class="modal-sub">Amazon Case Attempts</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Log after MSC is approved — open Seller Support case to claim the reimbursement.</div>
     <div id="dm-cases-${r.id}"></div>
-    <button class="btn btn-sm" style="margin-top:8px" onclick="openAddCase('${r.id}')">+ Log new attempt</button>
+    <button class="btn btn-sm" style="margin-top:8px" onclick="openAddCase('${r.id}')">+ Log Case Attempt</button>
     <div class="sep"></div>
     <div class="modal-sub">Reimbursement</div>
     <div class="fg g3">
@@ -1821,6 +2201,7 @@ function openDetail(id) {
       <button class="btn btn-red btn-sm" style="margin-left:auto" onclick="delR('${r.id}')">Delete</button>
     </div>`;
   document.getElementById('detail-overlay').classList.remove('h');
+  renderDetailMsc(r.id);
   renderDetailCases(r.id);
 }
 
@@ -1853,7 +2234,7 @@ function saveAdd() {
     status:'transit',
     msku:'',ean:'',shipid:'',tracking:'',amid:'',qdis:0,qcan:0,qpen:1,
     cog:0,lpn:'',disp:'Unsellable',cond:'Damaged',
-    darr:'',ddeliv:'',dreim:'',cases:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:'',discord_photos_link:'',
+    darr:'',ddeliv:'',dreim:'',cases:[],msc_attempts:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:'',discord_photos_link:'',
     status_log: [
       new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + ' — Added to system'
     ]
@@ -1878,14 +2259,40 @@ function renderDetailCases(id) {
   const el = document.getElementById(`dm-cases-${id}`); if(!el) return;
   const cases = r.cases||[];
   if(!cases.length){ el.innerHTML=`<div style="font-size:12px;color:var(--text3);padding:8px 0">No attempts logged yet.</div>`; return; }
-  el.innerHTML = cases.map((c,i)=>`
-    <div class="attempt-row">
-      <span class="attempt-date">${c.date||'--'}</span>
-      <span class="attempt-row-outcome ao-${c.outcome||'review'}">${c.outcome==='approved'?'✓ Approved':c.outcome==='denied'?'✗ Denied':c.outcome==='needsdoc'?'📄 Needs doc':'⏳ Review'}</span>
-      <span class="attempt-note">${c.note||''}</span>
-      ${c.id?`<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${c.id}" target="_blank" style="font-size:11px;color:var(--blue);white-space:nowrap;text-decoration:none">Case ${c.id} ↗</a>`:'<span style="font-size:11px;color:var(--text3)">No case ID</span>'}
-      <button onclick="removeCase('${id}',${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:0 4px" title="Remove">×</button>
-    </div>`).join('');
+
+  const TYPE_LABELS = {
+    'msc':'MSC Submit','msc-resubmit':'MSC Re-submit','case':'Amazon Case',
+    'escalation':'Escalation','update':'Update','doc':'Doc Sent',''  :'Attempt'
+  };
+  const OUTCOME_STYLE = {
+    'approved':  {col:'var(--green)',  label:'✓ Approved'},
+    'denied':    {col:'var(--red)',    label:'✗ Denied'},
+    'needsdoc':  {col:'var(--purple)', label:'📄 Needs doc'},
+    'resubmit':  {col:'var(--amber)',  label:'↩ Resubmit'},
+    'escalated': {col:'var(--pink)',   label:'⬆ Escalated'},
+    'pending':   {col:'var(--text2)',  label:'⏳ Pending'},
+    'review':    {col:'var(--cyan)',   label:'⏳ Review'},
+  };
+
+  el.innerHTML = `<div style="position:relative;padding-left:20px">
+    <div style="position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border2);border-radius:2px"></div>
+    ${cases.map((c,i)=>{
+      const os = OUTCOME_STYLE[c.outcome||'review'] || {col:'var(--text3)',label:c.outcome||'--'};
+      const typeLabel = TYPE_LABELS[c.type||''] || (c.type||'Attempt');
+      return `<div style="position:relative;margin-bottom:12px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px">
+        <div style="position:absolute;left:-17px;top:12px;width:10px;height:10px;border-radius:50%;background:${os.col};border:2px solid var(--bg)"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:700;color:var(--text2);background:var(--bg4);padding:2px 6px;border-radius:4px">${typeLabel}</span>
+          <span style="font-size:11px;font-weight:700;color:${os.col}">${os.label}</span>
+          <span style="font-size:10px;color:var(--text3);margin-left:auto">${c.date||'--'}</span>
+          <button onclick="removeCase('${id}',${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;line-height:1" title="Remove">×</button>
+        </div>
+        ${c.id?`<div style="font-size:10px;color:var(--text3);margin-bottom:3px">Case: <a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${c.id}" target="_blank" style="color:var(--blue)">${c.id} ↗</a></div>`:''}
+        ${c.cog?`<div style="font-size:10px;color:var(--amber);margin-bottom:3px">COG submitted: ${fmtMoney(c.cog)}</div>`:''}
+        ${c.note?`<div style="font-size:11px;color:var(--text2)">${c.note}</div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function removeCase(rid, idx) {
@@ -1908,12 +2315,188 @@ function openDiscordWithLink(webLink) {
   window.location.href = discordLink;
 }
 
+// MSC ATTEMPTS --
+function openAddMsc(rid) {
+  const r = DB.find(x=>x.id===rid); if(!r) return;
+  const attempts = r.msc_attempts||[];
+  const nextNum = attempts.length + 1;
+  document.getElementById('addmsc-rid').value = rid;
+  document.getElementById('addmsc-idx').value = -1;
+  document.getElementById('addmsc-title').textContent = `Log MSC Submission #${nextNum}`;
+  document.getElementById('am-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('am-attempt').value = nextNum;
+  document.getElementById('am-cog').value = '';
+  document.getElementById('am-outcome').value = 'pending';
+  document.getElementById('am-denial-date').value = '';
+  document.getElementById('am-next-date').value = '';
+  document.getElementById('am-note').value = '';
+  document.getElementById('am-approved-amt').value = '';
+  document.getElementById('am-denial-section').style.display = 'none';
+  document.getElementById('am-approved-section').style.display = 'none';
+
+  // Suggest reduced COG if previous attempt was denied
+  if (attempts.length > 0) {
+    const lastAttempt = attempts[attempts.length-1];
+    if (lastAttempt.outcome === 'denied' && lastAttempt.cog) {
+      const suggestedCog = (lastAttempt.cog * 0.8).toFixed(2);
+      document.getElementById('am-cog').value = suggestedCog;
+      document.getElementById('am-note').placeholder = `Previous COG was £${lastAttempt.cog} — suggested 20% reduction to £${suggestedCog}`;
+    }
+  }
+  document.getElementById('addmsc-overlay').classList.remove('h');
+}
+
+function onMscOutcomeChange() {
+  const outcome = document.getElementById('am-outcome').value;
+  document.getElementById('am-denial-section').style.display = outcome==='denied'||outcome==='error' ? 'block' : 'none';
+  document.getElementById('am-approved-section').style.display = outcome==='approved'||outcome==='approved-reduced' ? 'block' : 'none';
+}
+
+function onMscDenialDateChange() {
+  const denialDate = document.getElementById('am-denial-date').value;
+  if (denialDate) {
+    const nextDate = new Date(denialDate);
+    nextDate.setDate(nextDate.getDate() + 30);
+    document.getElementById('am-next-date').value = nextDate.toISOString().split('T')[0];
+  }
+}
+
+function saveMscAttempt() {
+  const rid = document.getElementById('addmsc-rid').value;
+  const r = DB.find(x=>x.id===rid); if(!r) return;
+  if(!r.msc_attempts) r.msc_attempts = [];
+
+  const outcome = document.getElementById('am-outcome').value;
+  const denialDate = document.getElementById('am-denial-date').value;
+  const nextDate = document.getElementById('am-next-date').value;
+  const cogVal = parseFloat(document.getElementById('am-cog').value)||0;
+  const approvedAmt = parseFloat(document.getElementById('am-approved-amt').value)||0;
+
+  const attempt = {
+    num:     parseInt(document.getElementById('am-attempt').value)||r.msc_attempts.length+1,
+    date:    document.getElementById('am-date').value,
+    cog:     cogVal||undefined,
+    outcome: outcome,
+    denial_date: denialDate||undefined,
+    next_date:   nextDate||undefined,
+    approved_amt: approvedAmt||undefined,
+    note:    document.getElementById('am-note').value.trim(),
+  };
+
+  const idx = parseInt(document.getElementById('addmsc-idx').value);
+  if (idx >= 0) {
+    r.msc_attempts[idx] = attempt;
+  } else {
+    r.msc_attempts.push(attempt);
+  }
+
+  // Auto-set reupdate date to next submit date if denied
+  if (nextDate) {
+    r.reupdate = nextDate;
+    updates.reupdate = nextDate;
+  }
+  // Auto-set denial date
+  if (denialDate) {
+    r.dmsc_checked = denialDate;
+    updates.dmsc_checked = denialDate;
+  }
+  // Auto-set status to mscdenied if outcome is denied
+  if (outcome === 'denied' && r.status !== 'mscdenied') {
+    r.status = 'mscdenied';
+    r.status_changed_at = new Date().toISOString();
+    updates.status = 'mscdenied';
+    updates.status_changed_at = r.status_changed_at;
+  }
+  // Auto-set status to mscapproved if outcome is approved
+  if ((outcome === 'approved' || outcome === 'approved-reduced') && !['mscapproved','mscreduced'].includes(r.status)) {
+    r.status = outcome === 'approved-reduced' ? 'mscreduced' : 'mscapproved';
+    r.status_changed_at = new Date().toISOString();
+    updates.status = r.status;
+    updates.status_changed_at = r.status_changed_at;
+  }
+
+  if (SUPABASE_READY && window.sbClient) {
+    const updates = { msc_attempts: r.msc_attempts };
+    if (nextDate) updates.reupdate = nextDate;
+    if (denialDate) updates.dmsc_checked = denialDate;
+    updateInSupabase(rid, updates);
+  }
+
+  closeModal('addmsc-overlay');
+  renderDetailMsc(rid);
+  renderPage(CURRENT_PAGE);
+}
+
+function removeMscAttempt(rid, idx) {
+  const r = DB.find(x=>x.id===rid); if(!r||!r.msc_attempts) return;
+  r.msc_attempts.splice(idx, 1);
+  if (SUPABASE_READY && window.sbClient) updateInSupabase(rid, { msc_attempts: r.msc_attempts });
+  renderDetailMsc(rid);
+}
+
+function renderDetailMsc(id) {
+  const r = DB.find(x=>x.id===id); if(!r) return;
+  const el = document.getElementById(`dm-msc-${id}`); if(!el) return;
+  const attempts = r.msc_attempts||[];
+
+  if(!attempts.length){
+    el.innerHTML=`<div style="font-size:12px;color:var(--text3);padding:8px 0">No MSC submissions logged yet.</div>`;
+    return;
+  }
+
+  const OUTCOME_STYLE = {
+    'pending':          {col:'var(--cyan)',   label:'⏳ Submitted / Pending'},
+    'review':           {col:'var(--blue)',   label:'⏳ Under review'},
+    'approved':         {col:'var(--green)',  label:'✓ Approved (full)'},
+    'approved-reduced': {col:'var(--amber)',  label:'✓ Approved (reduced)'},
+    'denied':           {col:'var(--red)',    label:'✗ Denied'},
+    'error':            {col:'var(--red)',    label:'⚠ Error / Too many attempts'},
+  };
+
+  // Calculate next due date
+  const lastDenied = [...attempts].reverse().find(a=>a.outcome==='denied'&&a.next_date);
+  const nextDue = lastDenied?.next_date;
+  const today = new Date().toISOString().split('T')[0];
+
+  let summaryHtml = '';
+  if (nextDue) {
+    const daysLeft = Math.ceil((new Date(nextDue)-new Date())/86400000);
+    const col = daysLeft < 0 ? 'var(--red)' : daysLeft<=7 ? 'var(--amber)' : 'var(--green)';
+    summaryHtml = `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:11px;color:var(--text2)">Attempt ${attempts.length+1} due:</span>
+      <span style="font-size:12px;font-weight:700;color:${col}">${daysLeft<0?`${Math.abs(daysLeft)}d overdue`:daysLeft===0?'Today':daysLeft+'d'} — ${fmtDate(nextDue)}</span>
+    </div>`;
+  }
+
+  el.innerHTML = summaryHtml + `<div style="position:relative;padding-left:20px">
+    <div style="position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border2);border-radius:2px"></div>
+    ${attempts.map((a,i)=>{
+      const os = OUTCOME_STYLE[a.outcome||'pending']||{col:'var(--text3)',label:a.outcome};
+      return `<div style="position:relative;margin-bottom:10px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px">
+        <div style="position:absolute;left:-17px;top:12px;width:10px;height:10px;border-radius:50%;background:${os.col};border:2px solid var(--bg)"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:700;background:var(--bg4);color:var(--text2);padding:2px 6px;border-radius:4px">Attempt #${a.num||i+1}</span>
+          <span style="font-size:11px;font-weight:700;color:${os.col}">${os.label}</span>
+          <span style="font-size:10px;color:var(--text3);margin-left:auto">${fmtDate(a.date)}</span>
+          <button onclick="removeMscAttempt('${id}',${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;line-height:1" title="Remove">×</button>
+        </div>
+        ${a.cog?`<div style="font-size:11px;color:var(--amber)">COG submitted: ${fmtMoney(a.cog)}${a.approved_amt?` · Approved: ${fmtMoney(a.approved_amt)}`:''}</div>`:''}
+        ${a.denial_date?`<div style="font-size:10px;color:var(--red);margin-top:2px">Denied: ${fmtDate(a.denial_date)} · Next submit: <strong>${fmtDate(a.next_date)}</strong></div>`:''}
+        ${a.note?`<div style="font-size:11px;color:var(--text2);margin-top:4px">${a.note}</div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+
 function openAddCase(rid) {
   document.getElementById('addcase-rid').value = rid;
   document.getElementById('ac-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('ac-caseid').value='';
   document.getElementById('ac-outcome').value='review';
+  document.getElementById('ac-type').value='msc';
   document.getElementById('ac-note').value='';
+  document.getElementById('ac-cog-submitted').value='';
   document.getElementById('addcase-overlay').classList.remove('h');
 }
 
@@ -1921,18 +2504,18 @@ function saveAddCase() {
   const rid = document.getElementById('addcase-rid').value;
   const r = DB.find(x=>x.id===rid); if(!r) return;
   if(!r.cases) r.cases=[];
+  const cogSub = parseFloat(document.getElementById('ac-cog-submitted').value)||0;
   r.cases.push({
-    date: document.getElementById('ac-date').value,
-    id:   document.getElementById('ac-caseid').value.trim(),
+    date:    document.getElementById('ac-date').value,
+    type:    document.getElementById('ac-type').value,
+    id:      document.getElementById('ac-caseid').value.trim(),
     outcome: document.getElementById('ac-outcome').value,
-    note: document.getElementById('ac-note').value.trim(),
+    cog:     cogSub||undefined,
+    note:    document.getElementById('ac-note').value.trim(),
   });
-  
-  // Save to Supabase
   if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(rid, { cases: r.cases });
   }
-  
   closeModal('addcase-overlay');
   renderDetailCases(rid);
   renderPage(CURRENT_PAGE);
@@ -1974,104 +2557,685 @@ function toggleSidebar() {
 }
 
 // OVERVIEW PAGE --
+function fmtDate(d) {
+  if (!d) return '--';
+  try { const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; } catch(e) { return d; }
+}
+function fmtMoney(n) {
+  return '£' + Number(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 function renderOverview() {
   const today = new Date().toISOString().split('T')[0];
-  const inTransit = DB.filter(r=>r.status==='transit').length;
-  const arrived = DB.filter(r=>r.status==='arrived').length;
-  const checkedin = DB.filter(r=>r.status==='checkdiscord').length;
-  const inReimb = DB.filter(r=>REIMB_STATUSES.includes(r.status)).length;
-  const overdueReu = DB.filter(r=>r.reupdate&&r.reupdate<=today&&!HIST_STATUSES.includes(r.status)).length;
-  const needsDoc = DB.filter(r=>r.status==='mscneedsdoc').length;
-  const escalated = DB.filter(r=>r.status==='escalated').length;
-  const cogAtRisk = DB.filter(r=>!HIST_STATUSES.includes(r.status)).reduce((s,r)=>s+Number(r.cog||0),0);
-  const recovered = DB.reduce((s,r)=>s+Number(r.ramt||0),0);
-  const noCaseYet = DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length)).length;
-  const approaching = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;}).length;
-  const totalActive = DB.filter(r=>!HIST_STATUSES.includes(r.status)).length;
+  const nowMs = new Date().setHours(0,0,0,0);
 
+  // Data slices
+  const inTransit   = DB.filter(r=>r.status==='transit');
+  const arrived     = DB.filter(r=>r.status==='arrived');
+  const checkedin   = DB.filter(r=>r.status==='checkdiscord');
+  const inReimb     = DB.filter(r=>REIMB_STATUSES.includes(r.status));
+  const overdueReu  = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status));
+  const needsDoc    = DB.filter(r=>r.status==='mscneedsdoc');
+  const approaching = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;});
+  const critical    = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=7;});
+  const totalActive = DB.filter(r=>!HIST_STATUSES.includes(r.status));
+  const noCaseYet   = DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length));
+
+  // Financials — recovery % only on completed reimbursements vs their COG
+  const mtdStart = new Date(); mtdStart.setDate(1); mtdStart.setHours(0,0,0,0);
+  const getReimbDate = r => r.dreim||r.darr||r.dsub||'';
+  const reimbursedRecs = DB.filter(r=>r.status==='reimbursed');
+  const totalRecov  = reimbursedRecs.reduce((s,r)=>s+Number(r.ramt||0),0);
+  const totalRecovCog = reimbursedRecs.reduce((s,r)=>s+Number(r.cog||0),0);
+  const mtdRecs     = reimbursedRecs.filter(r=>getReimbDate(r)&&new Date(getReimbDate(r))>=mtdStart);
+  const mtdRecov    = mtdRecs.reduce((s,r)=>s+Number(r.ramt||0),0);
+  const mtdCog      = mtdRecs.reduce((s,r)=>s+Number(r.cog||0),0);
+  const overallPct  = totalRecovCog>0 ? Math.min(100,Math.round((totalRecov/totalRecovCog)*100)) : 0;
+  const mtdPct      = mtdCog>0 ? Math.min(100,Math.round((mtdRecov/mtdCog)*100)) : 0;
+
+  // ── COMPUTE WORKLOAD METRICS (used by hero) ──────────────────────────
+  const checkMscNow  = DB.filter(r=>(r.status==='mscreview'||r.status==='mscsubmit')&&r.status_changed_at&&Math.floor((new Date()-new Date(r.status_changed_at))/86400000)>=5);
+  const checkReimbNow= DB.filter(r=>r.status==='reimbpending'&&r.status_changed_at&&Math.floor((new Date()-new Date(r.status_changed_at))/86400000)>=5);
+  const dueToday     = DB.filter(r=>r.reupdate===today&&!HIST_STATUSES.includes(r.status));
+  const escalatedRecs= DB.filter(r=>r.status==='escalated');
+
+  // ACTION REQUIRED = things Sarah must DO today (submit, check, log)
+  // WAITING = things sitting with Amazon that just need monitoring
+  const actionNowCount = overdueReu.length + dueToday.length + checkMscNow.length + checkReimbNow.length + arrived.length + noCaseYet.length + needsDoc.length;
+  const waitingCount   = DB.filter(r=>['mscsubmit','mscreview','caseopen','reimbpending'].includes(r.status)).length - checkMscNow.length - checkReimbNow.length;
+  const monitoringCount = Math.max(0, waitingCount);
+
+  // Workload classification
+  let workloadLevel = 'light', workloadColor = 'var(--green)', workloadEmoji = '☕';
+  if (actionNowCount >= 20)      { workloadLevel = 'heavy';    workloadColor = 'var(--red)';   workloadEmoji = '🔥'; }
+  else if (actionNowCount >= 10) { workloadLevel = 'moderate'; workloadColor = 'var(--amber)'; workloadEmoji = '⚡'; }
+  else if (actionNowCount >= 5)  { workloadLevel = 'steady';   workloadColor = 'var(--blue)';  workloadEmoji = '👍'; }
+
+  // Initial clock values for first render (live clock interval is set up below)
+  const _now = new Date();
+  const _dayName = _now.toLocaleDateString('en-GB',{weekday:'long',timeZone:'Europe/London'});
+  const _dateStr = _now.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',timeZone:'Europe/London'});
+  const _timeStr = _now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London',hour12:false});
+
+  document.getElementById('overview-financials').innerHTML = `
+    <!-- HERO ROW: live dashboard + total recovered + MTD recovered -->
+    <div style="display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:10px;margin-bottom:12px">
+
+      <!-- LIVE DASHBOARD TILE (clock + workload) -->
+      <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-left:3px solid ${workloadColor};border-radius:10px;padding:14px 16px;position:relative;overflow:hidden">
+        <!-- subtle pulse dot in corner -->
+        <div style="position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:5px">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite"></span>
+          <span style="font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.04em">LIVE · UK</span>
+        </div>
+        <!-- date + day + time row -->
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">
+          <div id="ov-clock-time" style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1">${_timeStr}</div>
+          <div style="font-size:11px;color:var(--text2);font-weight:500"><span id="ov-clock-day">${_dayName}</span> · <span id="ov-clock-date">${_dateStr}</span></div>
+        </div>
+        <!-- workload bar -->
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+          <div style="font-size:28px;font-weight:800;color:${workloadColor};line-height:1;letter-spacing:-.03em">${actionNowCount}</div>
+          <div style="font-size:11px;color:var(--text2);font-weight:500">task${actionNowCount!==1?'s':''} need action</div>
+          <div style="font-size:9px;color:${workloadColor};font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:${workloadColor}22;border:1px solid ${workloadColor}55;border-radius:10px;padding:2px 7px;margin-left:auto">${workloadEmoji} ${workloadLevel}</div>
+        </div>
+        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin-bottom:6px">
+          <div style="background:linear-gradient(90deg,${workloadColor},${workloadColor}aa);width:${Math.min(100,(actionNowCount/25)*100)}%;height:100%;border-radius:3px;transition:width .6s ease"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text3);display:flex;gap:10px">
+          <span><span style="color:${workloadColor};font-weight:700">${actionNowCount}</span> active</span>
+          <span style="color:var(--border2)">·</span>
+          <span><span style="color:var(--text2);font-weight:700">${monitoringCount}</span> waiting on Amazon</span>
+          <span style="color:var(--border2)">·</span>
+          <span><span style="color:var(--text2);font-weight:700">${totalActive.length}</span> total open</span>
+        </div>
+      </div>
+
+      <!-- TOTAL RECOVERED (overall) -->
+      <div class="fin-tile" style="border-left:3px solid var(--green);position:relative;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="fin-label">Total Recovered</div>
+          <div style="font-size:9px;color:var(--text3);background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:1px 7px;font-weight:700;letter-spacing:.05em">OVERALL</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+          <div class="fin-val" style="color:var(--green)">${fmtMoney(totalRecov)}</div>
+          <div style="font-size:15px;font-weight:800;color:var(--green);opacity:.8">${overallPct}%</div>
+        </div>
+        <div class="fin-sub">of ${fmtMoney(totalRecovCog)} COGs · ${reimbursedRecs.length} reimbursed</div>
+        <div style="background:var(--bg5);border-radius:3px;height:3px;margin-top:8px;overflow:hidden"><div style="background:linear-gradient(90deg,var(--green),var(--green)aa);width:${overallPct}%;height:100%;border-radius:3px;transition:width .6s"></div></div>
+      </div>
+
+      <!-- MTD RECOVERED — purple to distinguish from total -->
+      <div class="fin-tile" style="border-left:3px solid var(--purple);position:relative;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div class="fin-label">Month to Date</div>
+          <div style="font-size:9px;color:var(--purple);background:var(--purple-bg);border:1px solid var(--purple);border-radius:10px;padding:1px 7px;font-weight:700;letter-spacing:.05em">${_now.toLocaleDateString('en-GB',{month:'short'}).toUpperCase()}</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+          <div class="fin-val" style="color:var(--purple)">${fmtMoney(mtdRecov)}</div>
+          <div style="font-size:15px;font-weight:800;color:var(--purple);opacity:.8">${mtdPct}%</div>
+        </div>
+        <div class="fin-sub">of ${fmtMoney(mtdCog)} COGs · ${mtdRecs.length} this month</div>
+        <div style="background:var(--bg5);border-radius:3px;height:3px;margin-top:8px;overflow:hidden"><div style="background:linear-gradient(90deg,var(--purple),var(--purple)aa);width:${mtdPct}%;height:100%;border-radius:3px;transition:width .6s"></div></div>
+      </div>
+    </div>
+
+    ${escalatedRecs.length ? `
+    <!-- ESCALATED TO JACK BANNER -->
+    <div onclick="REIMB_FILTER='escalated';setTimeout(()=>navTo('reimb'),0)" style="background:linear-gradient(90deg,var(--pink-bg),var(--bg2));border:1px solid var(--pink);border-left:3px solid var(--pink);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s"
+      onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform=''">
+      <div style="font-size:18px">⬆</div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:.06em">Escalated to Jack / MD</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${escalatedRecs.length} item${escalatedRecs.length!==1?'s':''} awaiting your response · ${fmtMoney(escalatedRecs.reduce((s,r)=>s+Number(r.cog||0),0))} COG at stake</div>
+      </div>
+      <div style="font-size:24px;font-weight:800;color:var(--pink);line-height:1">${escalatedRecs.length}</div>
+      <svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px;color:var(--pink)"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>` : ''}`;
+
+  // ── LIVE CLOCK — updates every 30 seconds ────────────────────────────
+  if (window._overviewClockInterval) clearInterval(window._overviewClockInterval);
+  window._overviewClockInterval = setInterval(()=>{
+    const tEl = document.getElementById('ov-clock-time');
+    const dEl = document.getElementById('ov-clock-day');
+    const dtEl = document.getElementById('ov-clock-date');
+    if (!tEl || !dEl || !dtEl) { clearInterval(window._overviewClockInterval); return; }
+    const n = new Date();
+    tEl.textContent = n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London',hour12:false});
+    dEl.textContent = n.toLocaleDateString('en-GB',{weekday:'long',timeZone:'Europe/London'});
+    dtEl.textContent = n.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',timeZone:'Europe/London'});
+  }, 30000);
+  // ── URGENT ALERT BANNER ───────────────────────────────────────────────
+  // Split into ACTION-NOW alerts (Sarah must do something) vs MONITORING alerts (just info)
+  const actionAlerts = [];
+  const monitorAlerts = [];
+  if (overdueReu.length)     actionAlerts.push({icon:'⏰', color:'var(--red)',    text:`${overdueReu.length} overdue re-update${overdueReu.length>1?'s':''}`, fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
+  if (dueToday.length)       actionAlerts.push({icon:'📅', color:'var(--green)',  text:`${dueToday.length} due TODAY`,           fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
+  if (checkMscNow.length)    actionAlerts.push({icon:'🔍', color:'var(--amber)',  text:`${checkMscNow.length} MSC result${checkMscNow.length>1?'s':''} ready`, fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"});
+  if (checkReimbNow.length)  actionAlerts.push({icon:'💰', color:'var(--cyan)',   text:`${checkReimbNow.length} reimbursement${checkReimbNow.length>1?'s':''} to verify`, fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"});
+  if (needsDoc.length)       actionAlerts.push({icon:'📄', color:'var(--purple)', text:`${needsDoc.length} need${needsDoc.length>1?'':'s'} document`, fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"});
+  if (critical.length)       monitorAlerts.push({icon:'⚠',  color:'var(--red)',    text:`${critical.length} deadline${critical.length>1?'s':''} <7 days`, fn:"navTo('active')"});
+  if (arrived.length)        monitorAlerts.push({icon:'📦', color:'var(--amber)',  text:`${arrived.length} arrived, awaiting check-in`, fn:"navTo('active')"});
+
+  const banner = document.getElementById('overview-alert-banner');
+  if (actionAlerts.length || monitorAlerts.length) {
+    const renderChips = (list) => list.map(a=>`
+      <span onclick="${a.fn}" style="display:inline-flex;align-items:center;gap:5px;padding:4px 9px;background:${a.color}22;border:1px solid ${a.color}55;border-radius:14px;cursor:pointer;transition:all .12s;font-size:11.5px;font-weight:600;color:${a.color}"
+        onmouseover="this.style.background='${a.color}33'" onmouseout="this.style.background='${a.color}22'">
+        <span>${a.icon}</span><span>${a.text}</span>
+      </span>`).join('');
+    banner.innerHTML = `
+      <div style="background:${actionAlerts.length?'var(--red-bg)':'var(--bg2)'};border:1px solid ${actionAlerts.length?'var(--red)':'var(--border2)'};border-left:3px solid ${actionAlerts.length?'var(--red)':'var(--amber)'};border-radius:8px;padding:10px 14px;margin-bottom:14px">
+        ${actionAlerts.length ? `
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;${monitorAlerts.length?'padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px':''}">
+            <span style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.07em;display:inline-flex;align-items:center;gap:6px;flex-shrink:0">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);animation:pulse 2s infinite"></span>
+              Action Now
+            </span>
+            ${renderChips(actionAlerts)}
+          </div>` : ''}
+        ${monitorAlerts.length ? `
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0">Monitoring</span>
+            ${renderChips(monitorAlerts)}
+          </div>` : ''}
+      </div>`;
+  } else {
+    banner.innerHTML = `<div style="background:var(--green-bg);border:1px solid var(--green);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:16px">✓</span>
+      <span style="font-size:12px;font-weight:700;color:var(--green)">All clear — inbox zero</span>
+      <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing urgent right now</span>
+    </div>`;
+  }
+
+  // ── KPI TILES ─────────────────────────────────────────────────────────
+  // Each tile is tagged as either action-now (Sarah must do something) or waiting (just info)
   const tiles = [
-    {v:inTransit,   l:'In transit',         sub:'On the way to BDL',    c:'tile-blue',  tv:'tv-blue',  click:"navTo('active')"},
-    {v:arrived,     l:'Arrived at BDL',     sub:'Awaiting check-in',    c:'tile-amber', tv:'tv-amber', click:"navTo('active')"},
-    {v:checkedin,   l:'Checked in',         sub:'Awaiting decision',    c:'tile-cyan',  tv:'tv-cyan',  click:"navTo('active')"},
-    {v:inReimb,     l:'Active cases',       sub:'In reimbursement',     c:'tile-blue',  tv:'tv-blue',  click:"navTo('reimb')"},
-    {v:overdueReu,  l:'Overdue reupdates',  sub:'Need chasing now',     c:'tile-red',   tv:'tv-red',   click:"navTo('reimb')"},
-    {v:needsDoc,    l:'Needs document',     sub:'Invoice required',     c:'tile-purple',tv:'tv-purple',click:"navTo('reimb')"},
-    {v:escalated,   l:'Escalated to Jack',  sub:'Waiting on MD',        c:'tile-purple',tv:'tv-purple',click:"navTo('reimb')"},
-    {v:approaching, l:'Deadline <14 days',  sub:'60-day window closing',c:'tile-amber', tv:'tv-amber', click:"navTo('active')"},
-    {v:checkedin,   l:'Needs Discord Check',sub:'Check photos & notes',  c:'tile-cyan',  tv:'tv-cyan',  click:""},
-    {v:totalActive, l:'Total active',       sub:'All open removals',    c:'tile-blue',  tv:'tv-white', click:"navTo('active')"},
+    // ACTION-NOW tiles (left side, urgent)
+    {v:overdueReu.length,   l:'Overdue Re-updates',  sub:'Submit MSC today',     c:'tile-red',    tv:'tv-red',    key:'overdue',      border:'var(--red)',    kind:'action', urgent:overdueReu.length>0},
+    {v:checkMscNow.length,  l:'Check MSC Result',    sub:'5+ days in review',    c:'tile-amber',  tv:'tv-amber',  key:'checkmsc',     border:'var(--amber)',  kind:'action', urgent:checkMscNow.length>0},
+    {v:checkReimbNow.length,l:'Check Reimbursement', sub:'Verify in Amazon',     c:'tile-cyan',   tv:'tv-cyan',   key:'checkreimb',   border:'var(--cyan)',   kind:'action', urgent:checkReimbNow.length>0},
+    {v:needsDoc.length,     l:'Needs Document',      sub:'Upload invoice',       c:'tile-purple', tv:'tv-purple', key:'needsdoc',     border:'var(--purple)', kind:'action', urgent:needsDoc.length>0},
+    // WAITING tiles (right side, monitoring)
+    {v:inTransit.length,    l:'In Transit',          sub:'On way to BDL',        c:'tile-blue',   tv:'tv-blue',   key:'transit',      border:'var(--blue)',   kind:'wait'},
+    {v:arrived.length,      l:'Arrived',             sub:'Awaiting check-in',    c:'tile-amber',  tv:'tv-amber',  key:'arrived',      border:'var(--amber)',  kind:'wait'},
+    {v:inReimb.length,      l:'Active Cases',        sub:'In reimbursement',     c:'tile-blue',   tv:'tv-blue',   key:'reimb',        border:'var(--blue)',   kind:'wait'},
+    {v:approaching.length,  l:'Deadline <14d',       sub:'60-day window',        c:'tile-amber',  tv:'tv-amber',  key:'deadline',     border:'var(--amber)',  kind:'wait',   urgent:approaching.length>0},
   ];
-  document.getElementById('overview-tiles').innerHTML = tiles.map(t=>`
-    <div class="tile ${t.c}" ${t.click?`onclick="${t.click}" title="Click to view"`:'style="cursor:default"'}>
-      <div class="tile-v ${t.tv}">${t.v}</div>
+
+  document.getElementById('overview-tiles').innerHTML = tiles.map(t=>{
+    const kindBadge = t.kind==='action'
+      ? `<span style="position:absolute;top:8px;right:8px;font-size:8px;font-weight:800;color:var(--red);background:var(--red-bg);border:1px solid var(--red);border-radius:3px;padding:1px 5px;letter-spacing:.05em">ACT</span>`
+      : `<span style="position:absolute;top:8px;right:8px;font-size:8px;font-weight:700;color:var(--text3);background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;letter-spacing:.05em">WAIT</span>`;
+    return `<div class="tile ${t.c}" onclick="showTileDrill('${t.key}')" title="Click for detail" style="${t.kind==='action'&&t.v>0?'box-shadow:inset 0 0 0 1px '+t.border+'33':''}">
+      ${kindBadge}
+      ${t.urgent&&t.v>0?`<div style="position:absolute;top:8px;left:8px;width:6px;height:6px;border-radius:50%;background:${t.border};box-shadow:0 0 8px ${t.border};animation:pulse 2s infinite"></div>`:''}
+      <div class="tile-v ${t.tv}" style="margin-top:8px">${t.v}</div>
       <div class="tile-l">${t.l}</div>
       <div class="tile-sub">${t.sub}</div>
-    </div>`).join('');
-
-  // Action list -- Sarah's to-do
-  const actions = [];
-  DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status)).forEach(r=>{
-    const days=Math.ceil((new Date()-new Date(r.reupdate))/86400000);
-    actions.push({r,dot:'ad-red',label:`MSC reupdate overdue by ${days} day${days!==1?'s':''}`,meta:r.reupdate,note:r.reupdateNote||''});
-  });
-  DB.filter(r=>r.reupdate&&r.reupdate===today&&!HIST_STATUSES.includes(r.status)).forEach(r=>{
-    actions.push({r,dot:'ad-amber',label:'MSC reupdate due TODAY',meta:'Today',note:r.reupdateNote||''});
-  });
-  DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length)).forEach(r=>{
-    actions.push({r,dot:'ad-cyan',label:'Checked in -- no case opened yet',meta:r.darr||''});
-  });
-  DB.filter(r=>r.status==='mscneedsdoc').forEach(r=>{
-    actions.push({r,dot:'ad-purple',label:'Invoice / document needed',meta:''});
-  });
-  DB.filter(r=>r.status==='arrived').forEach(r=>{
-    actions.push({r,dot:'ad-amber',label:'Arrived at BDL -- needs checking in',meta:r.darr||r.dsub||''});
-  });
-  DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=7;}).forEach(r=>{
-    const d=deadline60(r);
-    actions.push({r,dot:'ad-red',label:`60-day deadline in ${d} day${d!==1?'s':''}`,meta:''});
-  });
-
-  document.getElementById('overview-actions').innerHTML = actions.length ? actions.map(({r,dot,label,meta,note})=>`
-    <div class="action-item" onclick="openDetail('${r.id}')">
-      <div class="action-dot ${dot}"></div>
-      <div class="action-info">
-        <div class="action-name">${r.name}</div>
-        <div class="action-desc">${label}${note?` -- <em>${note}</em>`:''}</div>
-      </div>
-      <div class="action-meta">${meta}</div>
-    </div>`).join('') :
-    `<div class="action-item"><div class="action-dot ad-blue"></div><div class="action-info"><div class="action-name" style="color:var(--green)">All clear ✓</div><div class="action-desc">Nothing needs action right now</div></div></div>`;
-
-  // Upcoming reupdates
-  const upcoming = DB.filter(r=>r.reupdate&&r.reupdate>today&&!HIST_STATUSES.includes(r.status))
-    .sort((a,b)=>a.reupdate.localeCompare(b.reupdate)).slice(0,6);
-  document.getElementById('overview-reupdates').innerHTML = upcoming.length ? upcoming.map(r=>{
-    const days=Math.ceil((new Date(r.reupdate)-new Date())/86400000);
-    return `<div class="action-item" onclick="openDetail('${r.id}')">
-      <div class="action-dot ad-amber"></div>
-      <div class="action-info">
-        <div class="action-name">${r.name}</div>
-        <div class="action-desc">${r.reupdateNote||'MSC reupdate scheduled'}</div>
-      </div>
-      <div class="action-meta" style="color:var(--amber)">${r.reupdate} <span style="color:var(--text3)">(${days}d)</span></div>
     </div>`;
-  }).join('') : `<div style="padding:16px;font-size:12px;color:var(--text3)">No upcoming reupdates</div>`;
+  }).join('');
 
-  // Approaching deadlines
+  // ── SARAH'S ACTION LIST ───────────────────────────────────────────────
+  const actions = [];
+
+  // Priority 0 — 5-day checks (most urgent — actionable RIGHT NOW)
+  // Sort so the longest-waiting items appear first within this group
+  const p0Mscs = [];
+  DB.filter(r=>r.status==='mscreview'||r.status==='mscsubmit').forEach(r=>{
+    if (!r.status_changed_at) return;
+    const days = Math.floor((new Date()-new Date(r.status_changed_at))/86400000);
+    if (days >= 5) p0Mscs.push({r, days, type:'msc'});
+  });
+  DB.filter(r=>r.status==='reimbpending').forEach(r=>{
+    if (!r.status_changed_at) return;
+    const days = Math.floor((new Date()-new Date(r.status_changed_at))/86400000);
+    if (days >= 5) p0Mscs.push({r, days, type:'reimb'});
+  });
+  // Most days-waiting first
+  p0Mscs.sort((a,b)=>b.days-a.days).forEach(({r,days,type})=>{
+    if (type==='msc') {
+      actions.push({r, dot:'ad-amber', label:`⏰ MSC under review for ${days} days — check result NOW`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days});
+    } else {
+      actions.push({r, dot:'ad-cyan', label:`💰 Reimbursement pending ${days} days — verify in Amazon`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days});
+    }
+  });
+
+  // Priority 1 — Critical deadlines
+  critical.forEach(r=>{
+    const d=deadline60(r);
+    actions.push({r,dot:'ad-red',label:`🔴 CRITICAL: ${d} day${d!==1?'s':''} left on 60-day deadline`,meta:fmtDate(r.darr||r.dsub),pri:1});
+  });
+
+  // Priority 2 — Overdue re-updates (sorted worst first)
+  overdueReu.sort((a,b)=>new Date(a.reupdate)-new Date(b.reupdate)).forEach(r=>{
+    const days=Math.ceil((nowMs-new Date(r.reupdate).setHours(0,0,0,0))/86400000);
+    const urgency = days>=14?'🔴':days>=7?'🟠':'🟡';
+    const badge = `<span style="display:inline-block;background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:6px">${days}d overdue</span>`;
+    const attempts = r.msc_attempts||[];
+    const nextAttemptNum = attempts.length+1;
+    const lastDenied = [...attempts].reverse().find(a=>a.outcome==='denied'&&a.cog);
+    const suggestedCog = lastDenied ? fmtMoney(lastDenied.cog*0.8) : '';
+    const attemptContext = attempts.length>0
+      ? `<span style="font-size:10px;color:var(--text3);margin-left:6px">Attempt #${nextAttemptNum} due${suggestedCog?' · suggested COG '+suggestedCog:''}</span>`
+      : '';
+    actions.push({r,dot:'ad-red',label:`${urgency} MSC re-update overdue${badge}${attemptContext}`,meta:fmtDate(r.reupdate),pri:2});
+  });
+
+  // Priority 3 — Due today
+  dueToday.forEach(r=>{
+    const attempts = r.msc_attempts||[];
+    const nextNum = attempts.length+1;
+    actions.push({r,dot:'ad-amber',label:`📅 MSC re-update due TODAY — submit attempt #${nextNum}`,meta:'Today',pri:3});
+  });
+
+  // Priority 3.5 — Escalated to Jack
+  DB.filter(r=>r.status==='escalated').forEach(r=>{
+    actions.push({r,dot:'ad-pink',label:'⬆ Escalated to Jack / MD — awaiting response',meta:fmtDate(r.darr||r.dsub),pri:3});
+  });
+
+  // Priority 4 — Needs document
+  needsDoc.forEach(r=>{
+    actions.push({r,dot:'ad-purple',label:'📄 Invoice / document needed — claim stalled',meta:fmtDate(r.darr||r.dsub),pri:4});
+  });
+
+  // Priority 5 — Arrived needs checkin
+  arrived.forEach(r=>{
+    actions.push({r,dot:'ad-amber',label:'📦 Arrived at BDL — needs checking in',meta:fmtDate(r.darr||r.dsub),pri:5});
+  });
+
+  // Priority 6 — Checked in no case
+  noCaseYet.forEach(r=>{
+    actions.push({r,dot:'ad-cyan',label:'💬 Checked in — no case opened yet',meta:fmtDate(r.darr),pri:6});
+  });
+
+  const countEl = document.getElementById('actions-count');
+  if (countEl) countEl.textContent = `${actions.length} item${actions.length!==1?'s':''} need attention`;
+
+  if (!actions.length) {
+    document.getElementById('overview-actions').innerHTML = `
+      <div style="padding:32px;text-align:center">
+        <div style="font-size:32px;margin-bottom:10px">✅</div>
+        <div style="font-size:14px;font-weight:700;color:var(--green)">All clear</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">Nothing needs attention right now</div>
+      </div>`;
+    return;
+  }
+
+  // Group by priority category
+  const groups = [
+    {pri:0, label:'⏰ Check Now',             color:'var(--amber)', items:actions.filter(a=>a.pri===0), collapsed:false},
+    {pri:1, label:'🔴 Critical Deadlines',    color:'var(--red)',   items:actions.filter(a=>a.pri===1), collapsed:false},
+    {pri:2, label:'⏰ Overdue Re-updates',    color:'var(--red)',   items:actions.filter(a=>a.pri===2), collapsed:false,
+     action:{label:'View all →', fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"},
+     maxShow:3},
+    {pri:3, label:'📅 Due Today / Escalated', color:'var(--amber)', items:actions.filter(a=>a.pri===3), collapsed:false},
+    {pri:4, label:'📄 Needs Document',         color:'var(--purple)',items:actions.filter(a=>a.pri===4), collapsed:false,
+     action:{label:'View all →', fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"}},
+    {pri:5, label:'📦 Arrived at BDL',        color:'var(--amber)', items:actions.filter(a=>a.pri===5), collapsed:true,
+     action:{label:'Go to Active →', fn:"navTo('active')"}},
+    {pri:6, label:'💬 No Case Opened Yet',     color:'var(--cyan)',  items:actions.filter(a=>a.pri===6), collapsed:true,
+     action:{label:'Go to Reimbursements →', fn:"navTo('reimb')"}},
+  ].filter(g=>g.items.length);
+
+  function renderGroups(expandedSet) {
+    return groups.map((g,gi)=>{
+      const isExpanded = expandedSet.has(gi);
+      const showAll = expandedSet.has(`all-${gi}`);
+      const displayItems = g.maxShow && !showAll ? g.items.slice(0, g.maxShow) : g.items;
+      const hasMore = g.maxShow && g.items.length > g.maxShow && !showAll;
+
+      return `<div style="border-bottom:1px solid var(--border)">
+        <div style="padding:9px 14px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between;cursor:pointer"
+          onclick="toggleActionGroup(${gi})">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;font-weight:700;color:${g.color}">${g.label}</span>
+            <span style="font-size:10px;background:${g.color}22;color:${g.color};border:1px solid ${g.color}44;border-radius:20px;padding:1px 7px;font-weight:700">${g.items.length}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${g.action?`<button onclick="event.stopPropagation();${g.action.fn}" style="background:none;border:none;font-size:10px;color:${g.color};cursor:pointer;font-weight:700">${g.action.label}</button>`:''}
+            <span style="color:var(--text3);font-size:12px">${isExpanded?'▾':'▸'}</span>
+          </div>
+        </div>
+        ${isExpanded ? `
+          ${displayItems.map(({r,label,meta})=>`
+            <div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .12s"
+              onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''"
+              onclick="openDetail('${r.id}')">
+              <div style="width:7px;height:7px;border-radius:50%;background:${g.color};flex-shrink:0;margin-top:4px"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>68?r.name.slice(0,68)+'…':r.name}</div>
+                <div style="font-size:11px;color:var(--text2);margin-top:2px">${label}</div>
+                ${r.cog>0?`<div style="font-size:10px;color:var(--amber);font-weight:600;margin-top:2px">COG: ${fmtMoney(r.cog)}</div>`:''}
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+                <span style="font-size:10px;color:var(--text3);white-space:nowrap">${meta}</span>
+                <button onclick="event.stopPropagation();openDetail('${r.id}')" style="background:var(--bg5);border:1px solid var(--border2);color:var(--text2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:600;cursor:pointer">Open</button>
+              </div>
+            </div>`).join('')}
+          ${hasMore ? `<div style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--border)">
+            <button onclick="expandAllGroup(${gi})" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:4px 14px;font-size:11px;cursor:pointer;font-weight:600">Show ${g.items.length - g.maxShow} more ▾</button>
+          </div>` : ''}
+        ` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  let _expandedGroups = new Set(groups.map((_,i)=>i).filter(i=>!groups[i].collapsed));
+  document.getElementById('overview-actions').innerHTML = renderGroups(_expandedGroups);
+
+  window.toggleActionGroup = function(gi) {
+    if (_expandedGroups.has(gi)) _expandedGroups.delete(gi);
+    else _expandedGroups.add(gi);
+    document.getElementById('overview-actions').innerHTML = renderGroups(_expandedGroups);
+  };
+  window.expandAllGroup = function(gi) {
+    _expandedGroups.add(`all-${gi}`);
+    document.getElementById('overview-actions').innerHTML = renderGroups(_expandedGroups);
+  };
+  // ── RE-UPDATE SCHEDULE ────────────────────────────────────────────────
+  // Group upcoming re-updates by day bucket (today already counted in tasks, here = future only)
+  const upcoming = DB.filter(r=>r.reupdate&&r.reupdate>today&&!HIST_STATUSES.includes(r.status))
+    .sort((a,b)=>a.reupdate.localeCompare(b.reupdate)).slice(0,8);
+  if (upcoming.length) {
+    // Group by date
+    const buckets = {};
+    upcoming.forEach(r=>{
+      const k = r.reupdate;
+      if (!buckets[k]) buckets[k] = [];
+      buckets[k].push(r);
+    });
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    document.getElementById('overview-reupdates').innerHTML = Object.keys(buckets).slice(0,5).map(date=>{
+      const recs = buckets[date];
+      const dObj = new Date(date);
+      const days = Math.ceil((dObj-new Date())/86400000);
+      const col = days<=3?'var(--red)':days<=7?'var(--amber)':'var(--blue)';
+      const dayLabel = days===1?'Tomorrow':days<=7?`${dayNames[dObj.getDay()]} · in ${days}d`:`in ${days}d`;
+      const totalCog = recs.reduce((s,r)=>s+Number(r.cog||0),0);
+      return `<div style="border-bottom:1px solid var(--border)">
+        <div style="padding:6px 12px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="width:5px;height:5px;border-radius:50%;background:${col}"></span>
+            <span style="font-size:10px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.05em">${dayLabel}</span>
+            <span style="font-size:9px;color:var(--text3)">${fmtDate(date)}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;font-weight:700;color:var(--text2);background:var(--bg4);border-radius:10px;padding:1px 6px">${recs.length}</span>
+            ${totalCog>0?`<span style="font-size:9px;color:var(--amber);font-weight:600">${fmtMoney(totalCog)}</span>`:''}
+          </div>
+        </div>
+        ${recs.map(r=>`
+          <div onclick="openDetail('${r.id}')" style="padding:6px 12px 6px 22px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)">${r.name.length>34?r.name.slice(0,34)+'…':r.name}</div>
+            </div>
+            ${r.cog>0?`<span style="font-size:9px;color:var(--text3);white-space:nowrap">${fmtMoney(r.cog)}</span>`:''}
+          </div>`).join('')}
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('overview-reupdates').innerHTML = `<div style="padding:18px 14px;font-size:11px;color:var(--text3);text-align:center">
+      <div style="font-size:18px;margin-bottom:4px;opacity:.5">📭</div>
+      No upcoming re-updates scheduled
+    </div>`;
+  }
+
+  // ── APPROACHING DEADLINES ─────────────────────────────────────────────
   const deadlines = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;})
     .sort((a,b)=>deadline60(a)-deadline60(b));
   document.getElementById('overview-deadlines').innerHTML = deadlines.length ? deadlines.map(r=>{
     const d=deadline60(r);
-    return `<div class="action-item" onclick="openDetail('${r.id}')">
-      <div class="action-dot ${d<=7?'ad-red':'ad-amber'}"></div>
-      <div class="action-info">
-        <div class="action-name">${r.name}</div>
-        <div class="action-desc">${r.oid||'No order ID'}</div>
+    const col = d<=3?'var(--red)':d<=7?'var(--red)':'var(--amber)';
+    return `<div onclick="openDetail('${r.id}')" style="padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+      <div style="width:28px;height:28px;border-radius:50%;background:${col}22;border:1.5px solid ${col};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <span style="font-size:11px;font-weight:800;color:${col};line-height:1">${d}</span>
       </div>
-      <div class="action-meta" style="color:${d<=7?'var(--red)':'var(--amber)'}">${d}d left</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>34?r.name.slice(0,34)+'…':r.name}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:1px">${d<=1?'TODAY':d<=7?'critical':'closing soon'} · ${r.cog>0?fmtMoney(r.cog)+' COG':''}</div>
+      </div>
+      <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;color:var(--text3);flex-shrink:0"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </div>`;
-  }).join('') : `<div style="padding:16px;font-size:12px;color:var(--text3)">No deadlines approaching</div>`;
+  }).join('') : `<div style="padding:18px 14px;font-size:11px;color:var(--text3);text-align:center">
+      <div style="font-size:18px;margin-bottom:4px;opacity:.5">✓</div>
+      No deadlines approaching
+    </div>`;
+
+  // ── PIPELINE FUNNEL ────────────────────────────────────────────────────
+  const pipelineStages = [
+    {label:'In Transit',      count:inTransit.length,  col:'var(--blue)',   key:'transit'},
+    {label:'Arrived',         count:arrived.length,    col:'var(--amber)',  key:'arrived'},
+    {label:'Checked In',      count:checkedin.length,  col:'var(--cyan)',   key:'nocase'},
+    {label:'MSC Submitted',   count:DB.filter(r=>r.status==='mscsubmit'||r.status==='mscreview').length, col:'var(--blue)',   fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"},
+    {label:'MSC Approved',    count:DB.filter(r=>r.status==='mscapproved'||r.status==='mscreduced').length, col:'var(--green)', fn:"REIMB_FILTER='mscapproved';setTimeout(()=>navTo('reimb'),0)"},
+    {label:'Case Open',       count:DB.filter(r=>r.status==='caseopen').length, col:'var(--cyan)', fn:"REIMB_FILTER='caseopen';setTimeout(()=>navTo('reimb'),0)"},
+    {label:'Reimb Pending',   count:DB.filter(r=>r.status==='reimbpending').length, col:'var(--blue)', fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"},
+  ];
+  const maxStage = Math.max(...pipelineStages.map(s=>s.count), 1);
+  const funnelEl = document.getElementById('overview-funnel');
+  if (funnelEl) funnelEl.innerHTML = pipelineStages.map((s,i)=>{
+    const pct = (s.count/maxStage)*100;
+    const clickFn = s.fn || (s.key?`showTileDrill('${s.key}')`:'');
+    return `<div onclick="${clickFn}" style="padding:7px 12px;border-bottom:${i===pipelineStages.length-1?'none':'1px solid var(--border)'};cursor:${clickFn?'pointer':'default'};transition:background .12s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:10.5px;color:var(--text2);font-weight:500">${s.label}</span>
+        <span style="font-size:11px;font-weight:700;color:${s.count>0?s.col:'var(--text3)'}">${s.count}</span>
+      </div>
+      <div style="background:var(--bg5);border-radius:2px;height:3px;overflow:hidden">
+        <div style="background:${s.count>0?s.col:'var(--border2)'};width:${pct}%;height:100%;border-radius:2px;transition:width .5s"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── QUICK STATS — segmented, with more useful data ──────────────────────
+  const mscDenied  = DB.filter(r=>r.status==='mscdenied').length;
+  const writeoff   = DB.filter(r=>r.status==='writeoff').length;
+  const reimbursedTotal = reimbursedRecs.length;
+  // This week's recoveries
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - 7); weekStart.setHours(0,0,0,0);
+  const weekRecs = reimbursedRecs.filter(r=>getReimbDate(r)&&new Date(getReimbDate(r))>=weekStart);
+  const weekRecov = weekRecs.reduce((s,r)=>s+Number(r.ramt||0),0);
+  // Avg days from arrival to reimbursement (only completed)
+  const completedWithDates = reimbursedRecs.filter(r=>r.darr&&getReimbDate(r));
+  const avgDays = completedWithDates.length>0
+    ? Math.round(completedWithDates.reduce((s,r)=>s+(new Date(getReimbDate(r))-new Date(r.darr))/86400000,0)/completedWithDates.length)
+    : null;
+  // Active COG at risk
+  const activeCog = totalActive.reduce((s,r)=>s+Number(r.cog||0),0);
+
+  const qsEl = document.getElementById('overview-quickstats');
+  if (qsEl) qsEl.innerHTML = `
+    <!-- This week section -->
+    <div style="padding:9px 12px;background:var(--bg3);border-bottom:1px solid var(--border)">
+      <div style="font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">This Week</div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <div>
+          <div style="font-size:16px;font-weight:800;color:var(--green);line-height:1">${fmtMoney(weekRecov)}</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px">${weekRecs.length} reimbursement${weekRecs.length!==1?'s':''}</div>
+        </div>
+        ${avgDays!==null?`<div style="text-align:right">
+          <div style="font-size:13px;font-weight:700;color:var(--text2);line-height:1">~${avgDays}d</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px">avg cycle time</div>
+        </div>`:''}
+      </div>
+    </div>
+
+    <!-- COG at risk -->
+    <div onclick="navTo('active')" style="padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .12s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:11px;color:var(--text2);font-weight:500">COG at Risk</div>
+        <div style="font-size:9px;color:var(--text3);margin-top:1px">${totalActive.length} active items</div>
+      </div>
+      <span style="font-size:13px;font-weight:800;color:var(--amber)">${fmtMoney(activeCog)}</span>
+    </div>
+
+    <!-- Outcomes section -->
+    <div style="padding:8px 12px 4px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--bg3)">Outcomes</div>
+    ${[
+      {label:'Reimbursed',  val:reimbursedTotal, col:'var(--green)',   fn:"navTo('hist')"},
+      {label:'MSC Denied',  val:mscDenied,       col:'var(--red)',     fn:"REIMB_FILTER='mscdenied';setTimeout(()=>navTo('reimb'),0)"},
+      {label:'Write-offs',  val:writeoff,        col:'var(--text3)',   fn:"navTo('hist')"},
+    ].map(q=>`
+      <div onclick="${q.fn}" style="padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+        <span style="font-size:11px;color:var(--text2)">${q.label}</span>
+        <span style="font-size:12px;font-weight:700;color:${q.val>0?q.col:'var(--text3)'}">${q.val}</span>
+      </div>`).join('')}
+  `;
 }
+  const today = new Date().toISOString().split('T')[0];
+  const nowMs = new Date().setHours(0,0,0,0);
+
+  // Counts
+  const inTransit   = DB.filter(r=>r.status==='transit');
+  const arrived     = DB.filter(r=>r.status==='arrived');
+  const checkedin   = DB.filter(r=>r.status==='checkdiscord');
+  const inReimb     = DB.filter(r=>REIMB_STATUSES.includes(r.status));
+  const overdueReu  = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status));
+  const needsDoc    = DB.filter(r=>r.status==='mscneedsdoc');
+  const approaching = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;});
+  const totalActive = DB.filter(r=>!HIST_STATUSES.includes(r.status));
+  const noCaseYet   = DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length));
+
+  // Financials — use dreim||darr||dsub as the reimbursed date (dreim often blank)
+  const mtdStart = new Date(); mtdStart.setDate(1); mtdStart.setHours(0,0,0,0);
+  const cogAtRisk  = totalActive.reduce((s,r)=>s+Number(r.cog||0),0);
+  const recovered  = DB.filter(r=>HIST_STATUSES.includes(r.status)).reduce((s,r)=>s+Number(r.ramt||0),0);
+  const getReimbDate = r => r.dreim || r.darr || r.dsub || '';
+  const mtdRecs    = DB.filter(r=>HIST_STATUSES.includes(r.status)&&getReimbDate(r)&&new Date(getReimbDate(r))>=mtdStart);
+  const mtdRecov   = mtdRecs.reduce((s,r)=>s+Number(r.ramt||0),0);
+  const mtdCog     = mtdRecs.reduce((s,r)=>s+Number(r.cog||0),0);
+  const pct = cogAtRisk > 0 ? Math.min(100, Math.round((recovered/cogAtRisk)*100)) : 0;
+
+  document.getElementById('overview-financials').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      <div class="fin-tile">
+        <div class="fin-label">COG at Risk</div>
+        <div class="fin-val" style="color:var(--amber)">${fmtMoney(cogAtRisk)}</div>
+        <div class="fin-sub">All open removals</div>
+      </div>
+      <div class="fin-tile">
+        <div class="fin-label">Total Recovered</div>
+        <div class="fin-val" style="color:var(--green)">${fmtMoney(recovered)}</div>
+        <div class="fin-sub">All time reimbursed</div>
+      </div>
+      <div class="fin-tile">
+        <div class="fin-label">MTD Recovered</div>
+        <div class="fin-val" style="color:var(--blue)">${fmtMoney(mtdRecov)}</div>
+        <div class="fin-sub">of ${fmtMoney(mtdCog)} COG this month${mtdRecs.length?` (${mtdRecs.length} items)`:''}</div>
+      </div>
+      <div class="fin-tile">
+        <div class="fin-label">Recovery Rate</div>
+        <div class="fin-val" style="color:${pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)'}">${pct}%</div>
+        <div class="fin-sub" style="margin-top:6px">
+          <div style="background:var(--bg5);border-radius:4px;height:6px;overflow:hidden">
+            <div style="background:${pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)'};width:${pct}%;height:100%;border-radius:4px;transition:width .4s"></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+// TILE DRILL-DOWN --
+function showTileDrill(key) {
+  const today = new Date().toISOString().split('T')[0];
+  let items = [], title = '', subtitle = '';
+
+  // Helper: days since a record's status changed
+  const daysSinceStatus = (r) => {
+    if (!r.status_changed_at) return null;
+    return Math.floor((new Date()-new Date(r.status_changed_at))/86400000);
+  };
+  // Helper: days overdue based on reupdate field
+  const daysOverdue = (r) => {
+    if (!r.reupdate) return null;
+    const ms = (new Date().setHours(0,0,0,0) - new Date(r.reupdate).setHours(0,0,0,0));
+    return Math.ceil(ms/86400000);
+  };
+
+  // Drill mode tiles — show a filtered list with relevant date/age column
+  if (key==='overdue') {
+    items = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status))
+      .sort((a,b)=>new Date(a.reupdate)-new Date(b.reupdate));
+    title='Overdue Re-updates';
+    subtitle='Sorted by most overdue first — submit MSC re-update now';
+  }
+  else if (key==='checkmsc') {
+    // Only items where MSC has been in review/submit for 5+ days (actually ready to check)
+    items = DB.filter(r=>(r.status==='mscreview'||r.status==='mscsubmit')&&r.status_changed_at&&daysSinceStatus(r)>=5)
+      .sort((a,b)=>(daysSinceStatus(b)||0)-(daysSinceStatus(a)||0));
+    title='MSC Results Ready to Check';
+    subtitle='In review for 5+ days — check Amazon for outcome';
+  }
+  else if (key==='checkreimb') {
+    // Only items where reimbursement has been pending 5+ days
+    items = DB.filter(r=>r.status==='reimbpending'&&r.status_changed_at&&daysSinceStatus(r)>=5)
+      .sort((a,b)=>(daysSinceStatus(b)||0)-(daysSinceStatus(a)||0));
+    title='Reimbursements to Verify';
+    subtitle='Pending 5+ days — check the funds have hit Amazon';
+  }
+  else if (key==='needsdoc')   { items=DB.filter(r=>r.status==='mscneedsdoc');                                                  title='Needs Document'; subtitle='Upload invoice or supporting doc to unblock the claim'; }
+  else if (key==='transit')    { items=DB.filter(r=>r.status==='transit');                                                      title='In Transit';     subtitle='On the way back to BDL'; }
+  else if (key==='arrived')    { items=DB.filter(r=>r.status==='arrived');                                                      title='Arrived at BDL'; subtitle='Awaiting check-in'; }
+  else if (key==='reimb')      { items=DB.filter(r=>REIMB_STATUSES.includes(r.status));                                         title='Active Cases';   subtitle='Currently in the reimbursement pipeline'; }
+  else if (key==='nodiscord' || key==='nocase') { items=DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length));    title='Needs Discord / Case Check'; subtitle='Checked in but no case opened yet'; }
+  else if (key==='deadline')   { items=DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;}).sort((a,b)=>deadline60(a)-deadline60(b)); title='Deadlines Within 14 Days'; subtitle='60-day reimbursement window closing soon'; }
+  else if (key==='all')        { items=DB.filter(r=>!HIST_STATUSES.includes(r.status));                                         title='All Active Removals'; subtitle=''; }
+
+  if (!items.length) { showToast(`No items in: ${title}`); return; }
+
+  let existing = document.getElementById('tile-drill-overlay');
+  if (existing) existing.remove();
+
+  // Decide which date/age column to show based on key
+  const getRightInfo = (r) => {
+    if (key==='overdue') {
+      const d=daysOverdue(r);
+      return `<span style="font-size:11px;font-weight:700;color:${d>=14?'var(--red)':d>=7?'var(--amber)':'var(--text2)'}">${d}d overdue</span><div style="font-size:10px;color:var(--text3)">${fmtDate(r.reupdate)}</div>`;
+    }
+    if (key==='checkmsc'||key==='checkreimb') {
+      const d=daysSinceStatus(r);
+      return `<span style="font-size:11px;font-weight:700;color:var(--amber)">${d}d in status</span><div style="font-size:10px;color:var(--text3)">since ${fmtDate(r.status_changed_at?r.status_changed_at.split('T')[0]:'')}</div>`;
+    }
+    if (key==='deadline') {
+      const d=deadline60(r);
+      return `<span style="font-size:14px;font-weight:800;color:${d<=7?'var(--red)':'var(--amber)'}">${d}d left</span><div style="font-size:10px;color:var(--text3)">60d window</div>`;
+    }
+    return `<span style="font-size:10px;color:var(--text3)">${fmtDate(r.darr||r.dsub||'')}</span>`;
+  };
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tile-drill-overlay';
+  overlay.className = 'overlay';
+  overlay.style.zIndex = '3000';
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;max-width:680px;width:92%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${title} <span style="font-size:11px;font-weight:600;color:var(--text3);margin-left:4px">${items.length}</span></div>
+          ${subtitle?`<div style="font-size:11px;color:var(--text3);margin-top:2px">${subtitle}</div>`:''}
+        </div>
+        <button onclick="document.getElementById('tile-drill-overlay').remove()" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:600">✕ Close</button>
+      </div>
+      <div style="flex:1;overflow-y:auto">
+        ${items.map(r=>`
+          <div onclick="document.getElementById('tile-drill-overlay').remove();openDetail('${r.id}')" style="padding:10px 18px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .12s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name||'(no name)'}</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">${r.asin||''} ${r.cog>0?`· COG <span style="color:var(--amber);font-weight:600">${fmtMoney(r.cog)}</span>`:''}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">${getRightInfo(r)}</div>
+            <svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px;color:var(--text3);flex-shrink:0"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>`).join('')}
+      </div>
+      <div style="padding:10px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+        <button onclick="document.getElementById('tile-drill-overlay').remove();${key==='overdue'?"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)":key==='checkmsc'?"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)":key==='checkreimb'?"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)":key==='needsdoc'?"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)":key==='deadline'?"navTo('active')":key==='transit'||key==='arrived'?"navTo('active')":"navTo('reimb')"}"
+          style="background:var(--blue-bg);border:1px solid var(--blue);color:var(--blue);border-radius:6px;padding:6px 14px;font-size:11px;cursor:pointer;font-weight:700">Open full list →</button>
+      </div>
+    </div>`;
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+}
+
 
 // CHECK-IN DECISION --
 let CHECKIN_DECISION = null;
@@ -2947,6 +4111,7 @@ function renderAuditLog() {
         DB = (data || []).map(r => ({
           ...r,
           cases: Array.isArray(r.cases) ? r.cases : (typeof r.cases === 'string' ? JSON.parse(r.cases || '[]') : []),
+          msc_attempts: Array.isArray(r.msc_attempts) ? r.msc_attempts : (typeof r.msc_attempts === 'string' ? JSON.parse(r.msc_attempts || '[]') : []),
           status_log: typeof r.status_log === 'string' ? JSON.parse(r.status_log || '[]') : (r.status_log || [])
         }));
         console.log(`✓ Loaded ${DB.length} removals from Supabase`);
