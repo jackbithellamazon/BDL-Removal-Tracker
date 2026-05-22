@@ -13,6 +13,7 @@
 </style>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
 :root{
   --bg:#0a0d14;--bg2:#111520;--bg3:#181e2e;--bg4:#1e2638;--bg5:#252d3d;
@@ -393,7 +394,15 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
         <h2 id="page-title">Overview</h2>
         <p id="page-sub">Your removals at a glance</p>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:12px;align-items:center">
+        <!-- PERSISTENT UK CLOCK -->
+        <div id="topbar-clock" style="display:flex;align-items:center;gap:9px;padding:6px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px" title="UK time (Europe/London)">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite;flex-shrink:0"></span>
+          <div style="line-height:1.1">
+            <div style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.02em"><span id="tb-clock-time">--:--</span></div>
+            <div style="font-size:9px;color:var(--text3);font-weight:500;margin-top:1px"><span id="tb-clock-day">--</span> · <span id="tb-clock-date">--/--</span> · UK</div>
+          </div>
+        </div>
         <a href="https://app.sellerfuse.com/your-orders?status=Removal+Order" target="_blank"
           id="sellerfuse-btn"
           style="display:inline-flex;align-items:center;gap:7px;padding:7px 13px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:6px;color:var(--blue);text-decoration:none;font-size:12px;font-weight:600;transition:all .15s"
@@ -433,7 +442,7 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
         <div class="tile-grid" id="overview-tiles"></div>
 
         <!-- MAIN BODY: Sarah's list + right panel -->
-        <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:14px">
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:14px;align-items:start">
 
           <!-- SARAH'S ACTION LIST -->
           <div class="tbl-wrap" style="border:2px solid var(--red);border-radius:10px;box-shadow:0 0 0 4px var(--red-bg)">
@@ -447,7 +456,7 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
               </div>
               <span id="actions-count" style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg4);border:1px solid var(--border2);border-radius:14px;padding:3px 10px"></span>
             </div>
-            <div id="overview-actions" style="max-height:calc(100vh - 380px);overflow-y:auto"></div>
+            <div id="overview-actions"></div>
           </div>
 
           <!-- RIGHT PANEL -->
@@ -736,7 +745,7 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
       <div id="page-pdf" style="display:none">
         <div class="cg-card" style="max-width:700px">
           <div style="font-size:14px;font-weight:500;margin-bottom:4px">PDF Builder</div>
-          <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Drag your Discord photos here — the app bundles them into a single PDF ready to attach to your Seller Support case.</p>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:16px">Drop in Discord photos and/or existing PDFs — everything gets merged into a single PDF ready to attach to your Seller Support case.</p>
           <div class="field" style="margin-bottom:12px"><label>Link to removal (optional — adds reference to filename)</label>
             <select id="pdf-removal"><option value="">No removal selected</option></select>
           </div>
@@ -745,10 +754,10 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
             ondragleave="this.classList.remove('drag')"
             ondrop="handlePdfDrop(event)">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="margin:0 auto 8px;display:block;opacity:.4"><path d="M12 16V8M8 12l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M20 16.7A5 5 0 0018 7h-1.26A8 8 0 104 15.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <div style="font-size:13px;font-weight:500;color:var(--text2)">Drop images here or click to select</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:4px">JPG, PNG — all images will be combined into one PDF</div>
+            <div style="font-size:13px;font-weight:500;color:var(--text2)">Drop files here or click to select</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px">JPG, PNG, PDF — files are merged in the order you add them</div>
           </div>
-          <input type="file" id="pdf-file-input" accept="image/*" multiple style="display:none" onchange="handlePdfFiles(this.files)">
+          <input type="file" id="pdf-file-input" accept="image/*,application/pdf,.pdf" multiple style="display:none" onchange="handlePdfFiles(this.files)">
           <div class="pdf-thumbs" id="pdf-thumbs"></div>
           <div id="pdf-actions" style="display:none;margin-top:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <button class="btn btn-primary" onclick="buildPdf()">Build PDF</button>
@@ -1255,18 +1264,23 @@ function showError(msg) {
 }
 
 const STATUS_LIST = [
+  // Pre-arrival
   {v:'transit',       l:'In transit',              cls:'ss-transit'},
   {v:'arrived',       l:'Arrived at BDL',          cls:'ss-arrived'},
+  // Workflow: check Discord → MSC pipeline
   {v:'checkdiscord',  l:'Check Discord',           cls:'ss-checkdiscord'},
   {v:'mscsubmit',     l:'MSC submitted',           cls:'ss-mscsubmit'},
   {v:'mscreview',     l:'MSC under review',        cls:'ss-mscreview'},
+  {v:'mscneedsdoc',   l:'Needs document',          cls:'ss-mscneedsdoc'},
+  // MSC outcomes
   {v:'mscapproved',   l:'MSC approved',            cls:'ss-mscapproved'},
   {v:'mscreduced',    l:'Reduced MSC approved',    cls:'ss-mscreduced'},
   {v:'mscdenied',     l:'MSC denied',              cls:'ss-mscdenied'},
-  {v:'mscneedsdoc',   l:'Needs document',          cls:'ss-mscneedsdoc'},
-  {v:'escalated',     l:'Escalated to Jack',       cls:'ss-escalated'},
+  // Post-MSC
   {v:'caseopen',      l:'Case opened',             cls:'ss-caseopen'},
   {v:'reimbpending',  l:'Reimbursement pending',   cls:'ss-reimbpending'},
+  {v:'escalated',     l:'Escalated to Jack',       cls:'ss-escalated'},
+  // Closed / historic
   {v:'reimbursed',    l:'Reimbursed',              cls:'ss-reimbursed'},
   {v:'sentnew',       l:'Sent back as New',        cls:'ss-sentout'},
   {v:'sentused',      l:'Sent back as Used',       cls:'ss-sentout'},
@@ -1472,16 +1486,17 @@ function toggleDateSort() {
 const MSC_STATUS_LIST = [
   {v:'all',          l:'All',                  cls:'',               border:'var(--border2)'},
   {v:'overdue',      l:'Overdue re-updates',   cls:'sb-mscdenied',   border:'#f05050'},
+  // ── Workflow order: Discord → MSC pipeline → outcomes → post-MSC ──
   {v:'checkdiscord', l:'Check Discord',        cls:'sb-checkdiscord',border:'#a78bfa'},
   {v:'mscsubmit',    l:'MSC submitted',        cls:'sb-mscsubmit',   border:'#4d8ef0'},
   {v:'mscreview',    l:'MSC under review',     cls:'sb-mscreview',   border:'#f5a623'},
+  {v:'mscneedsdoc',  l:'Needs document',       cls:'sb-mscneedsdoc', border:'#9b7ff0'},
   {v:'mscapproved',  l:'MSC approved',         cls:'sb-mscapproved', border:'#3dd68c'},
   {v:'mscreduced',   l:'Reduced MSC approved', cls:'sb-mscreduced',  border:'#3dd68c'},
   {v:'mscdenied',    l:'MSC denied',           cls:'sb-mscdenied',   border:'#f05050'},
-  {v:'mscneedsdoc',  l:'Needs document',       cls:'sb-mscneedsdoc', border:'#9b7ff0'},
-  {v:'escalated',    l:'Escalated to Jack',    cls:'sb-escalated',   border:'#f472b6'},
   {v:'caseopen',     l:'Case opened',          cls:'sb-caseopen',    border:'#22d3ee'},
   {v:'reimbpending', l:'Reimbursement pending',cls:'sb-reimbpending',border:'#06b6d4'},
+  {v:'escalated',    l:'Escalated to Jack',    cls:'sb-escalated',   border:'#f472b6'},
 ];
 const MSC_BORDER = Object.fromEntries(MSC_STATUS_LIST.map(s=>[s.v,s.border]));
 
@@ -2556,6 +2571,23 @@ function toggleSidebar() {
   localStorage.setItem('sb-collapsed', collapsed ? '1' : '0');
 }
 
+// ── PERSISTENT TOPBAR CLOCK (UK time) ────────────────────────────────
+// Updates every 15 seconds, runs across all pages
+function tickTopbarClock() {
+  const tEl = document.getElementById('tb-clock-time');
+  const dEl = document.getElementById('tb-clock-day');
+  const dtEl = document.getElementById('tb-clock-date');
+  if (!tEl || !dEl || !dtEl) return;
+  const n = new Date();
+  tEl.textContent = n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London',hour12:false});
+  dEl.textContent = n.toLocaleDateString('en-GB',{weekday:'short',timeZone:'Europe/London'});
+  dtEl.textContent = n.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',timeZone:'Europe/London'});
+}
+tickTopbarClock();
+document.addEventListener('DOMContentLoaded', tickTopbarClock);
+if (window._topbarClockInterval) clearInterval(window._topbarClockInterval);
+window._topbarClockInterval = setInterval(tickTopbarClock, 15000);
+
 // OVERVIEW PAGE --
 function fmtDate(d) {
   if (!d) return '--';
@@ -2583,15 +2615,23 @@ function renderOverview() {
 
   // Financials — recovery % only on completed reimbursements vs their COG
   const mtdStart = new Date(); mtdStart.setDate(1); mtdStart.setHours(0,0,0,0);
-  const getReimbDate = r => r.dreim||r.darr||r.dsub||'';
+  // Match the History page's "This month" filter logic: use dsub (removal/submitted date).
+  // This keeps the Overview MTD numbers consistent with what the History page shows for "This month".
   const reimbursedRecs = DB.filter(r=>r.status==='reimbursed');
   const totalRecov  = reimbursedRecs.reduce((s,r)=>s+Number(r.ramt||0),0);
   const totalRecovCog = reimbursedRecs.reduce((s,r)=>s+Number(r.cog||0),0);
-  const mtdRecs     = reimbursedRecs.filter(r=>getReimbDate(r)&&new Date(getReimbDate(r))>=mtdStart);
+  // MTD: same month/year as today, based on dsub (matches History page)
+  const mtdRecs = reimbursedRecs.filter(r=>{
+    if (!r.dsub) return false;
+    const d = new Date(r.dsub);
+    return d.getMonth()===mtdStart.getMonth() && d.getFullYear()===mtdStart.getFullYear();
+  });
   const mtdRecov    = mtdRecs.reduce((s,r)=>s+Number(r.ramt||0),0);
   const mtdCog      = mtdRecs.reduce((s,r)=>s+Number(r.cog||0),0);
   const overallPct  = totalRecovCog>0 ? Math.min(100,Math.round((totalRecov/totalRecovCog)*100)) : 0;
   const mtdPct      = mtdCog>0 ? Math.min(100,Math.round((mtdRecov/mtdCog)*100)) : 0;
+  // Helper for "this week" calc below — use dreim if present, otherwise dsub (when the work happened)
+  const getReimbDate = r => r.dreim || r.dsub || '';
 
   // ── COMPUTE WORKLOAD METRICS (used by hero) ──────────────────────────
   const checkMscNow  = DB.filter(r=>(r.status==='mscreview'||r.status==='mscsubmit')&&r.status_changed_at&&Math.floor((new Date()-new Date(r.status_changed_at))/86400000)>=5);
@@ -2605,78 +2645,179 @@ function renderOverview() {
   const waitingCount   = DB.filter(r=>['mscsubmit','mscreview','caseopen','reimbpending'].includes(r.status)).length - checkMscNow.length - checkReimbNow.length;
   const monitoringCount = Math.max(0, waitingCount);
 
-  // Workload classification
-  let workloadLevel = 'light', workloadColor = 'var(--green)', workloadEmoji = '☕';
-  if (actionNowCount >= 20)      { workloadLevel = 'heavy';    workloadColor = 'var(--red)';   workloadEmoji = '🔥'; }
-  else if (actionNowCount >= 10) { workloadLevel = 'moderate'; workloadColor = 'var(--amber)'; workloadEmoji = '⚡'; }
-  else if (actionNowCount >= 5)  { workloadLevel = 'steady';   workloadColor = 'var(--blue)';  workloadEmoji = '👍'; }
+  // Workload classification — no emojis, just labels and colors
+  let workloadLevel = 'LIGHT', workloadColor = 'var(--green)', workloadSubtitle = 'Quiet day — get ahead of upcoming items';
+  if (actionNowCount >= 20)      { workloadLevel = 'HEAVY';    workloadColor = 'var(--red)';    workloadSubtitle = 'High load — focus on overdues first'; }
+  else if (actionNowCount >= 10) { workloadLevel = 'MODERATE'; workloadColor = 'var(--amber)';  workloadSubtitle = 'Steady workload — work through systematically'; }
+  else if (actionNowCount >= 5)  { workloadLevel = 'STEADY';   workloadColor = 'var(--blue)';   workloadSubtitle = 'Manageable day — tackle priorities first'; }
 
-  // Initial clock values for first render (live clock interval is set up below)
+  // Used below for month label on MTD tile
   const _now = new Date();
-  const _dayName = _now.toLocaleDateString('en-GB',{weekday:'long',timeZone:'Europe/London'});
-  const _dateStr = _now.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',timeZone:'Europe/London'});
-  const _timeStr = _now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London',hour12:false});
+
+  // Sub-breakdown for workload (interactive — click to drill into each category)
+  const workloadBreakdown = [
+    {label:'Overdue',      val:overdueReu.length,    col:'var(--red)',    fn:"showTileDrill('overdue')"},
+    {label:'Check MSC',    val:checkMscNow.length,   col:'var(--amber)',  fn:"showTileDrill('checkmsc')"},
+    {label:'Check Reimb',  val:checkReimbNow.length, col:'var(--cyan)',   fn:"showTileDrill('checkreimb')"},
+    {label:'Due today',    val:dueToday.length,      col:'var(--green)',  fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"},
+    {label:'Arrived',      val:arrived.length,       col:'var(--amber)',  fn:"showTileDrill('arrived')"},
+    {label:'No case',      val:noCaseYet.length,     col:'var(--cyan)',   fn:"showTileDrill('nocase')"},
+    {label:'Needs doc',    val:needsDoc.length,      col:'var(--purple)', fn:"showTileDrill('needsdoc')"},
+  ].filter(b=>b.val>0);
+
+  // ── ANALYTICS for Total Recovered & MTD tiles ───────────────────────
+  // Avg recovery per case
+  const avgRecov = reimbursedRecs.length>0 ? totalRecov / reimbursedRecs.length : 0;
+  const netTotalPL = totalRecov - totalRecovCog;
+  // Last month comparison (using same dsub-based logic as MTD)
+  const lastMonthStart = new Date(mtdStart); lastMonthStart.setMonth(lastMonthStart.getMonth()-1);
+  const lastMonthEnd   = new Date(mtdStart); lastMonthEnd.setMilliseconds(-1);
+  const lastMonthRecs = reimbursedRecs.filter(r=>{
+    if (!r.dsub) return false;
+    const d = new Date(r.dsub);
+    return d.getMonth()===lastMonthStart.getMonth() && d.getFullYear()===lastMonthStart.getFullYear();
+  });
+  const lastMonthRecov = lastMonthRecs.reduce((s,r)=>s+Number(r.ramt||0),0);
+  // MTD vs last month delta
+  const mtdDeltaPct = lastMonthRecov>0 ? Math.round(((mtdRecov-lastMonthRecov)/lastMonthRecov)*100) : null;
+  const mtdNetPL = mtdRecov - mtdCog;
 
   document.getElementById('overview-financials').innerHTML = `
-    <!-- HERO ROW: live dashboard + total recovered + MTD recovered -->
-    <div style="display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:10px;margin-bottom:12px">
+    <!-- HERO ROW: workload + total recovered + MTD recovered (all balanced) -->
+    <div style="display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:10px;margin-bottom:12px;align-items:stretch">
 
-      <!-- LIVE DASHBOARD TILE (clock + workload) -->
-      <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-left:3px solid ${workloadColor};border-radius:10px;padding:14px 16px;position:relative;overflow:hidden">
-        <!-- subtle pulse dot in corner -->
-        <div style="position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:5px">
-          <span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite"></span>
-          <span style="font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.04em">LIVE · UK</span>
+      <!-- WORKLOAD TILE (no clock — clock lives in topbar) -->
+      <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-left:3px solid ${workloadColor};border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;display:flex;flex-direction:column">
+
+        <!-- TOP LABEL ROW -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="width:7px;height:7px;border-radius:50%;background:${workloadColor};box-shadow:0 0 6px ${workloadColor};animation:pulse 2s infinite"></span>
+            <span style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Today's Workload</span>
+          </div>
+          <div style="font-size:10px;color:${workloadColor};font-weight:800;text-transform:uppercase;letter-spacing:.08em;background:${workloadColor}22;border:1px solid ${workloadColor};border-radius:5px;padding:3px 8px">${workloadLevel}</div>
         </div>
-        <!-- date + day + time row -->
-        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px">
-          <div id="ov-clock-time" style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1">${_timeStr}</div>
-          <div style="font-size:11px;color:var(--text2);font-weight:500"><span id="ov-clock-day">${_dayName}</span> · <span id="ov-clock-date">${_dateStr}</span></div>
+
+        <!-- BIG WORKLOAD NUMBER -->
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+          <div style="font-size:46px;font-weight:800;color:${workloadColor};letter-spacing:-.04em;line-height:1">${actionNowCount}</div>
+          <div style="flex:1;line-height:1.2">
+            <div style="font-size:12px;color:var(--text);font-weight:600">task${actionNowCount!==1?'s':''} need action</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">${workloadSubtitle}</div>
+          </div>
         </div>
-        <!-- workload bar -->
-        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
-          <div style="font-size:28px;font-weight:800;color:${workloadColor};line-height:1;letter-spacing:-.03em">${actionNowCount}</div>
-          <div style="font-size:11px;color:var(--text2);font-weight:500">task${actionNowCount!==1?'s':''} need action</div>
-          <div style="font-size:9px;color:${workloadColor};font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:${workloadColor}22;border:1px solid ${workloadColor}55;border-radius:10px;padding:2px 7px;margin-left:auto">${workloadEmoji} ${workloadLevel}</div>
+
+        <!-- PROGRESS BAR -->
+        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin:4px 0 10px">
+          <div style="background:linear-gradient(90deg,${workloadColor},${workloadColor}aa);width:${Math.min(100,(actionNowCount/25)*100)}%;height:100%;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px ${workloadColor}66"></div>
         </div>
-        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin-bottom:6px">
-          <div style="background:linear-gradient(90deg,${workloadColor},${workloadColor}aa);width:${Math.min(100,(actionNowCount/25)*100)}%;height:100%;border-radius:3px;transition:width .6s ease"></div>
+
+        <!-- BREAKDOWN CHIPS (interactive) — flex-grow so tile fills evenly -->
+        <div style="display:flex;flex-wrap:wrap;gap:5px;flex:1;align-content:flex-start">
+          ${workloadBreakdown.length ? workloadBreakdown.map(b=>`
+            <span onclick="${b.fn}" style="display:inline-flex;align-items:center;gap:5px;background:${b.col}18;border:1px solid ${b.col}55;border-radius:12px;padding:3px 9px;cursor:pointer;transition:all .12s"
+              onmouseover="this.style.background='${b.col}33';this.style.transform='translateY(-1px)'"
+              onmouseout="this.style.background='${b.col}18';this.style.transform=''">
+              <span style="font-size:10px;color:${b.col};font-weight:700">${b.val}</span>
+              <span style="font-size:10px;color:var(--text2);font-weight:500">${b.label}</span>
+            </span>`).join('') : `<div style="font-size:10px;color:var(--text3);font-style:italic;padding:4px 0">No action items right now — nice work</div>`}
         </div>
-        <div style="font-size:10px;color:var(--text3);display:flex;gap:10px">
-          <span><span style="color:${workloadColor};font-weight:700">${actionNowCount}</span> active</span>
+
+        <!-- BOTTOM MINI STATS — pinned to bottom -->
+        <div style="display:flex;gap:14px;padding-top:10px;border-top:1px solid var(--border);margin-top:10px;font-size:10px;color:var(--text3)">
+          <span><span style="color:${workloadColor};font-weight:700">${actionNowCount}</span> action</span>
           <span style="color:var(--border2)">·</span>
-          <span><span style="color:var(--text2);font-weight:700">${monitoringCount}</span> waiting on Amazon</span>
+          <span><span style="color:var(--text2);font-weight:700">${monitoringCount}</span> waiting</span>
           <span style="color:var(--border2)">·</span>
-          <span><span style="color:var(--text2);font-weight:700">${totalActive.length}</span> total open</span>
+          <span><span style="color:var(--text);font-weight:700">${totalActive.length}</span> total open</span>
         </div>
       </div>
 
-      <!-- TOTAL RECOVERED (overall) -->
-      <div class="fin-tile" style="border-left:3px solid var(--green);position:relative;overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-          <div class="fin-label">Total Recovered</div>
-          <div style="font-size:9px;color:var(--text3);background:var(--bg4);border:1px solid var(--border2);border-radius:10px;padding:1px 7px;font-weight:700;letter-spacing:.05em">OVERALL</div>
+      <!-- TOTAL RECOVERED (overall) — green, with more analytics -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-left:3px solid var(--green);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column">
+
+        <!-- HEADER -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Total Recovered</div>
+          <div style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green)66;border-radius:5px;padding:2px 7px;font-weight:700;letter-spacing:.05em">ALL TIME</div>
         </div>
+
+        <!-- BIG VALUE -->
         <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
-          <div class="fin-val" style="color:var(--green)">${fmtMoney(totalRecov)}</div>
-          <div style="font-size:15px;font-weight:800;color:var(--green);opacity:.8">${overallPct}%</div>
+          <div style="font-size:26px;font-weight:800;color:var(--green);letter-spacing:-.03em;line-height:1">${fmtMoney(totalRecov)}</div>
+          <div style="font-size:14px;font-weight:800;color:var(--green);opacity:.7">${overallPct}%</div>
         </div>
-        <div class="fin-sub">of ${fmtMoney(totalRecovCog)} COGs · ${reimbursedRecs.length} reimbursed</div>
-        <div style="background:var(--bg5);border-radius:3px;height:3px;margin-top:8px;overflow:hidden"><div style="background:linear-gradient(90deg,var(--green),var(--green)aa);width:${overallPct}%;height:100%;border-radius:3px;transition:width .6s"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">of ${fmtMoney(totalRecovCog)} COGs claimed</div>
+
+        <!-- PROGRESS BAR -->
+        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin-bottom:10px">
+          <div style="background:linear-gradient(90deg,var(--green),var(--green)aa);width:${overallPct}%;height:100%;border-radius:3px;transition:width .6s;box-shadow:0 0 6px var(--green)44"></div>
+        </div>
+
+        <!-- ANALYTICS GRID -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;align-content:start">
+          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Reimbursed</div>
+            <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:2px;line-height:1">${reimbursedRecs.length}</div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">cases</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Avg / Case</div>
+            <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:2px;line-height:1">${fmtMoney(avgRecov)}</div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">per claim</div>
+          </div>
+        </div>
+
+        <!-- NET P/L -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);margin-top:10px">
+          <span style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Net P/L</span>
+          <span style="font-size:12px;font-weight:800;color:${netTotalPL>=0?'var(--green)':'var(--red)'}">${netTotalPL>=0?'+':''}${fmtMoney(netTotalPL)}</span>
+        </div>
       </div>
 
-      <!-- MTD RECOVERED — purple to distinguish from total -->
-      <div class="fin-tile" style="border-left:3px solid var(--purple);position:relative;overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-          <div class="fin-label">Month to Date</div>
-          <div style="font-size:9px;color:var(--purple);background:var(--purple-bg);border:1px solid var(--purple);border-radius:10px;padding:1px 7px;font-weight:700;letter-spacing:.05em">${_now.toLocaleDateString('en-GB',{month:'short'}).toUpperCase()}</div>
+      <!-- MTD RECOVERED — purple, with last-month delta -->
+      <div style="background:var(--bg2);border:1px solid var(--border2);border-left:3px solid var(--purple);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column">
+
+        <!-- HEADER -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Month to Date</div>
+          <div style="font-size:9px;color:var(--purple);background:var(--purple-bg);border:1px solid var(--purple);border-radius:5px;padding:2px 7px;font-weight:700;letter-spacing:.05em">${_now.toLocaleDateString('en-GB',{month:'short'}).toUpperCase()}</div>
         </div>
+
+        <!-- BIG VALUE -->
         <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
-          <div class="fin-val" style="color:var(--purple)">${fmtMoney(mtdRecov)}</div>
-          <div style="font-size:15px;font-weight:800;color:var(--purple);opacity:.8">${mtdPct}%</div>
+          <div style="font-size:26px;font-weight:800;color:var(--purple);letter-spacing:-.03em;line-height:1">${fmtMoney(mtdRecov)}</div>
+          <div style="font-size:14px;font-weight:800;color:var(--purple);opacity:.7">${mtdPct}%</div>
         </div>
-        <div class="fin-sub">of ${fmtMoney(mtdCog)} COGs · ${mtdRecs.length} this month</div>
-        <div style="background:var(--bg5);border-radius:3px;height:3px;margin-top:8px;overflow:hidden"><div style="background:linear-gradient(90deg,var(--purple),var(--purple)aa);width:${mtdPct}%;height:100%;border-radius:3px;transition:width .6s"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">of ${fmtMoney(mtdCog)} COGs claimed this month</div>
+
+        <!-- PROGRESS BAR -->
+        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin-bottom:10px">
+          <div style="background:linear-gradient(90deg,var(--purple),var(--purple)aa);width:${mtdPct}%;height:100%;border-radius:3px;transition:width .6s;box-shadow:0 0 6px var(--purple)44"></div>
+        </div>
+
+        <!-- ANALYTICS GRID -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;align-content:start">
+          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">This Month</div>
+            <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:2px;line-height:1">${mtdRecs.length}</div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">reimbursed</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Last Month</div>
+            <div style="font-size:14px;font-weight:800;color:var(--text2);margin-top:2px;line-height:1">${fmtMoney(lastMonthRecov)}</div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">${lastMonthRecs.length} item${lastMonthRecs.length!==1?'s':''}</div>
+          </div>
+        </div>
+
+        <!-- NET P/L THIS MONTH -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);margin-top:10px">
+          <span style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Net P/L MTD</span>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            ${mtdDeltaPct!==null ? `<span style="font-size:10px;font-weight:700;color:${mtdDeltaPct>=0?'var(--green)':'var(--red)'}">${mtdDeltaPct>=0?'↑':'↓'} ${Math.abs(mtdDeltaPct)}%</span>` : ''}
+            <span style="font-size:12px;font-weight:800;color:${mtdNetPL>=0?'var(--green)':'var(--red)'}">${mtdNetPL>=0?'+':''}${fmtMoney(mtdNetPL)}</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2684,7 +2825,9 @@ function renderOverview() {
     <!-- ESCALATED TO JACK BANNER -->
     <div onclick="REIMB_FILTER='escalated';setTimeout(()=>navTo('reimb'),0)" style="background:linear-gradient(90deg,var(--pink-bg),var(--bg2));border:1px solid var(--pink);border-left:3px solid var(--pink);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s"
       onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform=''">
-      <div style="font-size:18px">⬆</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--pink-bg);border:1.5px solid var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px;color:var(--pink)"><path d="M8 13V3M3 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
       <div style="flex:1">
         <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:.06em">Escalated to Jack / MD</div>
         <div style="font-size:11px;color:var(--text2);margin-top:2px">${escalatedRecs.length} item${escalatedRecs.length!==1?'s':''} awaiting your response · ${fmtMoney(escalatedRecs.reduce((s,r)=>s+Number(r.cog||0),0))} COG at stake</div>
@@ -2693,18 +2836,7 @@ function renderOverview() {
       <svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px;color:var(--pink)"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </div>` : ''}`;
 
-  // ── LIVE CLOCK — updates every 30 seconds ────────────────────────────
-  if (window._overviewClockInterval) clearInterval(window._overviewClockInterval);
-  window._overviewClockInterval = setInterval(()=>{
-    const tEl = document.getElementById('ov-clock-time');
-    const dEl = document.getElementById('ov-clock-day');
-    const dtEl = document.getElementById('ov-clock-date');
-    if (!tEl || !dEl || !dtEl) { clearInterval(window._overviewClockInterval); return; }
-    const n = new Date();
-    tEl.textContent = n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/London',hour12:false});
-    dEl.textContent = n.toLocaleDateString('en-GB',{weekday:'long',timeZone:'Europe/London'});
-    dtEl.textContent = n.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',timeZone:'Europe/London'});
-  }, 30000);
+  // Clock lives in topbar (started once on page load by initTopbarClock) — no overview-specific clock needed here.
   // ── URGENT ALERT BANNER ───────────────────────────────────────────────
   // Split into ACTION-NOW alerts (Sarah must do something) vs MONITORING alerts (just info)
   const actionAlerts = [];
@@ -2934,9 +3066,9 @@ function renderOverview() {
     document.getElementById('overview-actions').innerHTML = renderGroups(_expandedGroups);
   };
   // ── RE-UPDATE SCHEDULE ────────────────────────────────────────────────
-  // Group upcoming re-updates by day bucket (today already counted in tasks, here = future only)
+  // Show upcoming re-updates grouped by date with collapsible day groups
   const upcoming = DB.filter(r=>r.reupdate&&r.reupdate>today&&!HIST_STATUSES.includes(r.status))
-    .sort((a,b)=>a.reupdate.localeCompare(b.reupdate)).slice(0,8);
+    .sort((a,b)=>a.reupdate.localeCompare(b.reupdate));
   if (upcoming.length) {
     // Group by date
     const buckets = {};
@@ -2946,87 +3078,188 @@ function renderOverview() {
       buckets[k].push(r);
     });
     const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    document.getElementById('overview-reupdates').innerHTML = Object.keys(buckets).slice(0,5).map(date=>{
-      const recs = buckets[date];
-      const dObj = new Date(date);
-      const days = Math.ceil((dObj-new Date())/86400000);
-      const col = days<=3?'var(--red)':days<=7?'var(--amber)':'var(--blue)';
-      const dayLabel = days===1?'Tomorrow':days<=7?`${dayNames[dObj.getDay()]} · in ${days}d`:`in ${days}d`;
-      const totalCog = recs.reduce((s,r)=>s+Number(r.cog||0),0);
-      return `<div style="border-bottom:1px solid var(--border)">
-        <div style="padding:6px 12px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="width:5px;height:5px;border-radius:50%;background:${col}"></span>
-            <span style="font-size:10px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.05em">${dayLabel}</span>
-            <span style="font-size:9px;color:var(--text3)">${fmtDate(date)}</span>
+    const dayNamesFull = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    // Stats for summary header
+    const next7 = upcoming.filter(r=>{
+      const d = Math.ceil((new Date(r.reupdate)-new Date())/86400000);
+      return d <= 7;
+    });
+    const totalUpcomingCog = upcoming.reduce((s,r)=>s+Number(r.cog||0),0);
+
+    const dateKeys = Object.keys(buckets).slice(0, 8);
+    document.getElementById('overview-reupdates').innerHTML = `
+      <!-- Summary strip -->
+      <div style="padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="display:flex;gap:14px">
+          <div>
+            <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Next 7d</div>
+            <div style="font-size:13px;font-weight:800;color:var(--amber);line-height:1;margin-top:2px">${next7.length}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:10px;font-weight:700;color:var(--text2);background:var(--bg4);border-radius:10px;padding:1px 6px">${recs.length}</span>
-            ${totalCog>0?`<span style="font-size:9px;color:var(--amber);font-weight:600">${fmtMoney(totalCog)}</span>`:''}
+          <div>
+            <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total</div>
+            <div style="font-size:13px;font-weight:800;color:var(--text);line-height:1;margin-top:2px">${upcoming.length}</div>
           </div>
         </div>
-        ${recs.map(r=>`
-          <div onclick="openDetail('${r.id}')" style="padding:6px 12px 6px 22px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
-            <div style="flex:1;min-width:0">
-              <div style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)">${r.name.length>34?r.name.slice(0,34)+'…':r.name}</div>
+        ${totalUpcomingCog>0?`<div style="text-align:right">
+          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">COG at stake</div>
+          <div style="font-size:11px;font-weight:700;color:var(--amber);margin-top:2px">${fmtMoney(totalUpcomingCog)}</div>
+        </div>`:''}
+      </div>
+      <!-- Day buckets -->
+      ${dateKeys.map((date,bi)=>{
+        const recs = buckets[date];
+        const dObj = new Date(date);
+        const days = Math.ceil((dObj-new Date())/86400000);
+        const col = days<=3?'var(--red)':days<=7?'var(--amber)':'var(--blue)';
+        const colBg = days<=3?'var(--red-bg)':days<=7?'var(--amber-bg)':'var(--blue-bg)';
+        const dayLabel = days===1?'Tomorrow':days<=7?dayNamesFull[dObj.getDay()]:dayNames[dObj.getDay()];
+        const totalCog = recs.reduce((s,r)=>s+Number(r.cog||0),0);
+        const isOpen = bi < 2; // first 2 buckets open by default
+        return `<div data-rebucket="${bi}" style="border-bottom:1px solid var(--border)">
+          <div onclick="toggleReBucket(${bi})" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .12s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              <!-- Day circle badge -->
+              <div style="width:30px;height:30px;border-radius:8px;background:${colBg};border:1px solid ${col};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;line-height:1">
+                <span style="font-size:9px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.04em">${dayNames[dObj.getDay()].toUpperCase()}</span>
+                <span style="font-size:11px;font-weight:800;color:${col};margin-top:1px">${dObj.getDate()}</span>
+              </div>
+              <div style="min-width:0">
+                <div style="font-size:11px;font-weight:700;color:${col};line-height:1.1">${dayLabel}</div>
+                <div style="font-size:9px;color:var(--text3);margin-top:2px">in ${days}d · ${fmtDate(date)}</div>
+              </div>
             </div>
-            ${r.cog>0?`<span style="font-size:9px;color:var(--text3);white-space:nowrap">${fmtMoney(r.cog)}</span>`:''}
-          </div>`).join('')}
-      </div>`;
-    }).join('');
+            <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+              <span style="font-size:10px;font-weight:700;color:${col};background:${col}22;border:1px solid ${col}55;border-radius:10px;padding:1px 7px">${recs.length}</span>
+              ${totalCog>0?`<span style="font-size:9px;color:var(--text3);font-weight:600">${fmtMoney(totalCog)}</span>`:''}
+              <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;color:var(--text3);transition:transform .15s;${isOpen?'transform:rotate(90deg)':''}" id="rebucket-arrow-${bi}"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+          <div id="rebucket-body-${bi}" style="display:${isOpen?'block':'none'};background:var(--bg)">
+            ${recs.map(r=>`
+              <div onclick="openDetail('${r.id}')" style="padding:6px 12px 6px 50px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s;border-top:1px solid var(--border)" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
+                </div>
+                ${r.cog>0?`<span style="font-size:9px;color:var(--text3);white-space:nowrap;font-weight:600">${fmtMoney(r.cog)}</span>`:''}
+              </div>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+      ${upcoming.length > dateKeys.reduce((s,d)=>s+buckets[d].length,0) ? `
+        <div style="padding:8px 12px;text-align:center">
+          <button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:4px 12px;font-size:10px;cursor:pointer;font-weight:600">Show all ${upcoming.length} →</button>
+        </div>`:''}
+    `;
+    window.toggleReBucket = function(bi){
+      const body = document.getElementById('rebucket-body-'+bi);
+      const arrow = document.getElementById('rebucket-arrow-'+bi);
+      if (!body) return;
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        if (arrow) arrow.style.transform = 'rotate(90deg)';
+      } else {
+        body.style.display = 'none';
+        if (arrow) arrow.style.transform = '';
+      }
+    };
   } else {
-    document.getElementById('overview-reupdates').innerHTML = `<div style="padding:18px 14px;font-size:11px;color:var(--text3);text-align:center">
-      <div style="font-size:18px;margin-bottom:4px;opacity:.5">📭</div>
-      No upcoming re-updates scheduled
+    document.getElementById('overview-reupdates').innerHTML = `<div style="padding:24px 14px;font-size:11px;color:var(--text3);text-align:center">
+      <svg viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;color:var(--text3);opacity:.4;margin-bottom:6px"><path d="M4 7h16M4 7V5a1 1 0 011-1h14a1 1 0 011 1v2M4 7v12a1 1 0 001 1h14a1 1 0 001-1V7M8 3v4M16 3v4M9 14l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="font-weight:600;color:var(--text2)">All caught up</div>
+      <div style="margin-top:2px">No re-updates scheduled</div>
     </div>`;
   }
 
   // ── APPROACHING DEADLINES ─────────────────────────────────────────────
   const deadlines = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;})
     .sort((a,b)=>deadline60(a)-deadline60(b));
-  document.getElementById('overview-deadlines').innerHTML = deadlines.length ? deadlines.map(r=>{
-    const d=deadline60(r);
-    const col = d<=3?'var(--red)':d<=7?'var(--red)':'var(--amber)';
-    return `<div onclick="openDetail('${r.id}')" style="padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
-      <div style="width:28px;height:28px;border-radius:50%;background:${col}22;border:1.5px solid ${col};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <span style="font-size:11px;font-weight:800;color:${col};line-height:1">${d}</span>
-      </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>34?r.name.slice(0,34)+'…':r.name}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:1px">${d<=1?'TODAY':d<=7?'critical':'closing soon'} · ${r.cog>0?fmtMoney(r.cog)+' COG':''}</div>
-      </div>
-      <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;color:var(--text3);flex-shrink:0"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  if (deadlines.length) {
+    const critCount = deadlines.filter(r=>deadline60(r)<=7).length;
+    const totalAtRisk = deadlines.reduce((s,r)=>s+Number(r.cog||0),0);
+    document.getElementById('overview-deadlines').innerHTML = `
+      <!-- Mini warning strip -->
+      ${critCount > 0 ? `
+        <div style="padding:6px 12px;background:var(--red-bg);border-bottom:1px solid var(--red);display:flex;align-items:center;gap:8px">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);animation:pulse 2s infinite;flex-shrink:0"></span>
+          <span style="font-size:10px;color:var(--red);font-weight:700">${critCount} critical · ${fmtMoney(totalAtRisk)} at risk</span>
+        </div>` : ''}
+      ${deadlines.map(r=>{
+        const d=deadline60(r);
+        const col = d<=3?'var(--red)':d<=7?'var(--red)':'var(--amber)';
+        const colBg = d<=3?'var(--red-bg)':d<=7?'var(--red-bg)':'var(--amber-bg)';
+        const urgencyText = d<=1?'TODAY':d<=3?`${d} days`:d<=7?`${d} days`:`${d} days`;
+        const urgencyLabel = d<=3?'critical':d<=7?'closing':'soon';
+        return `<div onclick="openDetail('${r.id}')" style="padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:10px;transition:background .12s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+          <!-- Countdown badge -->
+          <div style="width:36px;height:36px;border-radius:8px;background:${colBg};border:1.5px solid ${col};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;line-height:1">
+            <span style="font-size:13px;font-weight:800;color:${col};line-height:1">${d}</span>
+            <span style="font-size:8px;color:${col};opacity:.8;margin-top:1px;font-weight:600">${d===1?'day':'days'}</span>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
+            <div style="display:flex;gap:6px;margin-top:2px;align-items:center">
+              <span style="font-size:9px;color:${col};font-weight:700;text-transform:uppercase;letter-spacing:.04em">${urgencyLabel}</span>
+              ${r.cog>0?`<span style="font-size:9px;color:var(--text3)">·</span><span style="font-size:9px;color:var(--amber);font-weight:600">${fmtMoney(r.cog)}</span>`:''}
+            </div>
+          </div>
+          <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;color:var(--text3);flex-shrink:0"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>`;
+      }).join('')}`;
+  } else {
+    document.getElementById('overview-deadlines').innerHTML = `<div style="padding:24px 14px;font-size:11px;color:var(--text3);text-align:center">
+      <svg viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;color:var(--green);opacity:.7;margin-bottom:6px"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="font-weight:600;color:var(--green)">No urgent deadlines</div>
+      <div style="margin-top:2px">All within safe window</div>
     </div>`;
-  }).join('') : `<div style="padding:18px 14px;font-size:11px;color:var(--text3);text-align:center">
-      <div style="font-size:18px;margin-bottom:4px;opacity:.5">✓</div>
-      No deadlines approaching
-    </div>`;
+  }
 
   // ── PIPELINE FUNNEL ────────────────────────────────────────────────────
   const pipelineStages = [
     {label:'In Transit',      count:inTransit.length,  col:'var(--blue)',   key:'transit'},
     {label:'Arrived',         count:arrived.length,    col:'var(--amber)',  key:'arrived'},
-    {label:'Checked In',      count:checkedin.length,  col:'var(--cyan)',   key:'nocase'},
+    {label:'Checked In',      count:checkedin.length,  col:'var(--purple)', key:'nocase'},
     {label:'MSC Submitted',   count:DB.filter(r=>r.status==='mscsubmit'||r.status==='mscreview').length, col:'var(--blue)',   fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"},
     {label:'MSC Approved',    count:DB.filter(r=>r.status==='mscapproved'||r.status==='mscreduced').length, col:'var(--green)', fn:"REIMB_FILTER='mscapproved';setTimeout(()=>navTo('reimb'),0)"},
     {label:'Case Open',       count:DB.filter(r=>r.status==='caseopen').length, col:'var(--cyan)', fn:"REIMB_FILTER='caseopen';setTimeout(()=>navTo('reimb'),0)"},
     {label:'Reimb Pending',   count:DB.filter(r=>r.status==='reimbpending').length, col:'var(--blue)', fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"},
   ];
+  const pipelineTotal = pipelineStages.reduce((s,p)=>s+p.count,0);
   const maxStage = Math.max(...pipelineStages.map(s=>s.count), 1);
   const funnelEl = document.getElementById('overview-funnel');
-  if (funnelEl) funnelEl.innerHTML = pipelineStages.map((s,i)=>{
-    const pct = (s.count/maxStage)*100;
-    const clickFn = s.fn || (s.key?`showTileDrill('${s.key}')`:'');
-    return `<div onclick="${clickFn}" style="padding:7px 12px;border-bottom:${i===pipelineStages.length-1?'none':'1px solid var(--border)'};cursor:${clickFn?'pointer':'default'};transition:background .12s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-        <span style="font-size:10.5px;color:var(--text2);font-weight:500">${s.label}</span>
-        <span style="font-size:11px;font-weight:700;color:${s.count>0?s.col:'var(--text3)'}">${s.count}</span>
+  if (funnelEl) funnelEl.innerHTML = `
+    <!-- Total summary at top -->
+    <div style="padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total in Pipeline</div>
+        <div style="font-size:14px;font-weight:800;color:var(--text);line-height:1;margin-top:2px">${pipelineTotal}</div>
       </div>
-      <div style="background:var(--bg5);border-radius:2px;height:3px;overflow:hidden">
-        <div style="background:${s.count>0?s.col:'var(--border2)'};width:${pct}%;height:100%;border-radius:2px;transition:width .5s"></div>
+      <div style="text-align:right">
+        <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Stages</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-top:2px">${pipelineStages.filter(s=>s.count>0).length} of ${pipelineStages.length} active</div>
       </div>
-    </div>`;
-  }).join('');
+    </div>
+    ${pipelineStages.map((s,i)=>{
+      const pct = (s.count/maxStage)*100;
+      const pctTotal = pipelineTotal>0 ? Math.round((s.count/pipelineTotal)*100) : 0;
+      const clickFn = s.fn || (s.key?`showTileDrill('${s.key}')`:'');
+      const isLast = i === pipelineStages.length - 1;
+      return `<div onclick="${clickFn}" style="padding:8px 12px;border-bottom:${isLast?'none':'1px solid var(--border)'};cursor:${clickFn?'pointer':'default'};transition:all .12s;position:relative" onmouseover="this.style.background='var(--bg4)';this.style.paddingLeft='15px'" onmouseout="this.style.background='';this.style.paddingLeft='12px'">
+        <!-- Step number + label + count -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div style="width:16px;height:16px;border-radius:50%;background:${s.count>0?s.col+'33':'var(--bg4)'};border:1px solid ${s.count>0?s.col:'var(--border2)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="font-size:9px;font-weight:700;color:${s.count>0?s.col:'var(--text3)'};line-height:1">${i+1}</span>
+          </div>
+          <span style="font-size:11px;color:${s.count>0?'var(--text)':'var(--text3)'};font-weight:${s.count>0?'600':'500'};flex:1">${s.label}</span>
+          ${pctTotal>0?`<span style="font-size:9px;color:var(--text3);font-weight:600">${pctTotal}%</span>`:''}
+          <span style="font-size:13px;font-weight:800;color:${s.count>0?s.col:'var(--text3)'};min-width:18px;text-align:right">${s.count}</span>
+        </div>
+        <!-- Progress bar -->
+        <div style="background:var(--bg5);border-radius:2px;height:3px;overflow:hidden;margin-left:24px">
+          <div style="background:${s.count>0?'linear-gradient(90deg,'+s.col+','+s.col+'aa)':'var(--border2)'};width:${pct}%;height:100%;border-radius:2px;transition:width .5s"></div>
+        </div>
+      </div>`;
+    }).join('')}`;
 
   // ── QUICK STATS — segmented, with more useful data ──────────────────────
   const mscDenied  = DB.filter(r=>r.status==='mscdenied').length;
@@ -3712,6 +3945,7 @@ function updateCaseModal(){} // legacy stub
 function buildCaseMsg(){} // legacy stub
 
 // PDF BUILDER --
+// PDF_IMAGES items: {kind:'image'|'pdf', dataUrl, name, bytes(for pdf), pageCount(for pdf)}
 function handlePdfDrop(e) {
   e.preventDefault();
   document.getElementById('pdf-drop').classList.remove('drag');
@@ -3719,26 +3953,66 @@ function handlePdfDrop(e) {
 }
 
 function handlePdfFiles(files) {
-  const allowed = ['image/jpeg','image/png','image/webp','image/gif'];
-  Array.from(files).filter(f=>allowed.includes(f.type)).forEach(f=>{
-    const reader = new FileReader();
-    reader.onload = ev => {
-      PDF_IMAGES.push({dataUrl:ev.target.result, name:f.name});
-      renderPdfThumbs();
-    };
-    reader.readAsDataURL(f);
+  const allowedImg = ['image/jpeg','image/png','image/webp','image/gif'];
+  Array.from(files).forEach(f=>{
+    if (allowedImg.includes(f.type)) {
+      // Image file — read as data URL
+      const reader = new FileReader();
+      reader.onload = ev => {
+        PDF_IMAGES.push({kind:'image', dataUrl:ev.target.result, name:f.name, type:f.type});
+        renderPdfThumbs();
+      };
+      reader.readAsDataURL(f);
+    } else if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) {
+      // PDF file — read as ArrayBuffer; we'll embed pages directly
+      const reader = new FileReader();
+      reader.onload = async ev => {
+        const bytes = new Uint8Array(ev.target.result);
+        // Try to count pages so we can show it in the thumb
+        let pageCount = '?';
+        try {
+          if (window.PDFLib) {
+            const doc = await PDFLib.PDFDocument.load(bytes, {ignoreEncryption:true});
+            pageCount = doc.getPageCount();
+          }
+        } catch(e) { /* ignore */ }
+        PDF_IMAGES.push({kind:'pdf', bytes, name:f.name, pageCount});
+        renderPdfThumbs();
+      };
+      reader.readAsArrayBuffer(f);
+    }
   });
+  // Reset input so the same file can be re-selected
+  const inp = document.getElementById('pdf-file-input');
+  if (inp) inp.value = '';
 }
 
 function renderPdfThumbs() {
   const wrap = document.getElementById('pdf-thumbs');
-  wrap.innerHTML = PDF_IMAGES.map((img,i)=>`
-    <div class="pdf-thumb">
-      <img src="${img.dataUrl}" alt="${img.name}">
-      <button class="pdf-thumb-rm" onclick="removePdfImg(${i})">×</button>
-    </div>`).join('');
+  wrap.innerHTML = PDF_IMAGES.map((item,i)=>{
+    if (item.kind === 'image') {
+      return `<div class="pdf-thumb" title="${item.name}">
+        <img src="${item.dataUrl}" alt="${item.name}">
+        <button class="pdf-thumb-rm" onclick="removePdfImg(${i})">×</button>
+      </div>`;
+    } else {
+      // PDF thumb — icon + page count
+      return `<div class="pdf-thumb" title="${item.name} (${item.pageCount} page${item.pageCount===1?'':'s'})" style="background:var(--red-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px">
+        <svg viewBox="0 0 24 24" fill="none" style="width:26px;height:26px;color:var(--red)"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.5"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"/><text x="12" y="17" text-anchor="middle" fill="currentColor" style="font-size:5px;font-weight:bold;font-family:sans-serif">PDF</text></svg>
+        <div style="font-size:9px;color:var(--red);font-weight:700;margin-top:1px;line-height:1">${item.pageCount}p</div>
+        <button class="pdf-thumb-rm" onclick="removePdfImg(${i})">×</button>
+      </div>`;
+    }
+  }).join('');
   document.getElementById('pdf-actions').style.display = PDF_IMAGES.length ? 'flex' : 'none';
-  document.getElementById('pdf-status').textContent = `${PDF_IMAGES.length} image${PDF_IMAGES.length!==1?'s':''} ready`;
+  // Counter shows breakdown
+  const imgCount = PDF_IMAGES.filter(x=>x.kind==='image').length;
+  const pdfCount = PDF_IMAGES.filter(x=>x.kind==='pdf').length;
+  const totalPages = PDF_IMAGES.reduce((s,x)=>s+(x.kind==='pdf'?(typeof x.pageCount==='number'?x.pageCount:1):1), 0);
+  const parts = [];
+  if (imgCount) parts.push(`${imgCount} image${imgCount!==1?'s':''}`);
+  if (pdfCount) parts.push(`${pdfCount} PDF${pdfCount!==1?'s':''}`);
+  document.getElementById('pdf-status').textContent = parts.length ? `${parts.join(' + ')} · ${totalPages} page${totalPages!==1?'s':''} total` : '';
 }
 
 function removePdfImg(i) {
@@ -3752,150 +4026,88 @@ function clearPdfImages() {
 }
 
 async function buildPdf() {
-  if(!PDF_IMAGES.length){alert('Add at least one image first');return;}
-  document.getElementById('pdf-status').textContent='Building PDF…';
+  if (!PDF_IMAGES.length) { alert('Add at least one file first'); return; }
+  if (!window.PDFLib) { alert('PDF library not loaded yet — please wait a second and try again'); return; }
+
+  const statusEl = document.getElementById('pdf-status');
+  statusEl.textContent = 'Building PDF…';
+
   const rid = document.getElementById('pdf-removal').value;
   const r = rid ? DB.find(x=>x.id==rid) : null;
   const filename = r ? `${r.oid||r.asin}_removal.pdf` : 'removal_photos.pdf';
 
-  // Build a simple PDF using canvas + data URLs
-  // Each image becomes a page sized to the image
-  const pages = await Promise.all(PDF_IMAGES.map(img=>new Promise(res=>{
-    const image = new Image();
-    image.onload = ()=>{
-      const canvas = document.createElement('canvas');
-      // Keep full native resolution for readable PDFs
-      const w = image.naturalWidth;
-      const h = image.naturalHeight;
-      canvas.width=w; canvas.height=h;
-      const ctx=canvas.getContext('2d');
-      ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
-      ctx.drawImage(image,0,0,w,h);
-      res({dataUrl:canvas.toDataURL('image/jpeg',0.92),w,h});
-    };
-    image.src=img.dataUrl;
-  })));
+  try {
+    const { PDFDocument } = PDFLib;
+    const outDoc = await PDFDocument.create();
 
-  // Minimal PDF structure
-  let pdf='%PDF-1.4\n';
-  const objs=[];
-  const addObj=(content)=>{objs.push(pdf.length);pdf+=`${objs.length} 0 obj\n${content}\nendobj\n`;return objs.length;};
+    for (let i=0; i<PDF_IMAGES.length; i++) {
+      const item = PDF_IMAGES[i];
+      statusEl.textContent = `Building PDF… ${i+1}/${PDF_IMAGES.length}`;
 
-  // Catalog
-  const cat=addObj(`<< /Type /Catalog /Pages 2 0 R >>`);
-  // Pages (placeholder, will fill in)
-  const pagesPos=pdf.length;
-  pdf+=`2 0 obj\n<< /Type /Pages /Kids [`;
-  const kidsPlaceholderStart=pdf.length;
+      if (item.kind === 'image') {
+        // Embed image (auto-detect PNG vs JPEG)
+        const isPng = item.type === 'image/png' || /\.png$/i.test(item.name);
+        // Convert dataUrl to bytes
+        const b64 = item.dataUrl.split(',')[1];
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let j=0; j<bin.length; j++) bytes[j] = bin.charCodeAt(j);
 
-  // Each page
-  const pageIds=[];
-  const imgObjs=[];
-  for(let i=0;i<pages.length;i++){
-    const p=pages[i];
-    const raw=atob(p.dataUrl.split(',')[1]);
-    const bytes=new Uint8Array(raw.length);
-    for(let j=0;j<raw.length;j++) bytes[j]=raw.charCodeAt(j);
-
-    // We'll write image + page after pages obj
-    imgObjs.push({bytes,w:p.w,h:p.h,idx:i});
-    pageIds.push(0); // placeholder
-  }
-
-  // Close pages obj placeholder -- we'll rebuild properly
-  // Simpler: collect all object positions in an array then build xref
-
-  // Reset and do it properly with a simple structure
-  // Use a blob URL approach instead -- much simpler for browser
-  const pdfParts=[];
-  pdfParts.push('%PDF-1.4\n%âãÏÓ\n');
-
-  const offsets=[];
-  let offset=pdfParts[0].length;
-
-  const enc=s=>s;
-  const writeObj=(n,dict,stream=null)=>{
-    const start=pdfParts.reduce((s,p)=>s+p.length,0);
-    offsets[n]=start;
-    let obj=`${n} 0 obj\n`;
-    obj+=dict+'\n';
-    if(stream!==null){
-      obj+=`stream\n`;
-      pdfParts.push(obj);
-      pdfParts.push(stream);
-      pdfParts.push(`\nendstream\nendobj\n`);
-    } else {
-      obj+=`endobj\n`;
-      pdfParts.push(obj);
+        // PDF-lib supports JPG and PNG natively. WEBP/GIF need converting to PNG first via canvas.
+        let img;
+        if (isPng) {
+          img = await outDoc.embedPng(bytes);
+        } else if (item.type === 'image/jpeg') {
+          img = await outDoc.embedJpg(bytes);
+        } else {
+          // Convert other formats (webp, gif) to PNG via canvas
+          const pngBytes = await convertImageToPng(item.dataUrl);
+          img = await outDoc.embedPng(pngBytes);
+        }
+        const page = outDoc.addPage([img.width, img.height]);
+        page.drawImage(img, { x:0, y:0, width:img.width, height:img.height });
+      } else if (item.kind === 'pdf') {
+        // Copy all pages from the source PDF into the output
+        const srcDoc = await PDFDocument.load(item.bytes, {ignoreEncryption:true});
+        const pageIdxs = srcDoc.getPageIndices();
+        const copied = await outDoc.copyPages(srcDoc, pageIdxs);
+        copied.forEach(p => outDoc.addPage(p));
+      }
     }
-  };
 
-  // obj 1: catalog
-  // obj 2: pages
-  // then for each image: obj (3+i*2) = image XObject, obj (4+i*2) = page
-  const n=pages.length;
-  const imgBase=3;
-  const pageBase=imgBase+n;
-  const pageKids=Array.from({length:n},(_,i)=>`${pageBase+i} 0 R`).join(' ');
-
-  writeObj(1,`<< /Type /Catalog /Pages 2 0 R >>`);
-  writeObj(2,`<< /Type /Pages /Kids [${pageKids}] /Count ${n} >>`);
-
-  const imgStreams=await Promise.all(pages.map(p=>{
-    const raw=atob(p.dataUrl.split(',')[1]);
-    const arr=new Uint8Array(raw.length);
-    for(let j=0;j<raw.length;j++) arr[j]=raw.charCodeAt(j);
-    return arr;
-  }));
-
-  for(let i=0;i<n;i++){
-    const p=pages[i];
-    const imgN=imgBase+i;
-    const pageN=pageBase+i;
-    // image obj
-    const start=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
-    offsets[imgN]=start;
-    const imgDict=`${imgN} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgStreams[i].length} >>\nstream\n`;
-    pdfParts.push(imgDict);
-    pdfParts.push(imgStreams[i]);
-    pdfParts.push(`\nendstream\nendobj\n`);
-
-    // page obj
-    const pageStart=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
-    offsets[pageN]=pageStart;
-    const contN=pageN+n; // content stream obj
-    pdfParts.push(`${pageN} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${p.w} ${p.h}] /Resources << /XObject << /Img${i} ${imgN} 0 R >> >> /Contents ${contN} 0 R >>\nendobj\n`);
+    const outBytes = await outDoc.save();
+    const blob = new Blob([outBytes], {type:'application/pdf'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    const totalPages = outDoc.getPageCount();
+    statusEl.textContent = `✓ ${filename} downloaded (${totalPages} page${totalPages!==1?'s':''})`;
+  } catch (err) {
+    console.error('PDF build error:', err);
+    statusEl.textContent = `Error: ${err.message || 'failed to build PDF'}`;
   }
+}
 
-  // Content streams
-  for(let i=0;i<n;i++){
-    const p=pages[i];
-    const contN=pageBase+n+i;
-    const stream=`q ${p.w} 0 0 ${p.h} 0 0 cm /Img${i} Do Q`;
-    const start=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
-    offsets[contN]=start;
-    pdfParts.push(`${contN} 0 obj\n<< /Length ${stream.length} >>\nstream\n${stream}\nendstream\nendobj\n`);
-  }
-
-  // xref
-  const xrefStart=pdfParts.reduce((s,x)=>s+(typeof x==='string'?x.length:x.length),0);
-  const totalObjs=1+1+n+n+n+1; // catalog+pages+images+pages+contents
-  const maxObj=pageBase+n+n;
-  let xref=`xref\n0 ${maxObj+1}\n0000000000 65535 f \n`;
-  for(let i=1;i<=maxObj;i++){
-    xref+=`${String(offsets[i]||0).padStart(10,'0')} 00000 n \n`;
-  }
-  pdfParts.push(xref);
-  pdfParts.push(`trailer\n<< /Size ${maxObj+1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`);
-
-  // Combine all parts into a blob
-  const blobParts=pdfParts.map(p=>typeof p==='string'?new TextEncoder().encode(p):p);
-  const blob=new Blob(blobParts,{type:'application/pdf'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=filename; a.click();
-  URL.revokeObjectURL(url);
-  document.getElementById('pdf-status').textContent=`✓ ${filename} downloaded!`;
+// Convert any image data URL (webp/gif/etc) to PNG bytes via canvas
+function convertImageToPng(dataUrl) {
+  return new Promise((res, rej)=>{
+    const im = new Image();
+    im.onload = ()=>{
+      const cv = document.createElement('canvas');
+      cv.width = im.naturalWidth; cv.height = im.naturalHeight;
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0,0,cv.width,cv.height);
+      ctx.drawImage(im,0,0);
+      cv.toBlob(async b=>{
+        const ab = await b.arrayBuffer();
+        res(new Uint8Array(ab));
+      }, 'image/png');
+    };
+    im.onerror = rej;
+    im.src = dataUrl;
+  });
 }
 
 function loadPdfDropdown(){
