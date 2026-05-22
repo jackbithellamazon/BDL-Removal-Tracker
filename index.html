@@ -16,31 +16,42 @@
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
 :root{
-  --bg:#0a0d14;--bg2:#111520;--bg3:#181e2e;--bg4:#1e2638;--bg5:#252d3d;
-  --border:#222840;--border2:#2e3a55;
-  --text:#e8eaf0;--text2:#b0b8cc;--text3:#6e7a94;
-  --blue:#4d8ef0;--blue-bg:#0f1f3d;--blue-dim:#1a2d52;
-  --green:#3dd68c;--green-bg:#0a2b1c;--green-dim:#0f2e1f;
-  --amber:#f5a623;--amber-bg:#2e1f08;--amber-dim:#241808;
-  --red:#f05050;--red-bg:#2d1010;--red-dim:#250e0e;
-  --purple:#9b7ff0;--purple-bg:#1e1540;--purple-dim:#1a1238;
-  --cyan:#22d3ee;--cyan-bg:#0a2030;
+  /* Deep slate base — richer, warmer-neutral, more depth than flat charcoal */
+  --bg:#0c0e12;--bg2:#13161c;--bg3:#1a1e26;--bg4:#222732;--bg5:#2c323f;
+  --border:#262b34;--border2:#343b47;
+  --text:#f1f3f8;--text2:#b5bdcc;--text3:#7c8597;
+  /* Accent (was harsh electric blue) → refined corporate teal-slate. Used sparingly. */
+  --blue:#5b9bd5;--blue-bg:#152230;--blue-dim:#1b2c3e;
+  /* Recovery / money won → premium emerald */
+  --green:#34d399;--green-bg:#0d2920;--green-dim:#123528;
+  /* Action-soon / due → warm amber */
+  --amber:#fbbf24;--amber-bg:#2c2008;--amber-dim:#231a06;
+  /* Risk / overdue / accountability → sharp signal red */
+  --red:#fb5a5a;--red-bg:#2e1213;--red-dim:#260e0f;
+  /* Secondary info → desaturated indigo (was loud purple) */
+  --purple:#8b8fe8;--purple-bg:#1a1c33;--purple-dim:#16182c;
+  /* Verify / monitoring → muted teal-cyan */
+  --cyan:#2dd4bf;--cyan-bg:#0c2a28;--cyan-dim:#0f3330;
   --pink:#f472b6;--pink-bg:#2d1028;
   --radius:8px;--radius-lg:12px;
   --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
   --sidebar-w:210px;--sidebar-collapsed:52px;
+  --shadow-tile:0 1px 3px rgba(0,0,0,.4),0 6px 16px rgba(0,0,0,.22);
+  --shadow-lift:0 8px 28px rgba(0,0,0,.38);
 }
 body.light-mode{
-  --bg:#d8dbe4;--bg2:#e4e6ed;--bg3:#dadbea;--bg4:#cdd0da;--bg5:#c2c5d0;
-  --border:#b8bcc8;--border2:#a8acba;
-  --text:#1a1f2e;--text2:#4a5168;--text3:#6b7285;
-  --blue:#2563eb;--blue-bg:#dbeafe;--blue-dim:#bfdbfe;
-  --green:#16a34a;--green-bg:#dcfce7;--green-dim:#bbf7d0;
-  --amber:#d97706;--amber-bg:#fef3c7;--amber-dim:#fde68a;
-  --red:#dc2626;--red-bg:#fee2e2;--red-dim:#fecaca;
-  --purple:#7c3aed;--purple-bg:#ede9fe;--purple-dim:#ddd6fe;
-  --cyan:#0891b2;--cyan-bg:#cffafe;
+  --bg:#eef0f5;--bg2:#ffffff;--bg3:#f4f6fa;--bg4:#e9ecf3;--bg5:#dde1ea;
+  --border:#e1e5ee;--border2:#cdd3df;
+  --text:#10131c;--text2:#454d61;--text3:#737d92;
+  --blue:#2563eb;--blue-bg:#e8f0fe;--blue-dim:#d3e2fc;
+  --green:#059669;--green-bg:#dcfce8;--green-dim:#bbf3d3;
+  --amber:#d97706;--amber-bg:#fef0c7;--amber-dim:#fde08a;
+  --red:#e11d48;--red-bg:#ffe4e6;--red-dim:#fecdd3;
+  --purple:#6366f1;--purple-bg:#eaeafe;--purple-dim:#d6d7fc;
+  --cyan:#0d9488;--cyan-bg:#ccfbf1;--cyan-dim:#a7f3e3;
   --pink:#db2777;--pink-bg:#fce7f3;
+  --shadow-tile:0 1px 2px rgba(16,19,28,.06),0 4px 14px rgba(16,19,28,.07);
+  --shadow-lift:0 10px 30px rgba(16,19,28,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh;line-height:1.5}
@@ -82,19 +93,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .content{flex:1;overflow-y:auto;padding:20px 24px}
 
 /* Tiles */
-.tile-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:14px}
-.tile{background:var(--bg2);border:1px solid var(--border);border-left-width:3px;border-radius:10px;padding:14px 14px 12px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
-.tile:hover{background:var(--bg3);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.2)}
-.tile-blue  {border-left-color:var(--blue)}
-.tile-amber {border-left-color:var(--amber)}
-.tile-red   {border-left-color:var(--red)}
-.tile-purple{border-left-color:var(--purple)}
-.tile-cyan  {border-left-color:var(--cyan)}
-.tile-green {border-left-color:var(--green)}
-.tile-v{font-size:28px;font-weight:800;letter-spacing:-.04em;line-height:1;margin-bottom:5px}
-.tile-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+.tile-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:9px;margin-bottom:14px}
+.tile{background:var(--bg2);border:1px solid var(--border);border-top:2px solid transparent;border-radius:12px;padding:14px 13px 13px;cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;box-shadow:var(--shadow-tile)}
+.tile::after{content:'';position:absolute;inset:0;background:radial-gradient(120% 90% at 0% 0%,var(--tile-glow,transparent),transparent 55%);opacity:.5;pointer-events:none;transition:opacity .18s}
+.tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--border2)}
+.tile:hover::after{opacity:1}
+.tile-blue  {border-top-color:var(--blue);--tile-glow:var(--blue-bg)}
+.tile-amber {border-top-color:var(--amber);--tile-glow:var(--amber-bg)}
+.tile-red   {border-top-color:var(--red);--tile-glow:var(--red-bg)}
+.tile-purple{border-top-color:var(--purple);--tile-glow:var(--purple-bg)}
+.tile-cyan  {border-top-color:var(--cyan);--tile-glow:var(--cyan-bg)}
+.tile-green {border-top-color:var(--green);--tile-glow:var(--green-bg)}
+.tile-v{font-size:30px;font-weight:800;letter-spacing:-.045em;line-height:1;margin-bottom:6px}
+.tile-l{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2)}
 .tile-sub{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.3}
 .tv-blue{color:var(--blue)}.tv-green{color:var(--green)}.tv-amber{color:var(--amber)}.tv-red{color:var(--red)}.tv-purple{color:var(--purple)}.tv-cyan{color:var(--cyan)}.tv-white{color:var(--text)}
+
+/* Overview right-panel cards */
+.panel-card{background:var(--bg2);border:1px solid var(--border);border-radius:13px;overflow:hidden;box-shadow:var(--shadow-tile)}
+.panel-head{padding:11px 14px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--bg3),var(--bg2));display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative}
+.panel-head::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--border2))}
+.panel-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:7px}
+.panel-sub{font-size:9.5px;color:var(--text3);margin-top:2px}
+.panel-btn{background:var(--bg4);border:1px solid var(--border2);font-size:10px;color:var(--text2);cursor:pointer;font-weight:700;border-radius:6px;padding:4px 9px;transition:all .12s;white-space:nowrap}
+.panel-btn:hover{color:var(--text);border-color:var(--text3)}
 
 /* Action list */
 .action-list{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
@@ -158,8 +180,8 @@ tbody tr:hover{background:var(--bg3)}
 /* Buttons */
 .btn{padding:5px 13px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .12s;white-space:nowrap}
 .btn:hover{background:var(--bg4)}
-.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
-.btn-primary:hover{opacity:.88}
+.btn-primary{background:linear-gradient(135deg,var(--green),var(--cyan));border-color:transparent;color:#06251c;font-weight:700;box-shadow:0 2px 8px var(--green-bg)}
+.btn-primary:hover{filter:brightness(1.06);transform:translateY(-1px);background:linear-gradient(135deg,var(--green),var(--cyan))}
 .btn-sm{padding:3px 9px;font-size:11px}
 .btn-blue{background:var(--blue-bg);border-color:var(--blue-dim);color:var(--blue)}
 .btn-blue:hover{background:var(--blue-dim)}
@@ -394,23 +416,28 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
         <h2 id="page-title">Overview</h2>
         <p id="page-sub">Your removals at a glance</p>
       </div>
-      <div style="display:flex;gap:12px;align-items:center">
-        <!-- PERSISTENT UK CLOCK -->
-        <div id="topbar-clock" style="display:flex;align-items:center;gap:9px;padding:6px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px" title="UK time (Europe/London)">
-          <span style="width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite;flex-shrink:0"></span>
-          <div style="line-height:1.1">
-            <div style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.02em"><span id="tb-clock-time">--:--</span></div>
-            <div style="font-size:9px;color:var(--text3);font-weight:500;margin-top:1px"><span id="tb-clock-day">--</span> · <span id="tb-clock-date">--/--</span> · UK</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <!-- PERSISTENT UK CLOCK — refined fintech time chip -->
+        <div id="topbar-clock" style="display:flex;align-items:center;gap:10px;padding:7px 13px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px" title="UK time (Europe/London)">
+          <span style="position:relative;display:flex;width:7px;height:7px;flex-shrink:0">
+            <span style="position:absolute;inset:0;border-radius:50%;background:var(--green);opacity:.4;animation:pulse 2s infinite"></span>
+            <span style="position:relative;width:7px;height:7px;border-radius:50%;background:var(--green)"></span>
+          </span>
+          <div style="line-height:1.05">
+            <div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text);letter-spacing:.01em"><span id="tb-clock-time">--:--</span></div>
+            <div style="font-size:8.5px;color:var(--text3);font-weight:600;margin-top:1px;text-transform:uppercase;letter-spacing:.06em"><span id="tb-clock-day">--</span> · <span id="tb-clock-date">--/--</span> · UK</div>
           </div>
         </div>
         <a href="https://app.sellerfuse.com/your-orders?status=Removal+Order" target="_blank"
           id="sellerfuse-btn"
-          style="display:inline-flex;align-items:center;gap:7px;padding:7px 13px;background:var(--blue-bg);border:1px solid var(--blue);border-radius:6px;color:var(--blue);text-decoration:none;font-size:12px;font-weight:600;transition:all .15s"
-          onmouseover="this.style.background='var(--blue-dim)'" onmouseout="this.style.background='var(--blue-bg)'"
+          style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text);text-decoration:none;font-size:12px;font-weight:600;transition:all .15s"
+          onmouseover="this.style.borderColor='var(--cyan)';this.style.background='var(--bg4)'" onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'"
           title="Open SellerFuse to check for new removal orders">
-          <span style="font-size:13px">📋</span>
+          <span style="display:inline-flex;width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,var(--cyan),var(--green));align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px"><path d="M3 4h10M3 8h10M3 12h6" stroke="#06251c" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
           <span>SellerFuse</span>
-          <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;color:var(--text3)"><path d="M5 11l6-6M11 5v5M11 5H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
         <button class="btn btn-primary" onclick="openAdd()">+ Add removal</button>
       </div>
@@ -420,98 +447,105 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
       <!-- OVERVIEW PAGE -->
       <div id="page-overview">
 
-        <!-- RECOVERY COMMAND BAR -->
+        <!-- RECOVERY COMMAND BAR (hero: workload + recovered + MTD) -->
         <div id="overview-financials"></div>
 
         <!-- URGENT ALERT BANNER -->
         <div id="overview-alert-banner"></div>
 
-        <!-- KPI TILES with ACTION/WAITING split labels -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;padding:0 4px">
-          <div style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em">
-            <span style="width:5px;height:5px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);animation:pulse 2s infinite"></span>
+        <!-- PIPELINE TILE GRID with ACTION / WAITING split labels -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 7px;padding:0 2px">
+          <div style="display:flex;align-items:center;gap:7px;font-size:10px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.09em">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 7px var(--red);animation:pulse 2s infinite"></span>
             Action Required
-            <span style="color:var(--text3);font-weight:500;letter-spacing:0;text-transform:none;margin-left:4px">— Sarah does these</span>
+            <span style="color:var(--text3);font-weight:600;letter-spacing:.01em;text-transform:none;margin-left:2px">— Sarah must do these now</span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">
-            <span style="width:5px;height:5px;border-radius:50%;background:var(--text3)"></span>
-            Waiting / Monitoring
-            <span style="color:var(--text3);font-weight:500;letter-spacing:0;text-transform:none;margin-left:4px">— informational</span>
+          <div style="display:flex;align-items:center;gap:7px;font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.09em">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--text3)"></span>
+            Waiting on Amazon
+            <span style="color:var(--text3);font-weight:600;letter-spacing:.01em;text-transform:none;margin-left:2px">— monitor only, no action yet</span>
           </div>
         </div>
         <div class="tile-grid" id="overview-tiles"></div>
 
         <!-- MAIN BODY: Sarah's list + right panel -->
-        <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:14px;align-items:start">
+        <div style="display:grid;grid-template-columns:1fr 326px;gap:14px;margin-top:16px;align-items:start">
 
           <!-- SARAH'S ACTION LIST -->
-          <div class="tbl-wrap" style="border:2px solid var(--red);border-radius:10px;box-shadow:0 0 0 4px var(--red-bg)">
-            <div style="padding:12px 16px;border-bottom:2px solid var(--red);background:linear-gradient(90deg,var(--red-bg),var(--bg2));display:flex;align-items:center;justify-content:space-between">
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;box-shadow:0 0 10px var(--red);animation:pulse 2s infinite"></span>
+          <div style="border:1px solid var(--red);border-radius:14px;overflow:hidden;background:var(--bg2);box-shadow:0 0 0 1px var(--red-bg),var(--shadow-tile)">
+            <div style="padding:13px 17px;border-bottom:1px solid var(--red-dim);background:linear-gradient(100deg,var(--red-bg),var(--bg2) 70%);display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:11px">
+                <span style="position:relative;display:flex;width:11px;height:11px;flex-shrink:0">
+                  <span style="position:absolute;inset:-3px;border-radius:50%;background:var(--red);opacity:.35;animation:pulse 2s infinite"></span>
+                  <span style="position:relative;width:11px;height:11px;border-radius:50%;background:var(--red)"></span>
+                </span>
                 <div>
-                  <div style="font-size:12px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.08em">Your Tasks Today</div>
-                  <div style="font-size:10px;color:var(--text3);margin-top:1px">Work top to bottom — most urgent first</div>
+                  <div style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:.02em">Action Queue — Work Top to Bottom</div>
+                  <div style="font-size:10.5px;color:var(--text3);margin-top:2px">Every item here is unrecovered money. Clear the red first.</div>
                 </div>
               </div>
-              <span id="actions-count" style="font-size:11px;font-weight:600;color:var(--text2);background:var(--bg4);border:1px solid var(--border2);border-radius:14px;padding:3px 10px"></span>
+              <span id="actions-count" style="font-size:11px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid var(--red-dim);border-radius:20px;padding:4px 11px;white-space:nowrap"></span>
             </div>
             <div id="overview-actions"></div>
           </div>
 
           <!-- RIGHT PANEL -->
-          <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:12px">
 
             <!-- RE-UPDATE SCHEDULE -->
-            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
-              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+            <div class="panel-card">
+              <div class="panel-head" style="--accent:var(--amber)">
                 <div>
-                  <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
-                    <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M3 6h10M3 6V4a1 1 0 011-1h8a1 1 0 011 1v2M3 6v7a1 1 0 001 1h8a1 1 0 001-1V6M5 2v2M11 2v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                    Re-update Schedule
+                  <div class="panel-title" style="color:var(--amber)">
+                    <svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M3 6h10M3 6V4a1 1 0 011-1h8a1 1 0 011 1v2M3 6v7a1 1 0 001 1h8a1 1 0 001-1V6M5 2v2M11 2v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    MSC Re-update Schedule
                   </div>
-                  <div style="font-size:9px;color:var(--text3);margin-top:1px">Upcoming MSC re-updates by day</div>
+                  <div class="panel-sub">When each claim must be re-pushed to Amazon</div>
                 </div>
-                <button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:1px solid var(--border2);font-size:10px;color:var(--text2);cursor:pointer;font-weight:600;border-radius:5px;padding:3px 8px">View all →</button>
+                <button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" class="panel-btn">View all →</button>
               </div>
               <div id="overview-reupdates"></div>
             </div>
 
             <!-- 60-DAY DEADLINES -->
-            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
-              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+            <div class="panel-card">
+              <div class="panel-head" style="--accent:var(--red)">
                 <div>
-                  <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
-                    <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                    60-Day Deadlines
+                  <div class="panel-title" style="color:var(--red)">
+                    <svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    Reimbursement Window
                   </div>
-                  <div style="font-size:9px;color:var(--text3);margin-top:1px">Reimbursement window closing</div>
+                  <div class="panel-sub">60-day claim deadline closing — miss it, lose it</div>
                 </div>
-                <button onclick="navTo('active')" style="background:none;border:1px solid var(--border2);font-size:10px;color:var(--text2);cursor:pointer;font-weight:600;border-radius:5px;padding:3px 8px">View Active →</button>
+                <button onclick="navTo('active')" class="panel-btn">Active →</button>
               </div>
               <div id="overview-deadlines"></div>
             </div>
 
             <!-- PIPELINE FUNNEL -->
-            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
-              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3)">
-                <div style="font-size:10px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
-                  <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M2 3h12l-3 5v4l-6 2V8L2 3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-                  Pipeline Flow
+            <div class="panel-card">
+              <div class="panel-head" style="--accent:var(--cyan)">
+                <div>
+                  <div class="panel-title" style="color:var(--cyan)">
+                    <svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M2 3h12l-3 5v4l-6 2V8L2 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                    Recovery Pipeline
+                  </div>
+                  <div class="panel-sub">Where every active item sits right now</div>
                 </div>
-                <div style="font-size:9px;color:var(--text3);margin-top:1px">Items at each stage</div>
               </div>
               <div id="overview-funnel"></div>
             </div>
 
             <!-- QUICK STATS -->
-            <div class="tbl-wrap" style="border:1px solid var(--border2);border-radius:10px;overflow:hidden">
-              <div style="padding:10px 14px;border-bottom:1px solid var(--border2);background:var(--bg3)">
-                <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px">
-                  <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px"><path d="M3 14V8M7 14V3M11 14v-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                  Quick Stats
+            <div class="panel-card">
+              <div class="panel-head" style="--accent:var(--green)">
+                <div>
+                  <div class="panel-title" style="color:var(--green)">
+                    <svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M3 14V8M7 14V3M11 14v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                    Recovery Performance
+                  </div>
+                  <div class="panel-sub">Wins, speed and final outcomes</div>
                 </div>
-                <div style="font-size:9px;color:var(--text3);margin-top:1px">Pipeline state breakdown</div>
               </div>
               <div id="overview-quickstats"></div>
             </div>
@@ -1302,17 +1336,49 @@ function seed() {
 }
 
 // HELPERS --
+// DEADLINE LOGIC — 55-day internal deadline (5-day buffer before Amazon's 60-day hard cutoff)
+// Priority: ddeliv (actual delivery) → darr (check-in date) → dsub (submitted)
+function deadlineBase(r) {
+  return r.ddeliv || r.darr || r.dsub || null;
+}
 function deadline60(r) {
   if (HIST_STATUSES.includes(r.status)) return null;
-  const base = r.ddeliv || r.darr || r.dsub; if (!base) return null;
-  const d = new Date(base); d.setDate(d.getDate()+60);
+  const base = deadlineBase(r); if (!base) return null;
+  const d = new Date(base); d.setDate(d.getDate()+55); // 55-day internal deadline
   return Math.ceil((d - new Date()) / 86400000);
+}
+function claimExpired(r) {
+  // True if past Amazon's hard 60-day deadline
+  if (HIST_STATUSES.includes(r.status)) return false;
+  const base = deadlineBase(r); if (!base) return false;
+  const d = new Date(base); d.setDate(d.getDate()+60);
+  return new Date() > d;
+}
+function claimDaysLeft(r) {
+  // Returns days left on 55-day internal deadline, null if no base date
+  if (HIST_STATUSES.includes(r.status)) return null;
+  const base = deadlineBase(r); if (!base) return null;
+  const d = new Date(base); d.setDate(d.getDate()+55);
+  return Math.ceil((d - new Date()) / 86400000);
+}
+function claimRiskBadge(r) {
+  // Returns HTML badge showing claim deadline risk, or empty string
+  if (HIST_STATUSES.includes(r.status)) return '';
+  if (claimExpired(r)) return `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0505033;border:1px solid var(--red);color:var(--red);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700">⚠ CLAIM EXPIRED</span>`;
+  const days = claimDaysLeft(r);
+  if (days === null) return '';
+  if (days < 0)   return `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0505033;border:1px solid var(--red);color:var(--red);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700">⚠ EXPIRED</span>`;
+  if (days <= 7)  return `<span style="display:inline-flex;align-items:center;gap:4px;background:#f0505033;border:1px solid var(--red);color:var(--red);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700">🔴 ${days}d to claim</span>`;
+  if (days <= 15) return `<span style="display:inline-flex;align-items:center;gap:4px;background:#f5a62333;border:1px solid var(--amber);color:var(--amber);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700">⚠ ${days}d to claim</span>`;
+  if (days <= 30) return `<span style="display:inline-flex;align-items:center;gap:4px;background:#f5a62322;border:1px solid var(--amber)88;color:var(--amber);border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700">${days}d to claim</span>`;
+  return ''; // >30 days — safe, no badge needed
 }
 
 function deadlineCell(r) {
+  if (claimExpired(r)) return `<span class="dc dc-red">Expired</span>`;
   const d = deadline60(r);
   if (d === null) return '<span style="color:var(--text3)">--</span>';
-  if (d < 0)  return `<span class="dc dc-red">Expired</span>`;
+  if (d < 0)  return `<span class="dc dc-red">Overdue</span>`;
   if (d <= 10) return `<span class="dc dc-red">${d}d</span>`;
   if (d <= 20) return `<span class="dc dc-amber">${d}d</span>`;
   return `<span class="dc dc-green">${d}d</span>`;
@@ -1731,6 +1797,7 @@ function buildReimbCard(r, today) {
         <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd('${r.id}','discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
+        <div class="rc-field-row"><span class="rc-field-name" style="${r.status==='mscneedsdoc'?'color:var(--purple);font-weight:700':''}">📄 Invoice</span><span class="rc-field-val" style="display:flex;gap:6px;align-items:center">${r.invoice_link?`<a href="${r.invoice_link}" target="_blank" style="color:var(--purple);font-size:11px;font-weight:600;text-decoration:none">Open ↗</a>`:`<span style="font-size:11px;color:${r.status==='mscneedsdoc'?'var(--red)':'var(--text3)'}">${r.status==='mscneedsdoc'?'⚠ Not linked':'--'}</span>`}<button onclick="openDetail('${r.id}')" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer">Add ↗</button></span></div>
         ${r.damage?`<div class="rc-field-row"><span class="rc-field-name">Notes</span><span class="rc-field-val" style="font-size:11px;color:var(--text2);text-align:right;max-width:200px">${r.damage}</span></div>`:''}
       </div>
       <div class="rc-right">
@@ -1744,7 +1811,7 @@ function buildReimbCard(r, today) {
       ${buildMscSummaryBar(r)}
       <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase('${r.id}'),150)">Case msg</button>
       <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Case attempt</button>
-      <button class="btn btn-sm" style="background:var(--amber-bg);border-color:var(--amber);color:var(--amber)" onclick="openDetail('${r.id}');setTimeout(()=>openAddMsc('${r.id}'),200)">+ MSC</button>
+      <button class="btn btn-sm" style="background:var(--amber-bg);border-color:var(--amber);color:var(--amber)" onclick="event.stopPropagation();openAddMsc('${r.id}')">+ MSC</button>
       <button class="btn btn-sm" onclick="openDetail('${r.id}')">Details</button>
       <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive('${r.id}')">← Active</button>
       <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed('${r.id}')">✓ Reimbursed</button>
@@ -2136,22 +2203,57 @@ function buildDetailBanner(r) {
 
 function openDetail(id) {
   const r = DB.find(x=>x.id===id);
+  if (!r) return;
+
+  // RET SKU auto-generator — removes 4-digit date suffix, converts to return format
+  const retSku = r.sku ? r.sku.replace(/_\d{4}_/g,'_').replace(/(\d{4})(?=[^_]*$)/,'') : '';
+
+  // Next MSC submit date from last denied attempt
+  const lastDeniedAttempt = (r.msc_attempts||[]).slice().reverse().find(a=>a.outcome==='denied'&&a.next_date);
+  const nextMscDate = r.reupdate || lastDeniedAttempt?.next_date || '';
+  const nextMscDaysLeft = nextMscDate ? Math.ceil((new Date(nextMscDate)-new Date())/86400000) : null;
+  const today = new Date().toISOString().split('T')[0];
+  const nextMscOverdue = nextMscDate && nextMscDate < today;
+
   document.getElementById('detail-modal').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="modal-title" style="margin-bottom:0">${r.name}</div>
-      <button onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:0 4px;line-height:1" title="Close">×</button>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div class="modal-title" style="margin-bottom:2px;font-size:14px;line-height:1.3">${r.name}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          ${r.asin?`<span onclick="navigator.clipboard.writeText('${r.asin}')" style="font-family:var(--mono);font-size:11px;color:var(--text3);cursor:pointer;background:var(--bg4);padding:2px 7px;border-radius:4px;border:1px solid var(--border)" title="Click to copy">${r.asin}</span>`:''}
+          ${r.fnsku?`<span onclick="navigator.clipboard.writeText('${r.fnsku}')" style="font-family:var(--mono);font-size:11px;color:var(--text3);cursor:pointer;background:var(--bg4);padding:2px 7px;border-radius:4px;border:1px solid var(--border)" title="Click to copy">${r.fnsku}</span>`:''}
+          ${r.sku?`<span onclick="navigator.clipboard.writeText('${r.sku}')" style="font-family:var(--mono);font-size:11px;color:var(--blue);cursor:pointer;background:var(--bg4);padding:2px 7px;border-radius:4px;border:1px solid var(--border)" title="Click to copy SKU">${r.sku}</span>`:''}
+          ${retSku?`<span onclick="navigator.clipboard.writeText('${retSku}')" style="font-family:var(--mono);font-size:11px;color:var(--red);cursor:pointer;background:var(--bg4);padding:2px 7px;border-radius:4px;border:1px solid var(--border)" title="Click to copy RET SKU">RET: ${retSku}</span>`:''}
+          <span style="font-size:11px;color:var(--text3);background:var(--bg4);padding:2px 7px;border-radius:4px;border:1px solid var(--border)">${SL[r.status]||r.status}</span>
+        </div>
+      </div>
+      <button onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:22px;padding:0;line-height:1;flex-shrink:0" title="Close">×</button>
     </div>
+
     ${buildDetailBanner(r)}
+
+    ${nextMscDate ? `
+    <div style="background:${nextMscOverdue?'var(--red-bg)':'var(--amber-bg)'};border:1px solid ${nextMscOverdue?'var(--red)':'var(--amber)'};border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px">${nextMscOverdue?'🔴':'⏰'}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:${nextMscOverdue?'var(--red)':'var(--amber)'}">${nextMscOverdue?`Next MSC submission overdue by ${Math.abs(nextMscDaysLeft)} days`:`Next MSC submission in ${nextMscDaysLeft} days`}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Due: ${fmtDate(nextMscDate)}${lastDeniedAttempt?.cog?` · Suggested COG: ${fmtMoney(lastDeniedAttempt.cog*0.8)} (20% reduced)`:''}</div>
+      </div>
+      <button onclick="openAddMsc('${r.id}')" style="background:${nextMscOverdue?'var(--red)':'var(--amber)'};border:none;color:white;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Log MSC now</button>
+    </div>` : ''}
+
     <div class="modal-sub">Product info</div>
     <div class="fg g3">
-      <div class="field"><label>Product name</label><input value="${r.name}" onchange="upd('${r.id}','name',this.value)"></div>
-      <div class="field"><label>ASIN</label><input value="${r.asin}" onchange="upd('${r.id}','asin',this.value)"></div>
+      <div class="field"><label>Product name</label><input value="${r.name||''}" onchange="upd('${r.id}','name',this.value)"></div>
+      <div class="field"><label>ASIN</label><input value="${r.asin||''}" onchange="upd('${r.id}','asin',this.value)"></div>
       <div class="field"><label>FNSKU</label><input value="${r.fnsku||''}" onchange="upd('${r.id}','fnsku',this.value)"></div>
     </div>
-    <div class="fg g2" style="margin-top:10px">
+    <div class="fg g3" style="margin-top:10px">
+      <div class="field"><label>SKU</label><input value="${r.sku||''}" onchange="upd('${r.id}','sku',this.value)"></div>
       <div class="field"><label>LPN (from photo)</label><input value="${r.lpn||''}" placeholder="e.g. 2825" onchange="upd('${r.id}','lpn',this.value)"></div>
       <div class="field"><label>Quantity</label><input type="number" value="${r.qord||1}" onchange="upd('${r.id}','qord',+this.value)"></div>
     </div>
+
     <div class="modal-sub">Order details</div>
     <div class="fg g3">
       <div class="field"><label>Removal Order ID</label><input value="${r.oid||''}" onchange="upd('${r.id}','oid',this.value)">
@@ -2165,51 +2267,80 @@ function openDetail(id) {
       <div class="field"><label>Date Delivered</label><input type="date" value="${r.ddeliv||''}" onchange="upd('${r.id}','ddeliv',this.value)"></div>
       <div class="field"><label>COG £ (inc VAT)</label><input type="number" step="0.01" value="${r.cog||''}" onchange="upd('${r.id}','cog',+this.value)"></div>
     </div>
-    <div class="fg g1" style="margin-top:10px">
-      <div class="field"><label>Order source</label><select onchange="upd('${r.id}','src',this.value)"><option value="seller"${r.src==='seller'?' selected':''}>Seller-initiated</option><option value="amazon"${r.src==='amazon'?' selected':''}>Amazon auto</option></select></div>
-    </div>
     <div class="fg g2" style="margin-top:10px">
-      <div class="field"><label>MSC Checked Date</label><input type="date" value="${r.dmsc_checked||''}" onchange="upd('${r.id}','dmsc_checked',this.value)" title="When you checked MSC eligibility — appeal window starts from this date if denied"></div>
-      <div class="field"><label>MSC Status (if checked)</label><select onchange="upd('${r.id}','msc_check_status',this.value)"><option value="">Not checked yet</option><option value="eligible"${r.msc_check_status==='eligible'?' selected':''}>Eligible</option><option value="ineligible"${r.msc_check_status==='ineligible'?' selected':''}>Ineligible</option><option value="review"${r.msc_check_status==='review'?' selected':''}>Under review</option></select></div>
+      <div class="field"><label>Order source</label><select onchange="upd('${r.id}','src',this.value)"><option value="seller"${r.src==='seller'?' selected':''}>Seller-initiated</option><option value="amazon"${r.src==='amazon'?' selected':''}>Amazon auto</option></select></div>
+      <div class="field"><label>Reason for removal</label><input value="${r.reason||''}" onchange="upd('${r.id}','reason',this.value)"></div>
     </div>
+
     <div class="sep"></div>
     <div class="modal-sub">Damage / condition notes</div>
-    <div class="field"><textarea onchange="upd('${r.id}','damage',this.value)" placeholder="Describe damage, missing parts, condition from Discord check-in...">${r.damage||''}</textarea></div>
+    <div class="field"><textarea onchange="upd('${r.id}','damage',this.value)" placeholder="Describe damage, missing parts, condition from Discord check-in..." style="min-height:70px">${r.damage||''}</textarea></div>
+
+    <div class="sep"></div>
+    <div class="modal-sub" style="color:var(--purple)">📄 Invoice / Documents</div>
+    <div class="fg g1" style="margin-bottom:10px">
+      <div class="field">
+        <label>Google Drive / Invoice Link</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input value="${r.invoice_link||''}" placeholder="Paste Google Drive link to invoice..." onchange="upd('${r.id}','invoice_link',this.value)" style="flex:1">
+          ${r.invoice_link?`<a href="${r.invoice_link}" target="_blank" style="background:var(--blue-bg);border:1px solid var(--blue)55;color:var(--blue);border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0">Open ↗</a>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Invoice / document notes</label>
+      <textarea onchange="upd('${r.id}','invoice_notes',this.value)" placeholder="e.g. Invoice from supplier dated 15/04/2026 — use for MSC appeal. File: HP300PET-INV.pdf" style="min-height:60px">${r.invoice_notes||''}</textarea>
+    </div>
+
     <div class="sep"></div>
     <div class="modal-sub" style="color:var(--amber)">MSC Submissions</div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Each MSC submission tracked separately. 30-day wait enforced between attempts. COG reduced ~20% on resubmission.</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Each MSC submission tracked separately. 30-day wait between attempts. COG reduced ~20% on resubmission.</div>
     <div id="dm-msc-${r.id}"></div>
-    <button class="btn btn-sm" style="margin-top:8px;background:var(--amber-bg);border-color:var(--amber);color:var(--amber)" onclick="openAddMsc('${r.id}')">+ Log MSC Submission</button>
+    <button class="btn btn-sm" style="margin-top:8px;background:var(--amber-bg);border-color:var(--amber);color:var(--amber);font-weight:700" onclick="openAddMsc('${r.id}')">+ Log MSC Submission</button>
+
     <div class="sep"></div>
     <div class="modal-sub">Amazon Case Attempts</div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Log after MSC is approved — open Seller Support case to claim the reimbursement.</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Log after MSC is approved — open Seller Support case to claim.</div>
     <div id="dm-cases-${r.id}"></div>
     <button class="btn btn-sm" style="margin-top:8px" onclick="openAddCase('${r.id}')">+ Log Case Attempt</button>
+
     <div class="sep"></div>
     <div class="modal-sub">Reimbursement</div>
     <div class="fg g3">
       <div class="field"><label>Amount reimbursed £</label><input type="number" step="0.01" value="${r.ramt||''}" onchange="upd('${r.id}','ramt',+this.value)"></div>
-      <div class="field"><label>Reimbursement ID</label><input value="${r.reimbid||''}" onchange="upd('${r.id}','reimbid',this.value)"></div>
+      <div class="field"><label>Reimbursement ID</label><input value="${r.reimbid||''}" placeholder="e.g. 8318367312" onchange="upd('${r.id}','reimbid',this.value)">
+        ${r.reimbid?`<div style="margin-top:4px"><a href="https://sellercentral.amazon.co.uk/reportcentral/REIMBURSEMENTS/0/%7B%22filters%22:[%22%22,%22%22,%22${r.reimbid}%22,%22%22],%22pageOffset%22:1,%22searchDays%22:365%7D" target="_blank" style="font-size:11px;color:var(--green)">Check in Amazon ↗</a></div>`:''}</div>
       <div class="field"><label>Date reimbursed</label><input type="date" value="${r.dreim||''}" onchange="upd('${r.id}','dreim',this.value)"></div>
     </div>
-    <div class="fg g2" style="margin-top:10px">
-      <div class="field"><label>Status</label><select onchange="upd('${r.id}','status',this.value);updateBadges()">
-        ${STATUS_LIST.map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('')}
-      </select></div>
-      <div class="field"><label>MSC reupdate date</label><input type="date" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value)"></div>
-    </div>
+
     <div class="sep"></div>
-    <div class="modal-sub">Audit Log</div>
+    <div class="modal-sub">Status & scheduling</div>
+    <div class="fg g2" style="margin-bottom:10px">
+      <div class="field"><label>Status</label>
+        <select onchange="changeStatus('${r.id}',this.value,'${CURRENT_PAGE}')">
+          ${STATUS_LIST.map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Next MSC reupdate</label>
+        <input type="date" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value)"
+          style="${r.reupdate&&r.reupdate<today?'border-color:var(--red);color:var(--red)':r.reupdate===today?'border-color:var(--amber);color:var(--amber)':''}">
+        ${r.reupdate&&r.reupdate<today?`<div style="font-size:10px;color:var(--red);margin-top:3px;font-weight:600">⚠ Overdue by ${Math.ceil((new Date()-new Date(r.reupdate))/86400000)} days</div>`:''}
+        ${r.reupdate===today?`<div style="font-size:10px;color:var(--amber);margin-top:3px;font-weight:600">📅 Due today</div>`:''}
+      </div>
+    </div>
+
+    <div class="modal-sub" style="margin-top:0">Audit Log</div>
     <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px;max-height:120px;overflow-y:auto;font-size:11px;font-family:var(--mono);color:var(--text3);line-height:1.6">
-      ${r.status_log && r.status_log.length ? r.status_log.map(log => {
+      ${r.status_log && r.status_log.length ? r.status_log.slice().reverse().map(log => {
         const parts = log.split(' | ');
         const ts = parts[0] ? new Date(parts[0]).toLocaleString('en-GB', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-        const change = parts[1] || '';
-        return `<div>${ts} — ${change}</div>`;
-      }).join('') : '<div style="color:var(--text4)">No status changes yet</div>'}
+        const change = parts[1] || log;
+        return `<div>${ts?ts+' — ':''}${change}</div>`;
+      }).join('') : '<div style="color:var(--text3)">No status changes yet</div>'}
     </div>
+
     <div class="sep"></div>
-    <div class="field"><label>General notes</label><textarea onchange="upd('${r.id}','mscnotes',this.value)">${r.mscnotes||''}</textarea></div>
+    <div class="field"><label>General notes</label><textarea onchange="upd('${r.id}','mscnotes',this.value)" style="min-height:60px">${r.mscnotes||''}</textarea></div>
     <div class="modal-foot">
       <button class="btn btn-primary" onclick="closeModal('detail-overlay');renderPage(CURRENT_PAGE)">Save & close</button>
       <button class="btn btn-blue" onclick="closeModal('detail-overlay');openCaseGenModal('${r.id}')">Generate case message</button>
@@ -2249,7 +2380,7 @@ function saveAdd() {
     status:'transit',
     msku:'',ean:'',shipid:'',tracking:'',amid:'',qdis:0,qcan:0,qpen:1,
     cog:0,lpn:'',disp:'Unsellable',cond:'Damaged',
-    darr:'',ddeliv:'',dreim:'',cases:[],msc_attempts:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:'',discord_photos_link:'',
+    darr:'',ddeliv:'',dreim:'',cases:[],msc_attempts:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:'',discord_photos_link:'',invoice_link:'',invoice_notes:'',
     status_log: [
       new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + ' — Added to system'
     ]
@@ -2363,8 +2494,17 @@ function openAddMsc(rid) {
 
 function onMscOutcomeChange() {
   const outcome = document.getElementById('am-outcome').value;
-  document.getElementById('am-denial-section').style.display = outcome==='denied'||outcome==='error' ? 'block' : 'none';
+  const isDenied = outcome==='denied'||outcome==='error';
+  document.getElementById('am-denial-section').style.display = isDenied ? 'block' : 'none';
   document.getElementById('am-approved-section').style.display = outcome==='approved'||outcome==='approved-reduced' ? 'block' : 'none';
+  // Auto-fill denial date to today if not already set
+  if (isDenied) {
+    const denialInput = document.getElementById('am-denial-date');
+    if (!denialInput.value) {
+      denialInput.value = new Date().toISOString().split('T')[0];
+      onMscDenialDateChange(); // trigger 30-day auto-calc immediately
+    }
+  }
 }
 
 function onMscDenialDateChange() {
@@ -2405,35 +2545,42 @@ function saveMscAttempt() {
     r.msc_attempts.push(attempt);
   }
 
-  // Auto-set reupdate date to next submit date if denied
+  // Build updates object — declared here so all branches can use it
+  const updates = { msc_attempts: r.msc_attempts };
+
+  // Auto-set reupdate to denial + 30 days
   if (nextDate) {
     r.reupdate = nextDate;
     updates.reupdate = nextDate;
   }
-  // Auto-set denial date
+  // Save denial date
   if (denialDate) {
     r.dmsc_checked = denialDate;
     updates.dmsc_checked = denialDate;
   }
-  // Auto-set status to mscdenied if outcome is denied
+  // Auto-set status to mscdenied
   if (outcome === 'denied' && r.status !== 'mscdenied') {
     r.status = 'mscdenied';
     r.status_changed_at = new Date().toISOString();
     updates.status = 'mscdenied';
     updates.status_changed_at = r.status_changed_at;
   }
-  // Auto-set status to mscapproved if outcome is approved
+  // Auto-set status to mscapproved/mscreduced
   if ((outcome === 'approved' || outcome === 'approved-reduced') && !['mscapproved','mscreduced'].includes(r.status)) {
     r.status = outcome === 'approved-reduced' ? 'mscreduced' : 'mscapproved';
     r.status_changed_at = new Date().toISOString();
     updates.status = r.status;
     updates.status_changed_at = r.status_changed_at;
   }
+  // Auto-set status to mscreview when submitted/pending
+  if (outcome === 'pending' || outcome === 'review') {
+    r.status = 'mscreview';
+    r.status_changed_at = new Date().toISOString();
+    updates.status = 'mscreview';
+    updates.status_changed_at = r.status_changed_at;
+  }
 
   if (SUPABASE_READY && window.sbClient) {
-    const updates = { msc_attempts: r.msc_attempts };
-    if (nextDate) updates.reupdate = nextDate;
-    if (denialDate) updates.dmsc_checked = denialDate;
     updateInSupabase(rid, updates);
   }
 
@@ -2610,6 +2757,7 @@ function renderOverview() {
   const needsDoc    = DB.filter(r=>r.status==='mscneedsdoc');
   const approaching = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;});
   const critical    = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=7;});
+  const expiredClaims = DB.filter(r=>claimExpired(r));
   const totalActive = DB.filter(r=>!HIST_STATUSES.includes(r.status));
   const noCaseYet   = DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length));
 
@@ -2641,7 +2789,7 @@ function renderOverview() {
 
   // ACTION REQUIRED = things Sarah must DO today (submit, check, log)
   // WAITING = things sitting with Amazon that just need monitoring
-  const actionNowCount = overdueReu.length + dueToday.length + checkMscNow.length + checkReimbNow.length + arrived.length + noCaseYet.length + needsDoc.length;
+  const actionNowCount = overdueReu.length + dueToday.length + checkMscNow.length + checkReimbNow.length + noCaseYet.length + needsDoc.length;
   const waitingCount   = DB.filter(r=>['mscsubmit','mscreview','caseopen','reimbpending'].includes(r.status)).length - checkMscNow.length - checkReimbNow.length;
   const monitoringCount = Math.max(0, waitingCount);
 
@@ -2682,140 +2830,152 @@ function renderOverview() {
   const mtdDeltaPct = lastMonthRecov>0 ? Math.round(((mtdRecov-lastMonthRecov)/lastMonthRecov)*100) : null;
   const mtdNetPL = mtdRecov - mtdCog;
 
-  document.getElementById('overview-financials').innerHTML = `
-    <!-- HERO ROW: workload + total recovered + MTD recovered (all balanced) -->
-    <div style="display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:10px;margin-bottom:12px;align-items:stretch">
+  // ── MONEY-AT-RISK framing for the workload hero ─────────────────────────
+  // COG sitting in the action queue (overdue + due-today + checks + needs-doc + arrived + no-case)
+  const actionRecs = [...overdueReu, ...dueToday, ...checkMscNow, ...checkReimbNow, ...needsDoc, ...noCaseYet];
+  const actionRiskSeen = new Set();
+  const actionCogAtRisk = actionRecs.reduce((s,r)=>{ if(actionRiskSeen.has(r.id))return s; actionRiskSeen.add(r.id); return s+Number(r.cog||0); },0);
+  const overdueCog = overdueReu.reduce((s,r)=>s+Number(r.cog||0),0);
+  const worstOverdueDays = overdueReu.length ? Math.max(...overdueReu.map(r=>Math.ceil((nowMs-new Date(r.reupdate).setHours(0,0,0,0))/86400000))) : 0;
 
-      <!-- WORKLOAD TILE (no clock — clock lives in topbar) -->
-      <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-left:3px solid ${workloadColor};border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;display:flex;flex-direction:column">
+  document.getElementById('overview-financials').innerHTML = `
+    <!-- HERO ROW: workload (dominant) + total recovered + MTD recovered -->
+    <div style="display:grid;grid-template-columns:1.55fr 1fr 1fr;gap:12px;align-items:stretch">
+
+      <!-- ════ TODAY'S WORKLOAD — the command tile (most important) ════ -->
+      <div style="background:
+            radial-gradient(130% 100% at 0% 0%, ${workloadColor}1f, transparent 60%),
+            linear-gradient(160deg,var(--bg2),var(--bg3));
+          border:1px solid ${workloadColor}55;border-radius:15px;padding:17px 18px;position:relative;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 1px ${workloadColor}18, var(--shadow-tile)">
+        <span style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,${workloadColor},transparent)"></span>
 
         <!-- TOP LABEL ROW -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="width:7px;height:7px;border-radius:50%;background:${workloadColor};box-shadow:0 0 6px ${workloadColor};animation:pulse 2s infinite"></span>
-            <span style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">Today's Workload</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="position:relative;display:flex;width:9px;height:9px">
+              <span style="position:absolute;inset:-3px;border-radius:50%;background:${workloadColor};opacity:.4;animation:pulse 2s infinite"></span>
+              <span style="position:relative;width:9px;height:9px;border-radius:50%;background:${workloadColor}"></span>
+            </span>
+            <span style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.09em">Today's Workload</span>
           </div>
-          <div style="font-size:10px;color:${workloadColor};font-weight:800;text-transform:uppercase;letter-spacing:.08em;background:${workloadColor}22;border:1px solid ${workloadColor};border-radius:5px;padding:3px 8px">${workloadLevel}</div>
+          <div style="font-size:10px;color:${workloadColor};font-weight:800;text-transform:uppercase;letter-spacing:.08em;background:${workloadColor}22;border:1px solid ${workloadColor}88;border-radius:6px;padding:3px 9px">${workloadLevel}</div>
         </div>
 
         <!-- BIG WORKLOAD NUMBER -->
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
-          <div style="font-size:46px;font-weight:800;color:${workloadColor};letter-spacing:-.04em;line-height:1">${actionNowCount}</div>
-          <div style="flex:1;line-height:1.2">
-            <div style="font-size:12px;color:var(--text);font-weight:600">task${actionNowCount!==1?'s':''} need action</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">${workloadSubtitle}</div>
+        <div style="display:flex;align-items:baseline;gap:13px;margin-bottom:8px">
+          <div style="font-size:54px;font-weight:800;color:${workloadColor};letter-spacing:-.05em;line-height:.85;text-shadow:0 0 26px ${workloadColor}44">${actionNowCount}</div>
+          <div style="flex:1;line-height:1.25">
+            <div style="font-size:13px;color:var(--text);font-weight:700">action${actionNowCount!==1?'s':''} needed today</div>
+            <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${workloadSubtitle}</div>
           </div>
         </div>
 
-        <!-- PROGRESS BAR -->
-        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin:4px 0 10px">
-          <div style="background:linear-gradient(90deg,${workloadColor},${workloadColor}aa);width:${Math.min(100,(actionNowCount/25)*100)}%;height:100%;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px ${workloadColor}66"></div>
+        <!-- MONEY-AT-RISK BAR — the reason this matters -->
+        <div style="display:flex;align-items:center;gap:8px;background:var(--red-bg);border:1px solid var(--red-dim);border-radius:9px;padding:8px 11px;margin-bottom:12px">
+          <svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px;color:var(--red);flex-shrink:0"><path d="M8 1l7 13H1L8 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div style="flex:1;line-height:1.15">
+            <span style="font-size:9px;color:var(--red);font-weight:800;text-transform:uppercase;letter-spacing:.06em">Recoverable COG in queue</span>
+            <div style="font-size:9.5px;color:var(--text3);margin-top:1px">Unactioned money exposed to loss</div>
+          </div>
+          <span style="font-size:17px;font-weight:800;color:var(--red);letter-spacing:-.02em">${fmtMoney(actionCogAtRisk)}</span>
         </div>
 
-        <!-- BREAKDOWN CHIPS (interactive) — flex-grow so tile fills evenly -->
-        <div style="display:flex;flex-wrap:wrap;gap:5px;flex:1;align-content:flex-start">
+        <!-- BREAKDOWN CHIPS (interactive drill-down) -->
+        <div style="font-size:9px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px">Breakdown — tap to filter</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1;align-content:flex-start">
           ${workloadBreakdown.length ? workloadBreakdown.map(b=>`
-            <span onclick="${b.fn}" style="display:inline-flex;align-items:center;gap:5px;background:${b.col}18;border:1px solid ${b.col}55;border-radius:12px;padding:3px 9px;cursor:pointer;transition:all .12s"
-              onmouseover="this.style.background='${b.col}33';this.style.transform='translateY(-1px)'"
-              onmouseout="this.style.background='${b.col}18';this.style.transform=''">
-              <span style="font-size:10px;color:${b.col};font-weight:700">${b.val}</span>
-              <span style="font-size:10px;color:var(--text2);font-weight:500">${b.label}</span>
-            </span>`).join('') : `<div style="font-size:10px;color:var(--text3);font-style:italic;padding:4px 0">No action items right now — nice work</div>`}
+            <span onclick="${b.fn}" style="display:inline-flex;align-items:center;gap:6px;background:${b.col}1a;border:1px solid ${b.col}55;border-radius:8px;padding:5px 10px;cursor:pointer;transition:all .12s"
+              onmouseover="this.style.background='${b.col}33';this.style.transform='translateY(-1px)';this.style.borderColor='${b.col}'"
+              onmouseout="this.style.background='${b.col}1a';this.style.transform='';this.style.borderColor='${b.col}55'">
+              <span style="font-size:13px;color:${b.col};font-weight:800;line-height:1">${b.val}</span>
+              <span style="font-size:10.5px;color:var(--text2);font-weight:600">${b.label}</span>
+            </span>`).join('') : `<div style="font-size:11px;color:var(--green);font-weight:600;padding:6px 0;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 8l2 2 4-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Queue clear — nothing needs action</div>`}
         </div>
 
-        <!-- BOTTOM MINI STATS — pinned to bottom -->
-        <div style="display:flex;gap:14px;padding-top:10px;border-top:1px solid var(--border);margin-top:10px;font-size:10px;color:var(--text3)">
-          <span><span style="color:${workloadColor};font-weight:700">${actionNowCount}</span> action</span>
-          <span style="color:var(--border2)">·</span>
-          <span><span style="color:var(--text2);font-weight:700">${monitoringCount}</span> waiting</span>
-          <span style="color:var(--border2)">·</span>
-          <span><span style="color:var(--text);font-weight:700">${totalActive.length}</span> total open</span>
-        </div>
-      </div>
-
-      <!-- TOTAL RECOVERED (overall) — green, with more analytics -->
-      <div style="background:var(--bg2);border:1px solid var(--border2);border-left:3px solid var(--green);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column">
-
-        <!-- HEADER -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Total Recovered</div>
-          <div style="font-size:9px;color:var(--green);background:var(--green-bg);border:1px solid var(--green)66;border-radius:5px;padding:2px 7px;font-weight:700;letter-spacing:.05em">ALL TIME</div>
-        </div>
-
-        <!-- BIG VALUE -->
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
-          <div style="font-size:26px;font-weight:800;color:var(--green);letter-spacing:-.03em;line-height:1">${fmtMoney(totalRecov)}</div>
-          <div style="font-size:14px;font-weight:800;color:var(--green);opacity:.7">${overallPct}%</div>
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">of ${fmtMoney(totalRecovCog)} COGs claimed</div>
-
-        <!-- PROGRESS BAR -->
-        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin-bottom:10px">
-          <div style="background:linear-gradient(90deg,var(--green),var(--green)aa);width:${overallPct}%;height:100%;border-radius:3px;transition:width .6s;box-shadow:0 0 6px var(--green)44"></div>
-        </div>
-
-        <!-- ANALYTICS GRID -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;align-content:start">
-          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
-            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Reimbursed</div>
-            <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:2px;line-height:1">${reimbursedRecs.length}</div>
-            <div style="font-size:9px;color:var(--text3);margin-top:2px">cases</div>
-          </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
-            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Avg / Case</div>
-            <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:2px;line-height:1">${fmtMoney(avgRecov)}</div>
-            <div style="font-size:9px;color:var(--text3);margin-top:2px">per claim</div>
-          </div>
-        </div>
-
-        <!-- NET P/L -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);margin-top:10px">
-          <span style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Net P/L</span>
-          <span style="font-size:12px;font-weight:800;color:${netTotalPL>=0?'var(--green)':'var(--red)'}">${netTotalPL>=0?'+':''}${fmtMoney(netTotalPL)}</span>
+        <!-- BOTTOM MINI STATS -->
+        <div style="display:flex;align-items:center;gap:0;padding-top:10px;border-top:1px solid var(--border);margin-top:10px">
+          <div style="flex:1;text-align:center"><div style="font-size:15px;font-weight:800;color:${workloadColor};line-height:1">${actionNowCount}</div><div style="font-size:9px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">To action</div></div>
+          <div style="width:1px;height:22px;background:var(--border)"></div>
+          <div style="flex:1;text-align:center"><div style="font-size:15px;font-weight:800;color:var(--text2);line-height:1">${monitoringCount}</div><div style="font-size:9px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Waiting</div></div>
+          <div style="width:1px;height:22px;background:var(--border)"></div>
+          <div style="flex:1;text-align:center"><div style="font-size:15px;font-weight:800;color:var(--text);line-height:1">${totalActive.length}</div><div style="font-size:9px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Total open</div></div>
         </div>
       </div>
 
-      <!-- MTD RECOVERED — purple, with last-month delta -->
-      <div style="background:var(--bg2);border:1px solid var(--border2);border-left:3px solid var(--purple);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column">
-
-        <!-- HEADER -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">Month to Date</div>
-          <div style="font-size:9px;color:var(--purple);background:var(--purple-bg);border:1px solid var(--purple);border-radius:5px;padding:2px 7px;font-weight:700;letter-spacing:.05em">${_now.toLocaleDateString('en-GB',{month:'short'}).toUpperCase()}</div>
-        </div>
-
-        <!-- BIG VALUE -->
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
-          <div style="font-size:26px;font-weight:800;color:var(--purple);letter-spacing:-.03em;line-height:1">${fmtMoney(mtdRecov)}</div>
-          <div style="font-size:14px;font-weight:800;color:var(--purple);opacity:.7">${mtdPct}%</div>
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:8px">of ${fmtMoney(mtdCog)} COGs claimed this month</div>
-
-        <!-- PROGRESS BAR -->
-        <div style="background:var(--bg5);border-radius:3px;height:4px;overflow:hidden;margin-bottom:10px">
-          <div style="background:linear-gradient(90deg,var(--purple),var(--purple)aa);width:${mtdPct}%;height:100%;border-radius:3px;transition:width .6s;box-shadow:0 0 6px var(--purple)44"></div>
-        </div>
-
-        <!-- ANALYTICS GRID -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;align-content:start">
-          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
-            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">This Month</div>
-            <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:2px;line-height:1">${mtdRecs.length}</div>
-            <div style="font-size:9px;color:var(--text3);margin-top:2px">reimbursed</div>
+      <!-- ════ TOTAL RECOVERED — emerald ════ -->
+      <div style="background:radial-gradient(120% 90% at 100% 0%, var(--green-bg), transparent 55%), var(--bg2);border:1px solid var(--green-dim);border-radius:15px;padding:16px 17px;display:flex;flex-direction:column;box-shadow:var(--shadow-tile)">
+        <span style="position:absolute"></span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="display:inline-flex;width:20px;height:20px;border-radius:6px;background:var(--green-bg);border:1px solid var(--green-dim);align-items:center;justify-content:center"><svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;color:var(--green)"><path d="M8 1v14M11.5 4.5C11 3 9.7 2.3 8 2.3 6 2.3 4.5 3.3 4.5 5s1.5 2.4 3.5 2.7 3.5.9 3.5 2.7-1.5 2.6-3.5 2.6c-1.7 0-3-.7-3.5-2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+            <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.07em">Total Recovered</div>
           </div>
-          <div style="background:var(--bg3);border-radius:6px;padding:7px 9px">
-            <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Last Month</div>
-            <div style="font-size:14px;font-weight:800;color:var(--text2);margin-top:2px;line-height:1">${fmtMoney(lastMonthRecov)}</div>
-            <div style="font-size:9px;color:var(--text3);margin-top:2px">${lastMonthRecs.length} item${lastMonthRecs.length!==1?'s':''}</div>
+          <div style="font-size:8.5px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-dim);border-radius:5px;padding:2px 7px;font-weight:800;letter-spacing:.06em">ALL TIME</div>
+        </div>
+
+        <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:3px">
+          <div style="font-size:28px;font-weight:800;color:var(--green);letter-spacing:-.04em;line-height:1">${fmtMoney(totalRecov)}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--green);opacity:.75">${overallPct}%</div>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:9px">recovered of ${fmtMoney(totalRecovCog)} claimed COG</div>
+
+        <div style="background:var(--bg4);border-radius:4px;height:5px;overflow:hidden;margin-bottom:11px">
+          <div style="background:linear-gradient(90deg,var(--green),var(--cyan));width:${overallPct}%;height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;align-content:start">
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+            <div style="font-size:8.5px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.05em">Claims won</div>
+            <div style="font-size:16px;font-weight:800;color:var(--text);margin-top:3px;line-height:1">${reimbursedRecs.length}</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+            <div style="font-size:8.5px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.05em">Avg / claim</div>
+            <div style="font-size:16px;font-weight:800;color:var(--text);margin-top:3px;line-height:1">${fmtMoney(avgRecov)}</div>
           </div>
         </div>
 
-        <!-- NET P/L THIS MONTH -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);margin-top:10px">
-          <span style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Net P/L MTD</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:11px">
+          <span style="font-size:9.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Net profit / loss</span>
+          <span style="font-size:13px;font-weight:800;color:${netTotalPL>=0?'var(--green)':'var(--red)'}">${netTotalPL>=0?'+':''}${fmtMoney(netTotalPL)}</span>
+        </div>
+      </div>
+
+      <!-- ════ MONTH TO DATE — teal/cyan surface (no more purple-on-grey clash) ════ -->
+      <div style="background:radial-gradient(120% 90% at 100% 0%, var(--cyan-bg), transparent 55%), var(--bg2);border:1px solid var(--cyan-dim);border-radius:15px;padding:16px 17px;display:flex;flex-direction:column;box-shadow:var(--shadow-tile)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="display:inline-flex;width:20px;height:20px;border-radius:6px;background:var(--cyan-bg);border:1px solid var(--cyan-dim);align-items:center;justify-content:center"><svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;color:var(--cyan)"><path d="M3 6h10M3 6V4a1 1 0 011-1h8a1 1 0 011 1v2M3 6v7a1 1 0 001 1h8a1 1 0 001-1V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+            <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.07em">Month to Date</div>
+          </div>
+          <div style="font-size:8.5px;color:var(--cyan);background:var(--cyan-bg);border:1px solid var(--cyan-dim);border-radius:5px;padding:2px 7px;font-weight:800;letter-spacing:.06em">${_now.toLocaleDateString('en-GB',{month:'short'}).toUpperCase()}</div>
+        </div>
+
+        <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:3px">
+          <div style="font-size:28px;font-weight:800;color:var(--cyan);letter-spacing:-.04em;line-height:1">${fmtMoney(mtdRecov)}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--cyan);opacity:.75">${mtdPct}%</div>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:9px">recovered of ${fmtMoney(mtdCog)} claimed this month</div>
+
+        <div style="background:var(--bg4);border-radius:4px;height:5px;overflow:hidden;margin-bottom:11px">
+          <div style="background:linear-gradient(90deg,var(--cyan),var(--green));width:${mtdPct}%;height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;align-content:start">
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+            <div style="font-size:8.5px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.05em">This month</div>
+            <div style="font-size:16px;font-weight:800;color:var(--text);margin-top:3px;line-height:1">${mtdRecs.length}<span style="font-size:9px;color:var(--text3);font-weight:600;margin-left:3px">won</span></div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px">
+            <div style="font-size:8.5px;color:var(--text3);font-weight:800;text-transform:uppercase;letter-spacing:.05em">Last month</div>
+            <div style="font-size:16px;font-weight:800;color:var(--text2);margin-top:3px;line-height:1">${fmtMoney(lastMonthRecov)}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:11px">
+          <span style="font-size:9.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Net P/L this month</span>
           <div style="display:flex;align-items:baseline;gap:8px">
-            ${mtdDeltaPct!==null ? `<span style="font-size:10px;font-weight:700;color:${mtdDeltaPct>=0?'var(--green)':'var(--red)'}">${mtdDeltaPct>=0?'↑':'↓'} ${Math.abs(mtdDeltaPct)}%</span>` : ''}
-            <span style="font-size:12px;font-weight:800;color:${mtdNetPL>=0?'var(--green)':'var(--red)'}">${mtdNetPL>=0?'+':''}${fmtMoney(mtdNetPL)}</span>
+            ${mtdDeltaPct!==null ? `<span style="font-size:10px;font-weight:800;color:${mtdDeltaPct>=0?'var(--green)':'var(--red)'};background:${mtdDeltaPct>=0?'var(--green-bg)':'var(--red-bg)'};border-radius:4px;padding:1px 6px">${mtdDeltaPct>=0?'▲':'▼'} ${Math.abs(mtdDeltaPct)}%</span>` : ''}
+            <span style="font-size:13px;font-weight:800;color:${mtdNetPL>=0?'var(--green)':'var(--red)'}">${mtdNetPL>=0?'+':''}${fmtMoney(mtdNetPL)}</span>
           </div>
         </div>
       </div>
@@ -2823,88 +2983,101 @@ function renderOverview() {
 
     ${escalatedRecs.length ? `
     <!-- ESCALATED TO JACK BANNER -->
-    <div onclick="REIMB_FILTER='escalated';setTimeout(()=>navTo('reimb'),0)" style="background:linear-gradient(90deg,var(--pink-bg),var(--bg2));border:1px solid var(--pink);border-left:3px solid var(--pink);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s"
+    <div onclick="REIMB_FILTER='escalated';setTimeout(()=>navTo('reimb'),0)" style="background:linear-gradient(100deg,var(--pink-bg),var(--bg2) 70%);border:1px solid var(--pink);border-radius:11px;padding:11px 15px;margin-top:12px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:all .15s"
       onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform=''">
-      <div style="width:32px;height:32px;border-radius:50%;background:var(--pink-bg);border:1.5px solid var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px;color:var(--pink)"><path d="M8 13V3M3 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div style="width:34px;height:34px;border-radius:9px;background:var(--pink-bg);border:1.5px solid var(--pink);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg viewBox="0 0 16 16" fill="none" style="width:15px;height:15px;color:var(--pink)"><path d="M8 13V3M3 8l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <div style="flex:1">
-        <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:.06em">Escalated to Jack / MD</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${escalatedRecs.length} item${escalatedRecs.length!==1?'s':''} awaiting your response · ${fmtMoney(escalatedRecs.reduce((s,r)=>s+Number(r.cog||0),0))} COG at stake</div>
+        <div style="font-size:11px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:.06em">Escalated to Jack / MD</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${escalatedRecs.length} item${escalatedRecs.length!==1?'s':''} awaiting a decision · ${fmtMoney(escalatedRecs.reduce((s,r)=>s+Number(r.cog||0),0))} COG at stake</div>
       </div>
-      <div style="font-size:24px;font-weight:800;color:var(--pink);line-height:1">${escalatedRecs.length}</div>
+      <div style="font-size:26px;font-weight:800;color:var(--pink);line-height:1">${escalatedRecs.length}</div>
       <svg viewBox="0 0 16 16" fill="none" style="width:14px;height:14px;color:var(--pink)"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </div>` : ''}`;
 
   // Clock lives in topbar (started once on page load by initTopbarClock) — no overview-specific clock needed here.
   // ── URGENT ALERT BANNER ───────────────────────────────────────────────
   // Split into ACTION-NOW alerts (Sarah must do something) vs MONITORING alerts (just info)
+  const G = {
+    clock:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.2l2 1.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    cal:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    search:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.5"/><path d="M10.2 10.2L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    coin:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4.5v7M9.6 5.8c-.4-.7-1-1-1.8-1-1 0-1.7.5-1.7 1.4 0 1.9 3.6.7 3.6 2.6 0 .9-.8 1.4-1.9 1.4-.8 0-1.5-.3-1.9-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>',
+    doc:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M4 2.5h5l3 3v8a.5.5 0 01-.5.5h-7a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 2.5v3h3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+    warn:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M8 2l6.5 11.5h-13L8 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.5v.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    box:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M8 1.8l5.5 3v6.4L8 14.2l-5.5-3V4.8L8 1.8z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2.7 4.9L8 7.8l5.3-2.9M8 7.8v6.4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+  };
   const actionAlerts = [];
   const monitorAlerts = [];
-  if (overdueReu.length)     actionAlerts.push({icon:'⏰', color:'var(--red)',    text:`${overdueReu.length} overdue re-update${overdueReu.length>1?'s':''}`, fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
-  if (dueToday.length)       actionAlerts.push({icon:'📅', color:'var(--green)',  text:`${dueToday.length} due TODAY`,           fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
-  if (checkMscNow.length)    actionAlerts.push({icon:'🔍', color:'var(--amber)',  text:`${checkMscNow.length} MSC result${checkMscNow.length>1?'s':''} ready`, fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"});
-  if (checkReimbNow.length)  actionAlerts.push({icon:'💰', color:'var(--cyan)',   text:`${checkReimbNow.length} reimbursement${checkReimbNow.length>1?'s':''} to verify`, fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"});
-  if (needsDoc.length)       actionAlerts.push({icon:'📄', color:'var(--purple)', text:`${needsDoc.length} need${needsDoc.length>1?'':'s'} document`, fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"});
-  if (critical.length)       monitorAlerts.push({icon:'⚠',  color:'var(--red)',    text:`${critical.length} deadline${critical.length>1?'s':''} <7 days`, fn:"navTo('active')"});
-  if (arrived.length)        monitorAlerts.push({icon:'📦', color:'var(--amber)',  text:`${arrived.length} arrived, awaiting check-in`, fn:"navTo('active')"});
+  if (expiredClaims.length) actionAlerts.unshift({icon:G.warn, color:'var(--red)', text:`${expiredClaims.length} claim${expiredClaims.length>1?'s':''} may have EXPIRED — 60d window passed`, fn:"showTileDrill('expired')"});
+  if (overdueReu.length)     actionAlerts.push({icon:G.clock, color:'var(--red)',    text:`${overdueReu.length} overdue re-update${overdueReu.length>1?'s':''}`, fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
+  if (dueToday.length)       actionAlerts.push({icon:G.cal, color:'var(--amber)',  text:`${dueToday.length} re-update${dueToday.length>1?'s':''} due TODAY`,           fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
+  if (checkMscNow.length)    actionAlerts.push({icon:G.search, color:'var(--amber)',  text:`${checkMscNow.length} MSC result${checkMscNow.length>1?'s':''} ready to check`, fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"});
+  if (checkReimbNow.length)  actionAlerts.push({icon:G.coin, color:'var(--cyan)',   text:`${checkReimbNow.length} reimbursement${checkReimbNow.length>1?'s':''} to verify in Amazon`, fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"});
+  if (needsDoc.length)       actionAlerts.push({icon:G.doc, color:'var(--purple)', text:`${needsDoc.length} claim${needsDoc.length>1?'s':''} blocked — needs document`, fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"});
+  if (critical.length)       monitorAlerts.push({icon:G.warn,  color:'var(--red)',    text:`${critical.length} deadline${critical.length>1?'s':''} closing in <7 days`, fn:"navTo('active')"});
+  if (arrived.length)        monitorAlerts.push({icon:G.box,  color:'var(--amber)',  text:`${arrived.length} arrived — awaiting check-in`, fn:"navTo('active')"});
 
   const banner = document.getElementById('overview-alert-banner');
   if (actionAlerts.length || monitorAlerts.length) {
     const renderChips = (list) => list.map(a=>`
-      <span onclick="${a.fn}" style="display:inline-flex;align-items:center;gap:5px;padding:4px 9px;background:${a.color}22;border:1px solid ${a.color}55;border-radius:14px;cursor:pointer;transition:all .12s;font-size:11.5px;font-weight:600;color:${a.color}"
-        onmouseover="this.style.background='${a.color}33'" onmouseout="this.style.background='${a.color}22'">
-        <span>${a.icon}</span><span>${a.text}</span>
+      <span onclick="${a.fn}" style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:${a.color}1a;border:1px solid ${a.color}55;border-radius:8px;cursor:pointer;transition:all .12s;font-size:11.5px;font-weight:700;color:${a.color}"
+        onmouseover="this.style.background='${a.color}33';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='${a.color}1a';this.style.transform=''">
+        ${a.icon}<span>${a.text}</span>
       </span>`).join('');
     banner.innerHTML = `
-      <div style="background:${actionAlerts.length?'var(--red-bg)':'var(--bg2)'};border:1px solid ${actionAlerts.length?'var(--red)':'var(--border2)'};border-left:3px solid ${actionAlerts.length?'var(--red)':'var(--amber)'};border-radius:8px;padding:10px 14px;margin-bottom:14px">
+      <div style="background:${actionAlerts.length?'linear-gradient(100deg,var(--red-bg),var(--bg2) 75%)':'var(--bg2)'};border:1px solid ${actionAlerts.length?'var(--red)':'var(--border2)'};border-radius:12px;padding:12px 15px;margin-top:14px;box-shadow:var(--shadow-tile)">
         ${actionAlerts.length ? `
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;${monitorAlerts.length?'padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px':''}">
-            <span style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.07em;display:inline-flex;align-items:center;gap:6px;flex-shrink:0">
-              <span style="width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red);animation:pulse 2s infinite"></span>
-              Action Now
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;${monitorAlerts.length?'padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px':''}">
+            <span style="font-size:10px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.08em;display:inline-flex;align-items:center;gap:7px;flex-shrink:0">
+              <span style="position:relative;display:flex;width:8px;height:8px"><span style="position:absolute;inset:-2px;border-radius:50%;background:var(--red);opacity:.4;animation:pulse 2s infinite"></span><span style="position:relative;width:8px;height:8px;border-radius:50%;background:var(--red)"></span></span>
+              Do Now
             </span>
             ${renderChips(actionAlerts)}
           </div>` : ''}
         ${monitorAlerts.length ? `
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0">Monitoring</span>
+            <span style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">Keep an eye on</span>
             ${renderChips(monitorAlerts)}
           </div>` : ''}
       </div>`;
   } else {
-    banner.innerHTML = `<div style="background:var(--green-bg);border:1px solid var(--green);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:16px">✓</span>
-      <span style="font-size:12px;font-weight:700;color:var(--green)">All clear — inbox zero</span>
-      <span style="font-size:11px;color:var(--text3);margin-left:auto">Nothing urgent right now</span>
+    banner.innerHTML = `<div style="background:linear-gradient(100deg,var(--green-bg),var(--bg2) 75%);border:1px solid var(--green-dim);border-radius:12px;padding:12px 15px;margin-top:14px;display:flex;align-items:center;gap:11px;box-shadow:var(--shadow-tile)">
+      <span style="display:inline-flex;width:24px;height:24px;border-radius:7px;background:var(--green-bg);border:1px solid var(--green-dim);align-items:center;justify-content:center"><svg viewBox="0 0 16 16" fill="none" style="width:13px;height:13px;color:var(--green)"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span style="font-size:12.5px;font-weight:800;color:var(--green)">Queue clear — nothing needs action right now</span>
+      <span style="font-size:11px;color:var(--text3);margin-left:auto">All claims are on track</span>
     </div>`;
   }
 
   // ── KPI TILES ─────────────────────────────────────────────────────────
-  // Each tile is tagged as either action-now (Sarah must do something) or waiting (just info)
+  // Each tile is tagged action (Sarah must do something) or wait (just monitor)
+  const cogOf = recs => recs.reduce((s,r)=>s+Number(r.cog||0),0);
   const tiles = [
-    // ACTION-NOW tiles (left side, urgent)
-    {v:overdueReu.length,   l:'Overdue Re-updates',  sub:'Submit MSC today',     c:'tile-red',    tv:'tv-red',    key:'overdue',      border:'var(--red)',    kind:'action', urgent:overdueReu.length>0},
-    {v:checkMscNow.length,  l:'Check MSC Result',    sub:'5+ days in review',    c:'tile-amber',  tv:'tv-amber',  key:'checkmsc',     border:'var(--amber)',  kind:'action', urgent:checkMscNow.length>0},
-    {v:checkReimbNow.length,l:'Check Reimbursement', sub:'Verify in Amazon',     c:'tile-cyan',   tv:'tv-cyan',   key:'checkreimb',   border:'var(--cyan)',   kind:'action', urgent:checkReimbNow.length>0},
-    {v:needsDoc.length,     l:'Needs Document',      sub:'Upload invoice',       c:'tile-purple', tv:'tv-purple', key:'needsdoc',     border:'var(--purple)', kind:'action', urgent:needsDoc.length>0},
-    // WAITING tiles (right side, monitoring)
-    {v:inTransit.length,    l:'In Transit',          sub:'On way to BDL',        c:'tile-blue',   tv:'tv-blue',   key:'transit',      border:'var(--blue)',   kind:'wait'},
-    {v:arrived.length,      l:'Arrived',             sub:'Awaiting check-in',    c:'tile-amber',  tv:'tv-amber',  key:'arrived',      border:'var(--amber)',  kind:'wait'},
-    {v:inReimb.length,      l:'Active Cases',        sub:'In reimbursement',     c:'tile-blue',   tv:'tv-blue',   key:'reimb',        border:'var(--blue)',   kind:'wait'},
-    {v:approaching.length,  l:'Deadline <14d',       sub:'60-day window',        c:'tile-amber',  tv:'tv-amber',  key:'deadline',     border:'var(--amber)',  kind:'wait',   urgent:approaching.length>0},
+    // ACTION-NOW tiles — coloured by urgency
+    {v:overdueReu.length,   l:'Overdue Re-updates',  sub:'Re-push MSC to Amazon now', c:'tile-red',    tv:'tv-red',    key:'overdue',    border:'var(--red)',    kind:'action', urgent:overdueReu.length>0, cog:cogOf(overdueReu)},
+    {v:checkMscNow.length,  l:'MSC Results to Check', sub:'In review 5+ days',        c:'tile-amber',  tv:'tv-amber',  key:'checkmsc',   border:'var(--amber)',  kind:'action', urgent:checkMscNow.length>0, cog:cogOf(checkMscNow)},
+    {v:checkReimbNow.length,l:'Reimbursements to Verify', sub:'Confirm funds in Amazon', c:'tile-cyan', tv:'tv-cyan',   key:'checkreimb', border:'var(--cyan)',   kind:'action', urgent:checkReimbNow.length>0, cog:cogOf(checkReimbNow)},
+    {v:needsDoc.length,     l:'Needs Document',       sub:'Invoice required',          c:'tile-purple', tv:'tv-purple', key:'needsdoc',   border:'var(--purple)', kind:'action', urgent:needsDoc.length>0, cog:cogOf(needsDoc)},
+    // WAITING tiles — neutral slate, monitor only
+    {v:inTransit.length,    l:'In Transit',          sub:'Returning to BDL',          c:'tile-blue',   tv:'tv-blue',   key:'transit',    border:'var(--blue)',   kind:'wait', cog:cogOf(inTransit)},
+    {v:arrived.length,      l:'Arrived',             sub:'Awaiting your check-in',    c:'tile-amber',  tv:'tv-amber',  key:'arrived',    border:'var(--amber)',  kind:'wait', urgent:arrived.length>0, cog:cogOf(arrived)},
+    {v:inReimb.length,      l:'Claims in Progress',  sub:'Open with Amazon',          c:'tile-blue',   tv:'tv-blue',   key:'reimb',      border:'var(--blue)',   kind:'wait', cog:cogOf(inReimb)},
+    {v:approaching.length,  l:'Deadline < 14 Days',  sub:'60-day window closing',     c:'tile-amber',  tv:'tv-amber',  key:'deadline',   border:'var(--amber)',  kind:'wait',   urgent:approaching.length>0, cog:cogOf(approaching)},
   ];
 
   document.getElementById('overview-tiles').innerHTML = tiles.map(t=>{
     const kindBadge = t.kind==='action'
-      ? `<span style="position:absolute;top:8px;right:8px;font-size:8px;font-weight:800;color:var(--red);background:var(--red-bg);border:1px solid var(--red);border-radius:3px;padding:1px 5px;letter-spacing:.05em">ACT</span>`
-      : `<span style="position:absolute;top:8px;right:8px;font-size:8px;font-weight:700;color:var(--text3);background:var(--bg4);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;letter-spacing:.05em">WAIT</span>`;
-    return `<div class="tile ${t.c}" onclick="showTileDrill('${t.key}')" title="Click for detail" style="${t.kind==='action'&&t.v>0?'box-shadow:inset 0 0 0 1px '+t.border+'33':''}">
+      ? `<span style="position:absolute;top:9px;right:9px;font-size:7.5px;font-weight:800;color:var(--red);background:var(--red-bg);border:1px solid var(--red);border-radius:4px;padding:1px 5px;letter-spacing:.06em">ACT</span>`
+      : `<span style="position:absolute;top:9px;right:9px;font-size:7.5px;font-weight:800;color:var(--text3);background:var(--bg4);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;letter-spacing:.06em">WATCH</span>`;
+    const dim = t.v===0;
+    return `<div class="tile ${t.c}" onclick="showTileDrill('${t.key}')" title="Click for the full list" style="${dim?'opacity:.62;':''}${t.urgent&&t.v>0?'border-color:'+t.border+'66;':''}">
       ${kindBadge}
-      ${t.urgent&&t.v>0?`<div style="position:absolute;top:8px;left:8px;width:6px;height:6px;border-radius:50%;background:${t.border};box-shadow:0 0 8px ${t.border};animation:pulse 2s infinite"></div>`:''}
-      <div class="tile-v ${t.tv}" style="margin-top:8px">${t.v}</div>
+      ${t.urgent&&t.v>0?`<div style="position:absolute;top:9px;left:11px;width:6px;height:6px;border-radius:50%;background:${t.border};box-shadow:0 0 8px ${t.border};animation:pulse 2s infinite"></div>`:''}
+      <div class="tile-v ${dim?'tv-white':t.tv}" style="margin-top:9px;${dim?'opacity:.5':''}">${t.v}</div>
       <div class="tile-l">${t.l}</div>
       <div class="tile-sub">${t.sub}</div>
+      ${t.cog>0?`<div style="font-size:10px;font-weight:700;color:${t.border};margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">${fmtMoney(t.cog)} <span style="color:var(--text3);font-weight:500">COG</span></div>`:''}
     </div>`;
   }).join('');
 
@@ -2927,87 +3100,98 @@ function renderOverview() {
   // Most days-waiting first
   p0Mscs.sort((a,b)=>b.days-a.days).forEach(({r,days,type})=>{
     if (type==='msc') {
-      actions.push({r, dot:'ad-amber', label:`⏰ MSC under review for ${days} days — check result NOW`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days});
+      actions.push({r, dot:'ad-amber', label:`MSC in review ${days} days — check the result now`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days, urg:{t:`${days}d`,c:'var(--amber)'}});
     } else {
-      actions.push({r, dot:'ad-cyan', label:`💰 Reimbursement pending ${days} days — verify in Amazon`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days});
+      actions.push({r, dot:'ad-cyan', label:`Reimbursement pending ${days} days — verify funds in Amazon`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days, urg:{t:`${days}d`,c:'var(--cyan)'}});
     }
   });
 
   // Priority 1 — Critical deadlines
   critical.forEach(r=>{
     const d=deadline60(r);
-    actions.push({r,dot:'ad-red',label:`🔴 CRITICAL: ${d} day${d!==1?'s':''} left on 60-day deadline`,meta:fmtDate(r.darr||r.dsub),pri:1});
+    actions.push({r,dot:'ad-red',label:`Only ${d} day${d!==1?'s':''} left to claim — file before the 60-day window shuts`,meta:fmtDate(r.darr||r.dsub),pri:1, urg:{t:`${d}d left`,c:'var(--red)'}});
   });
 
   // Priority 2 — Overdue re-updates (sorted worst first)
   overdueReu.sort((a,b)=>new Date(a.reupdate)-new Date(b.reupdate)).forEach(r=>{
     const days=Math.ceil((nowMs-new Date(r.reupdate).setHours(0,0,0,0))/86400000);
-    const urgency = days>=14?'🔴':days>=7?'🟠':'🟡';
-    const badge = `<span style="display:inline-block;background:var(--red-bg);border:1px solid var(--red);color:var(--red);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:6px">${days}d overdue</span>`;
     const attempts = r.msc_attempts||[];
     const nextAttemptNum = attempts.length+1;
     const lastDenied = [...attempts].reverse().find(a=>a.outcome==='denied'&&a.cog);
     const suggestedCog = lastDenied ? fmtMoney(lastDenied.cog*0.8) : '';
     const attemptContext = attempts.length>0
-      ? `<span style="font-size:10px;color:var(--text3);margin-left:6px">Attempt #${nextAttemptNum} due${suggestedCog?' · suggested COG '+suggestedCog:''}</span>`
+      ? ` · attempt #${nextAttemptNum}${suggestedCog?', try COG '+suggestedCog:''}`
       : '';
-    actions.push({r,dot:'ad-red',label:`${urgency} MSC re-update overdue${badge}${attemptContext}`,meta:fmtDate(r.reupdate),pri:2});
+    actions.push({r,dot:'ad-red',label:`Re-update was due ${days} day${days!==1?'s':''} ago — re-push to Amazon${attemptContext}`,meta:fmtDate(r.reupdate),pri:2, urg:{t:`${days}d late`,c:days>=14?'var(--red)':days>=7?'var(--red)':'var(--amber)'}});
   });
 
   // Priority 3 — Due today
   dueToday.forEach(r=>{
     const attempts = r.msc_attempts||[];
     const nextNum = attempts.length+1;
-    actions.push({r,dot:'ad-amber',label:`📅 MSC re-update due TODAY — submit attempt #${nextNum}`,meta:'Today',pri:3});
+    actions.push({r,dot:'ad-amber',label:`Re-update due today — submit attempt #${nextNum} before end of day`,meta:'Today',pri:3, urg:{t:'TODAY',c:'var(--amber)'}});
   });
 
   // Priority 3.5 — Escalated to Jack
   DB.filter(r=>r.status==='escalated').forEach(r=>{
-    actions.push({r,dot:'ad-pink',label:'⬆ Escalated to Jack / MD — awaiting response',meta:fmtDate(r.darr||r.dsub),pri:3});
+    actions.push({r,dot:'ad-pink',label:'Escalated to Jack / MD — awaiting a decision',meta:fmtDate(r.darr||r.dsub),pri:3, urg:{t:'ESCALATED',c:'var(--pink)'}});
   });
 
   // Priority 4 — Needs document
   needsDoc.forEach(r=>{
-    actions.push({r,dot:'ad-purple',label:'📄 Invoice / document needed — claim stalled',meta:fmtDate(r.darr||r.dsub),pri:4});
+    actions.push({r,dot:'ad-purple',label:'Claim is stalled — upload the invoice / supporting document to unblock it',meta:fmtDate(r.darr||r.dsub),pri:4, urg:{t:'BLOCKED',c:'var(--purple)'}});
   });
 
   // Priority 5 — Arrived needs checkin
   arrived.forEach(r=>{
-    actions.push({r,dot:'ad-amber',label:'📦 Arrived at BDL — needs checking in',meta:fmtDate(r.darr||r.dsub),pri:5});
+    actions.push({r,dot:'ad-amber',label:'Arrived at BDL — assess it and check it in',meta:fmtDate(r.darr||r.dsub),pri:5});
   });
 
   // Priority 6 — Checked in no case
   noCaseYet.forEach(r=>{
-    actions.push({r,dot:'ad-cyan',label:'💬 Checked in — no case opened yet',meta:fmtDate(r.darr),pri:6});
+    actions.push({r,dot:'ad-cyan',label:'Checked in but no reimbursement case opened yet — open one',meta:fmtDate(r.darr),pri:6});
   });
 
   const countEl = document.getElementById('actions-count');
-  if (countEl) countEl.textContent = `${actions.length} item${actions.length!==1?'s':''} need attention`;
+  if (countEl) countEl.textContent = `${actions.length} to action`;
 
   if (!actions.length) {
     document.getElementById('overview-actions').innerHTML = `
-      <div style="padding:32px;text-align:center">
-        <div style="font-size:32px;margin-bottom:10px">✅</div>
-        <div style="font-size:14px;font-weight:700;color:var(--green)">All clear</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:4px">Nothing needs attention right now</div>
+      <div style="padding:40px 32px;text-align:center">
+        <div style="display:inline-flex;width:48px;height:48px;border-radius:14px;background:var(--green-bg);border:1px solid var(--green-dim);align-items:center;justify-content:center;margin-bottom:14px">
+          <svg viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;color:var(--green)"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="font-size:15px;font-weight:800;color:var(--green)">Queue is clear</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:5px;max-width:280px;margin-inline:auto">Nothing needs action right now. Every recoverable claim is on track.</div>
       </div>`;
     return;
   }
 
-  // Group by priority category
+  // Icons per group
+  const GI = {
+    bell:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M4 6.5a4 4 0 018 0c0 3 1.2 4 1.2 4H2.8S4 9.5 4 6.5zM6.5 13a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    flame:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M8 1.5s4 3 4 7a4 4 0 11-8 0c0-1.3.7-2.3.7-2.3S6 8 6 9c0 0 2-1.5 2-7.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+    clock:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v3.2l2 1.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    cal:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><rect x="2.5" y="3.5" width="11" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+    doc:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M4 2.5h5l3 3v8a.5.5 0 01-.5.5h-7a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 2.5v3h3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+    box:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M8 1.8l5.5 3v6.4L8 14.2l-5.5-3V4.8L8 1.8z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2.7 4.9L8 7.8l5.3-2.9M8 7.8v6.4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+    chat:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M2.5 4a1.5 1.5 0 011.5-1.5h8A1.5 1.5 0 0113.5 4v5A1.5 1.5 0 0112 10.5H6l-3 3V10.5H4A1.5 1.5 0 012.5 9V4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+  };
+  const cogSum = items => items.reduce((s,a)=>s+Number(a.r.cog||0),0);
+
+  // Group by priority category — money-recovery framed
   const groups = [
-    {pri:0, label:'⏰ Check Now',             color:'var(--amber)', items:actions.filter(a=>a.pri===0), collapsed:false},
-    {pri:1, label:'🔴 Critical Deadlines',    color:'var(--red)',   items:actions.filter(a=>a.pri===1), collapsed:false},
-    {pri:2, label:'⏰ Overdue Re-updates',    color:'var(--red)',   items:actions.filter(a=>a.pri===2), collapsed:false,
+    {pri:0, label:'Check Now',                icon:GI.bell,  color:'var(--amber)', items:actions.filter(a=>a.pri===0), collapsed:false},
+    {pri:1, label:'Critical — Window Closing', icon:GI.flame, color:'var(--red)',   items:actions.filter(a=>a.pri===1), collapsed:false},
+    {pri:2, label:'Overdue Re-updates',        icon:GI.clock, color:'var(--red)',   items:actions.filter(a=>a.pri===2), collapsed:false,
      action:{label:'View all →', fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"},
-     maxShow:3},
-    {pri:3, label:'📅 Due Today / Escalated', color:'var(--amber)', items:actions.filter(a=>a.pri===3), collapsed:false},
-    {pri:4, label:'📄 Needs Document',         color:'var(--purple)',items:actions.filter(a=>a.pri===4), collapsed:false,
+     maxShow:4},
+    {pri:3, label:'Due Today / Escalated',     icon:GI.cal,   color:'var(--amber)', items:actions.filter(a=>a.pri===3), collapsed:false},
+    {pri:4, label:'Blocked — Needs Document',  icon:GI.doc,   color:'var(--purple)',items:actions.filter(a=>a.pri===4), collapsed:false,
      action:{label:'View all →', fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"}},
-    {pri:5, label:'📦 Arrived at BDL',        color:'var(--amber)', items:actions.filter(a=>a.pri===5), collapsed:true,
-     action:{label:'Go to Active →', fn:"navTo('active')"}},
-    {pri:6, label:'💬 No Case Opened Yet',     color:'var(--cyan)',  items:actions.filter(a=>a.pri===6), collapsed:true,
-     action:{label:'Go to Reimbursements →', fn:"navTo('reimb')"}},
+    {pri:6, label:'No Case Opened Yet',        icon:GI.chat,  color:'var(--cyan)',  items:actions.filter(a=>a.pri===6), collapsed:true,
+     action:{label:'Open Reimbursements →', fn:"REIMB_FILTER='checkdiscord';setTimeout(()=>navTo('reimb'),0)"},
+     maxShow:4},
   ].filter(g=>g.items.length);
 
   function renderGroups(expandedSet) {
@@ -3016,37 +3200,47 @@ function renderOverview() {
       const showAll = expandedSet.has(`all-${gi}`);
       const displayItems = g.maxShow && !showAll ? g.items.slice(0, g.maxShow) : g.items;
       const hasMore = g.maxShow && g.items.length > g.maxShow && !showAll;
+      const canCollapse = showAll || (g.maxShow && !hasMore && g.items.length > g.maxShow);
+      const gcog = cogSum(g.items);
 
       return `<div style="border-bottom:1px solid var(--border)">
-        <div style="padding:9px 14px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between;cursor:pointer"
-          onclick="toggleActionGroup(${gi})">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;font-weight:700;color:${g.color}">${g.label}</span>
-            <span style="font-size:10px;background:${g.color}22;color:${g.color};border:1px solid ${g.color}44;border-radius:20px;padding:1px 7px;font-weight:700">${g.items.length}</span>
+        <div style="padding:10px 15px;background:${isExpanded?`linear-gradient(100deg,${g.color}14,var(--bg3) 60%)`:'var(--bg3)'};display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .12s"
+          onclick="toggleActionGroup(${gi})" onmouseover="if(!${isExpanded})this.style.background='var(--bg4)'" onmouseout="if(!${isExpanded})this.style.background='var(--bg3)'">
+          <div style="display:flex;align-items:center;gap:9px;min-width:0">
+            <span style="display:inline-flex;width:22px;height:22px;border-radius:6px;background:${g.color}1f;border:1px solid ${g.color}44;color:${g.color};align-items:center;justify-content:center;flex-shrink:0">${g.icon}</span>
+            <span style="font-size:12px;font-weight:800;color:${g.color};letter-spacing:.01em">${g.label}</span>
+            <span style="font-size:10px;background:${g.color}26;color:${g.color};border-radius:20px;padding:1px 8px;font-weight:800;flex-shrink:0">${g.items.length}</span>
+            ${gcog>0?`<span style="font-size:10px;color:var(--text3);font-weight:700;flex-shrink:0">${fmtMoney(gcog)} COG</span>`:''}
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            ${g.action?`<button onclick="event.stopPropagation();${g.action.fn}" style="background:none;border:none;font-size:10px;color:${g.color};cursor:pointer;font-weight:700">${g.action.label}</button>`:''}
-            <span style="color:var(--text3);font-size:12px">${isExpanded?'▾':'▸'}</span>
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+            ${g.action?`<button onclick="event.stopPropagation();${g.action.fn}" style="background:none;border:none;font-size:10px;color:${g.color};cursor:pointer;font-weight:800;white-space:nowrap">${g.action.label}</button>`:''}
+            <svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px;color:var(--text3);transition:transform .15s;${isExpanded?'transform:rotate(90deg)':''}"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </div>
         </div>
         ${isExpanded ? `
-          ${displayItems.map(({r,label,meta})=>`
-            <div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:background .12s"
-              onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''"
+          ${displayItems.map(({r,label,meta,urg})=>{
+            const risk = claimRiskBadge(r);
+            return `<div style="padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .12s;border-left:2px solid transparent"
+              onmouseover="this.style.background='var(--bg3)';this.style.borderLeftColor='${g.color}'" onmouseout="this.style.background='';this.style.borderLeftColor='transparent'"
               onclick="openDetail('${r.id}')">
-              <div style="width:7px;height:7px;border-radius:50%;background:${g.color};flex-shrink:0;margin-top:4px"></div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>68?r.name.slice(0,68)+'…':r.name}</div>
-                <div style="font-size:11px;color:var(--text2);margin-top:2px">${label}</div>
-                ${r.cog>0?`<div style="font-size:10px;color:var(--amber);font-weight:600;margin-top:2px">COG: ${fmtMoney(r.cog)}</div>`:''}
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">
+                  <span style="font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px">${r.name.length>55?r.name.slice(0,55)+'…':r.name}</span>
+                  ${urg?`<span style="flex-shrink:0;font-size:9px;font-weight:800;color:${urg.c};background:${urg.c}1f;border:1px solid ${urg.c}55;border-radius:5px;padding:1px 6px;text-transform:uppercase;letter-spacing:.03em">${urg.t}</span>`:''}
+                  ${risk}
+                </div>
+                <div style="font-size:11px;color:var(--text2);line-height:1.4">${label}</div>
               </div>
-              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-                <span style="font-size:10px;color:var(--text3);white-space:nowrap">${meta}</span>
-                <button onclick="event.stopPropagation();openDetail('${r.id}')" style="background:var(--bg5);border:1px solid var(--border2);color:var(--text2);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:600;cursor:pointer">Open</button>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+                ${r.cog>0?`<span style="font-size:11px;font-weight:800;color:${g.color}">${fmtMoney(r.cog)}</span>`:`<span style="font-size:10px;color:var(--text3)">${meta}</span>`}
+                <button onclick="event.stopPropagation();openDetail('${r.id}')" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:3px 11px;font-size:10px;font-weight:700;cursor:pointer;transition:all .12s" onmouseover="this.style.borderColor='${g.color}';this.style.color='${g.color}'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Open</button>
               </div>
-            </div>`).join('')}
-          ${hasMore ? `<div style="padding:8px 14px;text-align:center;border-bottom:1px solid var(--border)">
-            <button onclick="expandAllGroup(${gi})" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:4px 14px;font-size:11px;cursor:pointer;font-weight:600">Show ${g.items.length - g.maxShow} more ▾</button>
+            </div>`;}).join('')}
+          ${hasMore ? `<div style="padding:9px 15px;text-align:center;border-bottom:1px solid var(--border)">
+            <button onclick="event.stopPropagation();expandAllGroup(${gi})" style="background:none;border:1px solid var(--border2);color:var(--text2);border-radius:7px;padding:5px 16px;font-size:11px;cursor:pointer;font-weight:700">Show ${g.items.length - g.maxShow} more ▾</button>
+          </div>` : ''}
+          ${!hasMore && g.maxShow && g.items.length > g.maxShow ? `<div style="padding:7px 15px;text-align:center;border-bottom:1px solid var(--border)">
+            <button onclick="event.stopPropagation();collapseGroup(${gi})" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-weight:600">Show less ▲</button>
           </div>` : ''}
         ` : ''}
       </div>`;
@@ -3065,112 +3259,105 @@ function renderOverview() {
     _expandedGroups.add(`all-${gi}`);
     document.getElementById('overview-actions').innerHTML = renderGroups(_expandedGroups);
   };
+  window.collapseGroup = function(gi) {
+    _expandedGroups.delete(`all-${gi}`);
+    document.getElementById('overview-actions').innerHTML = renderGroups(_expandedGroups);
+  };
   // ── RE-UPDATE SCHEDULE ────────────────────────────────────────────────
-  // Show upcoming re-updates grouped by date with collapsible day groups
-  const upcoming = DB.filter(r=>r.reupdate&&r.reupdate>today&&!HIST_STATUSES.includes(r.status))
-    .sort((a,b)=>a.reupdate.localeCompare(b.reupdate));
-  if (upcoming.length) {
-    // Group by date
-    const buckets = {};
-    upcoming.forEach(r=>{
-      const k = r.reupdate;
-      if (!buckets[k]) buckets[k] = [];
-      buckets[k].push(r);
-    });
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const dayNamesFull = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  // Unified urgency timeline: OVERDUE → DUE TODAY → upcoming days
 
-    // Stats for summary header
-    const next7 = upcoming.filter(r=>{
-      const d = Math.ceil((new Date(r.reupdate)-new Date())/86400000);
-      return d <= 7;
-    });
-    const totalUpcomingCog = upcoming.reduce((s,r)=>s+Number(r.cog||0),0);
+  const reupAll = DB.filter(r=>r.reupdate&&!HIST_STATUSES.includes(r.status));
+  const reOverdue = reupAll.filter(r=>r.reupdate<today).sort((a,b)=>a.reupdate.localeCompare(b.reupdate));
+  const reToday   = reupAll.filter(r=>r.reupdate===today);
+  const upcoming  = reupAll.filter(r=>r.reupdate>today).sort((a,b)=>a.reupdate.localeCompare(b.reupdate));
+  const next7     = upcoming.filter(r=>Math.ceil((new Date(r.reupdate)-new Date())/86400000)<=7);
 
-    const dateKeys = Object.keys(buckets).slice(0, 8);
-    document.getElementById('overview-reupdates').innerHTML = `
-      <!-- Summary strip -->
-      <div style="padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <div style="display:flex;gap:14px">
-          <div>
-            <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Next 7d</div>
-            <div style="font-size:13px;font-weight:800;color:var(--amber);line-height:1;margin-top:2px">${next7.length}</div>
-          </div>
-          <div>
-            <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">Total</div>
-            <div style="font-size:13px;font-weight:800;color:var(--text);line-height:1;margin-top:2px">${upcoming.length}</div>
-          </div>
-        </div>
-        ${totalUpcomingCog>0?`<div style="text-align:right">
-          <div style="font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">COG at stake</div>
-          <div style="font-size:11px;font-weight:700;color:var(--amber);margin-top:2px">${fmtMoney(totalUpcomingCog)}</div>
-        </div>`:''}
-      </div>
-      <!-- Day buckets -->
-      ${dateKeys.map((date,bi)=>{
-        const recs = buckets[date];
-        const dObj = new Date(date);
-        const days = Math.ceil((dObj-new Date())/86400000);
-        const col = days<=3?'var(--red)':days<=7?'var(--amber)':'var(--blue)';
-        const colBg = days<=3?'var(--red-bg)':days<=7?'var(--amber-bg)':'var(--blue-bg)';
-        const dayLabel = days===1?'Tomorrow':days<=7?dayNamesFull[dObj.getDay()]:dayNames[dObj.getDay()];
-        const totalCog = recs.reduce((s,r)=>s+Number(r.cog||0),0);
-        const isOpen = bi < 2; // first 2 buckets open by default
-        return `<div data-rebucket="${bi}" style="border-bottom:1px solid var(--border)">
-          <div onclick="toggleReBucket(${bi})" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .12s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
-            <div style="display:flex;align-items:center;gap:10px;min-width:0">
-              <!-- Day circle badge -->
-              <div style="width:30px;height:30px;border-radius:8px;background:${colBg};border:1px solid ${col};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;line-height:1">
-                <span style="font-size:9px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.04em">${dayNames[dObj.getDay()].toUpperCase()}</span>
-                <span style="font-size:11px;font-weight:800;color:${col};margin-top:1px">${dObj.getDate()}</span>
-              </div>
-              <div style="min-width:0">
-                <div style="font-size:11px;font-weight:700;color:${col};line-height:1.1">${dayLabel}</div>
-                <div style="font-size:9px;color:var(--text3);margin-top:2px">in ${days}d · ${fmtDate(date)}</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-              <span style="font-size:10px;font-weight:700;color:${col};background:${col}22;border:1px solid ${col}55;border-radius:10px;padding:1px 7px">${recs.length}</span>
-              ${totalCog>0?`<span style="font-size:9px;color:var(--text3);font-weight:600">${fmtMoney(totalCog)}</span>`:''}
-              <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;color:var(--text3);transition:transform .15s;${isOpen?'transform:rotate(90deg)':''}" id="rebucket-arrow-${bi}"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </div>
-          </div>
-          <div id="rebucket-body-${bi}" style="display:${isOpen?'block':'none'};background:var(--bg)">
-            ${recs.map(r=>`
-              <div onclick="openDetail('${r.id}')" style="padding:6px 12px 6px 50px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .12s;border-top:1px solid var(--border)" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</div>
-                </div>
-                ${r.cog>0?`<span style="font-size:9px;color:var(--text3);white-space:nowrap;font-weight:600">${fmtMoney(r.cog)}</span>`:''}
-              </div>`).join('')}
-          </div>
-        </div>`;
-      }).join('')}
-      ${upcoming.length > dateKeys.reduce((s,d)=>s+buckets[d].length,0) ? `
-        <div style="padding:8px 12px;text-align:center">
-          <button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:4px 12px;font-size:10px;cursor:pointer;font-weight:600">Show all ${upcoming.length} →</button>
-        </div>`:''}
-    `;
-    window.toggleReBucket = function(bi){
-      const body = document.getElementById('rebucket-body-'+bi);
-      const arrow = document.getElementById('rebucket-arrow-'+bi);
-      if (!body) return;
-      if (body.style.display === 'none') {
-        body.style.display = 'block';
-        if (arrow) arrow.style.transform = 'rotate(90deg)';
-      } else {
-        body.style.display = 'none';
-        if (arrow) arrow.style.transform = '';
-      }
-    };
+  const schedEl = document.getElementById('overview-reupdates');
+  if (!schedEl) return;
+
+  if (!reOverdue.length && !reToday.length && !upcoming.length) {
+    schedEl.innerHTML = `<div style="padding:20px 14px;text-align:center;font-size:11px;color:var(--text3)">No re-updates scheduled</div>`;
   } else {
-    document.getElementById('overview-reupdates').innerHTML = `<div style="padding:24px 14px;font-size:11px;color:var(--text3);text-align:center">
-      <svg viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;color:var(--text3);opacity:.4;margin-bottom:6px"><path d="M4 7h16M4 7V5a1 1 0 011-1h14a1 1 0 011 1v2M4 7v12a1 1 0 001 1h14a1 1 0 001-1V7M8 3v4M16 3v4M9 14l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div style="font-weight:600;color:var(--text2)">All caught up</div>
-      <div style="margin-top:2px">No re-updates scheduled</div>
+    // Summary strip
+    let html = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)">
+      <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border)">
+        <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Overdue</div>
+        <div style="font-size:18px;font-weight:800;color:${reOverdue.length?'var(--red)':'var(--text3)'};line-height:1;margin-top:2px">${reOverdue.length}</div>
+      </div>
+      <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border)">
+        <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Today</div>
+        <div style="font-size:18px;font-weight:800;color:${reToday.length?'var(--amber)':'var(--text3)'};line-height:1;margin-top:2px">${reToday.length}</div>
+      </div>
+      <div style="padding:8px 12px;text-align:center">
+        <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Next 7d</div>
+        <div style="font-size:18px;font-weight:800;color:${next7.length?'var(--cyan)':'var(--text3)'};line-height:1;margin-top:2px">${next7.length}</div>
+      </div>
     </div>`;
-  }
 
+    // OVERDUE items — flat list, all visible
+    if (reOverdue.length) {
+      html += `<div style="background:var(--red-bg);border-bottom:1px solid var(--red-dim)">
+        <div style="padding:6px 12px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:9px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.06em">⚠ Overdue — submit now</span>
+          <button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:none;font-size:9px;color:var(--red);cursor:pointer;font-weight:700">View all →</button>
+        </div>
+        ${reOverdue.slice(0,5).map(r=>{
+          const dl=Math.ceil((nowMs-new Date(r.reupdate).setHours(0,0,0,0))/86400000);
+          const risk=claimDaysLeft(r);
+          const riskCol=risk===null?null:risk<=7?'var(--red)':risk<=15?'var(--amber)':null;
+          return `<div onclick="openDetail('${r.id}')" style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid var(--red-dim);transition:background .1s" onmouseover="this.style.background='rgba(240,80,80,.08)'" onmouseout="this.style.background=''">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>35?r.name.slice(0,35)+'…':r.name}</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:1px">Was due ${fmtDate(r.reupdate)}</div>
+            </div>
+            <span style="font-size:9px;font-weight:800;color:var(--red);background:var(--red-dim);border:1px solid var(--red)66;border-radius:4px;padding:2px 6px;white-space:nowrap">${dl}d late</span>
+            ${riskCol?`<span style="font-size:9px;font-weight:700;color:${riskCol};background:${riskCol}22;border:1px solid ${riskCol}66;border-radius:4px;padding:2px 6px;white-space:nowrap">${risk<=0?'EXP':risk+'d left'}</span>`:''}
+            ${r.cog>0?`<span style="font-size:10px;font-weight:700;color:var(--red)">${fmtMoney(r.cog)}</span>`:''}
+          </div>`;
+        }).join('')}
+        ${reOverdue.length>5?`<div style="padding:6px 12px;border-top:1px solid var(--red-dim)"><button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:none;color:var(--red);font-size:10px;font-weight:700;cursor:pointer">+${reOverdue.length-5} more →</button></div>`:''}
+      </div>`;
+    }
+
+    // DUE TODAY
+    if (reToday.length) {
+      html += `<div style="border-bottom:1px solid var(--border)">
+        <div style="padding:6px 12px;background:var(--amber-bg)">
+          <span style="font-size:9px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.06em">📅 Due today</span>
+        </div>
+        ${reToday.map(r=>`
+          <div onclick="openDetail('${r.id}')" style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+            <div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>38?r.name.slice(0,38)+'…':r.name}</div></div>
+            <span style="font-size:9px;font-weight:800;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber)66;border-radius:4px;padding:2px 6px">TODAY</span>
+            ${r.cog>0?`<span style="font-size:10px;font-weight:700;color:var(--amber)">${fmtMoney(r.cog)}</span>`:''}
+          </div>`).join('')}
+      </div>`;
+    }
+
+    // UPCOMING — grouped by date, clean
+    const buckets = {};
+    upcoming.forEach(r=>{ (buckets[r.reupdate]=buckets[r.reupdate]||[]).push(r); });
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    Object.keys(buckets).slice(0,5).forEach(date=>{
+      const recs = buckets[date];
+      const dObj = new Date(date);
+      const days = Math.ceil((dObj-new Date())/86400000);
+      const col = days<=3?'var(--amber)':days<=7?'var(--cyan)':'var(--text3)';
+      const dayLabel = days===1?'Tomorrow':days<=7?dayNames[dObj.getDay()]:fmtDate(date);
+      html += `<div style="border-bottom:1px solid var(--border)">
+        <div style="padding:6px 12px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:9px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.05em">${dayLabel} · in ${days}d · ${fmtDate(date)}</span>
+          <span style="font-size:9px;color:var(--text3);font-weight:600">${recs.length} item${recs.length!==1?'s':''}</span>
+        </div>
+        ${recs.map(r=>`
+          <div onclick="openDetail('${r.id}')" style="padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
+            <div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>38?r.name.slice(0,38)+'…':r.name}</div></div>
+            ${r.cog>0?`<span style="font-size:10px;color:var(--text3)">${fmtMoney(r.cog)}</span>`:''}
+          </div>`).join('')}
+      </div>`;
+    });
+    schedEl.innerHTML = html;
+  }
   // ── APPROACHING DEADLINES ─────────────────────────────────────────────
   const deadlines = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;})
     .sort((a,b)=>deadline60(a)-deadline60(b));
@@ -3216,13 +3403,13 @@ function renderOverview() {
 
   // ── PIPELINE FUNNEL ────────────────────────────────────────────────────
   const pipelineStages = [
-    {label:'In Transit',      count:inTransit.length,  col:'var(--blue)',   key:'transit'},
+    {label:'In Transit',      count:inTransit.length,  col:'var(--text3)',  key:'transit'},
     {label:'Arrived',         count:arrived.length,    col:'var(--amber)',  key:'arrived'},
     {label:'Checked In',      count:checkedin.length,  col:'var(--purple)', key:'nocase'},
-    {label:'MSC Submitted',   count:DB.filter(r=>r.status==='mscsubmit'||r.status==='mscreview').length, col:'var(--blue)',   fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"},
+    {label:'MSC Submitted',   count:DB.filter(r=>r.status==='mscsubmit'||r.status==='mscreview').length, col:'var(--cyan)',   fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"},
     {label:'MSC Approved',    count:DB.filter(r=>r.status==='mscapproved'||r.status==='mscreduced').length, col:'var(--green)', fn:"REIMB_FILTER='mscapproved';setTimeout(()=>navTo('reimb'),0)"},
-    {label:'Case Open',       count:DB.filter(r=>r.status==='caseopen').length, col:'var(--cyan)', fn:"REIMB_FILTER='caseopen';setTimeout(()=>navTo('reimb'),0)"},
-    {label:'Reimb Pending',   count:DB.filter(r=>r.status==='reimbpending').length, col:'var(--blue)', fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"},
+    {label:'Case Open',       count:DB.filter(r=>r.status==='caseopen').length, col:'var(--blue)', fn:"REIMB_FILTER='caseopen';setTimeout(()=>navTo('reimb'),0)"},
+    {label:'Reimb Pending',   count:DB.filter(r=>r.status==='reimbpending').length, col:'var(--cyan)', fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"},
   ];
   const pipelineTotal = pipelineStages.reduce((s,p)=>s+p.count,0);
   const maxStage = Math.max(...pipelineStages.map(s=>s.count), 1);
@@ -3412,6 +3599,7 @@ function showTileDrill(key) {
   else if (key==='reimb')      { items=DB.filter(r=>REIMB_STATUSES.includes(r.status));                                         title='Active Cases';   subtitle='Currently in the reimbursement pipeline'; }
   else if (key==='nodiscord' || key==='nocase') { items=DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length));    title='Needs Discord / Case Check'; subtitle='Checked in but no case opened yet'; }
   else if (key==='deadline')   { items=DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;}).sort((a,b)=>deadline60(a)-deadline60(b)); title='Deadlines Within 14 Days'; subtitle='60-day reimbursement window closing soon'; }
+  else if (key==='expired')    { items=DB.filter(r=>claimExpired(r));                                                             title='Expired Claims'; subtitle='60-day Amazon window may have passed — escalate immediately'; }
   else if (key==='all')        { items=DB.filter(r=>!HIST_STATUSES.includes(r.status));                                         title='All Active Removals'; subtitle=''; }
 
   if (!items.length) { showToast(`No items in: ${title}`); return; }
@@ -3423,7 +3611,8 @@ function showTileDrill(key) {
   const getRightInfo = (r) => {
     if (key==='overdue') {
       const d=daysOverdue(r);
-      return `<span style="font-size:11px;font-weight:700;color:${d>=14?'var(--red)':d>=7?'var(--amber)':'var(--text2)'}">${d}d overdue</span><div style="font-size:10px;color:var(--text3)">${fmtDate(r.reupdate)}</div>`;
+      const risk = claimRiskBadge(r);
+      return `<div style="text-align:right"><span style="font-size:11px;font-weight:700;color:${d>=14?'var(--red)':d>=7?'var(--amber)':'var(--text2)'}">${d}d overdue</span>${risk?`<div style="margin-top:3px">${risk}</div>`:''}<div style="font-size:10px;color:var(--text3)">${fmtDate(r.reupdate)}</div></div>`;
     }
     if (key==='checkmsc'||key==='checkreimb') {
       const d=daysSinceStatus(r);
