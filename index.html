@@ -125,7 +125,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .action-item:last-child{border-bottom:none}
 .action-item:hover{background:var(--bg3)}
 .action-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.ad-red{background:var(--red)}.ad-amber{background:var(--amber)}.ad-purple{background:var(--purple)}.ad-blue{background:var(--blue)}.ad-cyan{background:var(--cyan)}.ad-pink{background:var(--pink)}
+.ad-red{background:var(--red)}.ad-amber{background:var(--amber)}.ad-purple{background:var(--purple)}.ad-blue{background:var(--blue)}.ad-cyan{background:var(--cyan)}.ad-pink{background:var(--pink)}.ad-green{background:var(--green)}
 .action-info{flex:1;min-width:0}
 .action-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .action-desc{font-size:11px;color:var(--text3);margin-top:1px}
@@ -241,7 +241,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
 /* Quick links */
 .qlinks{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
 .qlink{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:11.5px;text-decoration:none;transition:all .12s;cursor:pointer;font-family:var(--font)}
-.qlink:hover{background:var(--bg4);color:var(--text);border-color:var(--blue-dim)}
+.qlink:hover{background:var(--bg4);color:var(--text);border-color:var(--border2)}
 .qlink svg{width:12px;height:12px;flex-shrink:0}
 
 /* Misc */
@@ -270,62 +270,109 @@ input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightnes
 .cl-note-txt{font-size:12px;color:var(--text2);white-space:pre-wrap;line-height:1.5}
 .cl-msg{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px;font-family:var(--mono);font-size:11.5px;line-height:1.9;white-space:pre-wrap;color:var(--text2);max-height:280px;overflow-y:auto}
 
-/* Reimbursement cards */
-.rc{border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden;transition:all .2s;border:1px solid transparent}
-.rc-checkdiscord {background:#0d0a1a;border-color:#a78bfa55}
-.rc-mscsubmit   {background:#060a18;border-color:#4d8ef055}
-.rc-mscreview   {background:#1a1200;border-color:#f5a62366}
-.rc-mscapproved {background:#021508;border-color:#3dd68c77}
-.rc-mscreduced  {background:#1a1000;border-color:#f5a62377}
-.rc-mscdenied   {background:#180303;border-color:#f0505077}
-.rc-mscneedsdoc {background:#0d0620;border-color:#9b7ff077}
-.rc-escalated   {background:#1a0820;border-color:#f472b655}
-
-body.light-mode .rc-checkdiscord {background:#f0eeff;border-color:#a78bfa88}
-body.light-mode .rc-mscsubmit   {background:#eff4ff;border-color:#2563eb66}
-body.light-mode .rc-mscreview   {background:#fffbeb;border-color:#d9770688}
-body.light-mode .rc-mscapproved {background:#f0fdf4;border-color:#16a34a88}
-body.light-mode .rc-mscreduced  {background:#fffbeb;border-color:#d9770888}
-body.light-mode .rc-mscdenied   {background:#fef2f2;border-color:#dc262688}
-body.light-mode .rc-mscneedsdoc {background:#f5f3ff;border-color:#7c3aed88}
-body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
-.rc-header{padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border)}
+/* Reimbursement cards — v3 (compact, chevron pipeline) */
+.rc{position:relative;border-radius:9px;margin-bottom:8px;border:1px solid var(--border2);background:var(--bg2);transition:border-color .15s,box-shadow .15s}
+.rc:hover{border-color:var(--rc-spine,var(--border2));box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.rc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rc-spine,var(--border2));z-index:3;border-radius:9px 0 0 9px}
+.rc-checkdiscord {--rc-spine:#a78bfa}
+.rc-mscsubmit   {--rc-spine:#4d8ef0}
+.rc-mscreview   {--rc-spine:#f5a623}
+.rc-mscapproved {--rc-spine:#3dd68c}
+.rc-mscreduced  {--rc-spine:#f5a623}
+.rc-mscdenied   {--rc-spine:#f05050}
+.rc-mscneedsdoc {--rc-spine:#9b7ff0}
+.rc-escalated   {--rc-spine:#f472b6}
+.rc-caseopen    {--rc-spine:#22d3ee}
+.rc-reimbpending{--rc-spine:#06b6d4}
+.rc>*{position:relative;z-index:1}
+.rc::before{z-index:3}
+/* Header — tight single line where possible */
+.rc-header{padding:8px 13px 7px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:relative;z-index:60}
 .rc-header-left{flex:1;min-width:0}
-.rc-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:5px;user-select:text}
-.rc-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.rc-copy{font-size:11px;color:var(--text3);font-family:var(--mono);cursor:pointer;border:none;background:none;padding:0;transition:color .1s;user-select:text;font-family:var(--mono)}
-.rc-copy:hover{color:var(--blue)}
-.rc-oid{font-size:11px;color:var(--blue);text-decoration:none;font-family:var(--mono)}
+.rc-name{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;user-select:text;letter-spacing:-.01em}
+.rc-meta{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:3px}
+.rc-copy{font-size:10px;color:var(--text2);font-family:var(--mono);cursor:pointer;border:1px solid var(--border);background:var(--bg4);padding:1px 6px;border-radius:4px;transition:all .12s;user-select:text}
+.rc-copy:hover{color:var(--text);border-color:var(--border2);background:var(--bg5)}
+.rc-oid{font-size:10px;color:var(--blue);text-decoration:none;font-family:var(--mono)}
 .rc-oid:hover{text-decoration:underline}
-.rc-tags{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
-.rc-tag{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
-.rc-progress{padding:10px 14px 0}
-.rc-prog-label{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
-.rc-prog-step{font-size:12px;font-weight:800}
-.rc-bar-track{height:8px;background:var(--bg5);border-radius:4px;overflow:hidden;margin-bottom:14px}
-.rc-bar-fill{height:100%;border-radius:4px;transition:width .4s ease,background .3s}
-.rc-steps{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:10px}
-.rc-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
-.rc-step-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:2px solid var(--border2);background:var(--bg4);color:var(--text3)}
-.rc-step-dot.done{background:#3dd68c;border-color:#3dd68c;color:#fff;box-shadow:0 0 12px #3dd68c55}
-.rc-step-dot.warn{background:#f5a62318;border-color:#f5a623;color:#f5a623}
-.rc-step-dot.err{background:#f0505018;border-color:#f05050;color:#f05050;box-shadow:0 0 12px #f0505044}
-.rc-step-lbl{font-size:9px;color:var(--text3);text-align:center;line-height:1.3;white-space:nowrap}
-.rc-body{display:grid;grid-template-columns:1fr 220px;border-top:1px solid var(--border)}
-.rc-left{padding:10px 14px}
-.rc-field-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)}
+.rc-tags{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;align-items:center}
+.rc-tag{font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap}
+.rc-statustag{display:inline-flex;align-items:center;gap:5px}
+.rc-tag-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+/* Chevron pipeline */
+.rc-progress{padding:2px 13px 8px}
+.rc-pipe{display:flex;align-items:stretch;gap:0;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.rc-pseg{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:5px 6px 5px 14px;font-size:9.5px;font-weight:700;color:var(--text3);background:var(--bg3);position:relative;white-space:nowrap;letter-spacing:.01em;min-width:0}
+.rc-pseg:first-child{padding-left:9px}
+.rc-pseg::after{content:"";position:absolute;right:-1px;top:0;bottom:0;width:11px;background:inherit;clip-path:polygon(0 0,100% 50%,0 100%);z-index:2}
+.rc-pseg:last-child::after{display:none}
+.rc-pseg-num{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;font-size:9px;font-weight:800;background:var(--bg5);color:var(--text3);flex-shrink:0}
+.rc-pseg.done{background:rgba(61,214,140,.16);color:#3dd68c}
+.rc-pseg.done .rc-pseg-num{background:#3dd68c;color:#04130b}
+.rc-pseg.active{background:var(--rc-spine,#4d8ef0);color:#fff}
+.rc-pseg.active .rc-pseg-num{background:rgba(255,255,255,.9);color:#000}
+.rc-pseg.err{background:rgba(240,80,80,.18);color:#f05050}
+.rc-pseg.err .rc-pseg-num{background:#f05050;color:#fff}
+.rc-pseg.warn{background:rgba(245,166,35,.16);color:#f5a623}
+.rc-pseg.warn .rc-pseg-num{background:#f5a623;color:#1a1100}
+.rc-pseg-sub{font-size:8px;font-weight:700;opacity:.85;margin-left:2px}
+/* Body */
+.rc-body{display:grid;grid-template-columns:1fr 200px;border-top:1px solid var(--border)}
+.rc-left{padding:7px 13px}
+.rc-section-lbl{font-size:8px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin:5px 0 1px;opacity:.7}
+.rc-section-lbl:first-child{margin-top:0}
+.rc-field-row{display:flex;align-items:center;justify-content:space-between;padding:3.5px 0;border-bottom:1px solid var(--border)}
 .rc-field-row:last-child{border-bottom:none}
+.rc-field-emph .rc-field-name,.rc-field-emph .rc-field-val{font-weight:700}
 .rc-field-name{font-size:11px;color:var(--text3);font-weight:500}
-.rc-field-val{font-size:12px;font-weight:500;text-align:right;cursor:pointer;user-select:text}
-.rc-right{background:var(--bg4);border-left:1px solid var(--border);padding:11px}
-.rc-right-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
-.rc-right-val{font-size:20px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-bottom:4px}
-.rc-right-sub{font-size:11px;color:var(--text3);margin-bottom:10px}
-.rc-alert{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:12px;font-weight:600}
-.rc-footer{padding:8px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.rc-age{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-left:auto;white-space:nowrap;flex-shrink:0}
-.rc-msc-date-input{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:var(--font);outline:none;width:100%;margin-top:6px}
+.rc-field-val{font-size:11.5px;font-weight:500;text-align:right;cursor:pointer;user-select:text}
+.rc-right{background:var(--bg3);border-left:1px solid var(--border);padding:9px 11px;position:relative;z-index:1;display:flex;flex-direction:column}
+.rc-right-spacer{flex:1;min-height:8px}
+.rc-right-act{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;font-size:11px;font-weight:800;padding:8px 10px;border-radius:8px;border:1px solid;cursor:pointer;white-space:nowrap;transition:filter .12s,transform .1s;font-family:var(--font);margin-top:8px}
+.rc-right-act:hover{filter:brightness(1.13);transform:translateY(-1px)}
+.rc-right-mini{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px}
+.rc-right-mini .mdot{width:9px;height:9px;border-radius:50%}
+.rc-right-mini .mlbl{font-size:9px;color:var(--text3);font-family:var(--mono)}
+.rc-right-label{font-size:8px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px}
+.rc-right-val{font-size:18px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-bottom:3px}
+.rc-right-sub{font-size:10.5px;color:var(--text3);margin-bottom:8px;line-height:1.4}
+.rc-alert{display:flex;align-items:center;gap:8px;padding:7px 13px;font-size:11.5px;font-weight:600;border-radius:9px 9px 0 0}
+.rc-alert-ico{font-size:13px;flex-shrink:0;line-height:1}
+.rc-footer{padding:7px 13px;border-top:1px solid var(--border);display:flex;align-items:center;gap:5px;flex-wrap:wrap;background:var(--bg2);border-radius:0 0 9px 9px}
+.rc-age{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:6px;margin-left:auto;white-space:nowrap;flex-shrink:0}
+.rc-msc-date-input{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:var(--font);outline:none;width:100%;margin-top:5px}
 .rc-msc-date-input:focus{border-color:currentColor}
+body.light-mode .rc-pseg{background:var(--bg4)}
+body.light-mode .rc-pseg.done{background:rgba(5,150,105,.14)}
+/* time-in-status tag on the active chevron */
+.rc-pseg-time{display:inline-flex;align-items:center;font-size:8px;font-weight:800;padding:1px 5px;border-radius:20px;margin-left:2px;background:rgba(255,255,255,.22);color:#fff;letter-spacing:.02em}
+/* 55/60-day Amazon clock timeline */
+.rc-timeline{padding:6px 13px 9px}
+.rc-tl-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.rc-tl-lbl{font-size:8px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
+.rc-tl-days{font-size:10px;font-weight:800;letter-spacing:.01em}
+.rc-tl-track{position:relative;height:6px;background:var(--bg5);border-radius:4px;overflow:visible}
+.rc-tl-risk{position:absolute;top:0;bottom:0;right:0;width:8.33%;background:repeating-linear-gradient(45deg,rgba(240,80,80,.35),rgba(240,80,80,.35) 3px,transparent 3px,transparent 6px);border-radius:0 4px 4px 0}
+.rc-tl-fill{position:absolute;top:0;bottom:0;left:0;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1),background .3s}
+.rc-tl-now{position:absolute;top:-3px;width:2px;height:12px;background:var(--text);border-radius:2px;box-shadow:0 0 0 2px var(--bg2);transition:left .5s cubic-bezier(.4,0,.2,1)}
+.rc-tl-ticks{display:flex;justify-content:space-between;margin-top:3px}
+.rc-tl-tick{font-size:7.5px;color:var(--text3);font-weight:600}
+/* next-action primary button (in alert + footer) */
+.rc-do{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 12px;border-radius:7px;border:1px solid;cursor:pointer;white-space:nowrap;transition:transform .1s,filter .12s;font-family:var(--font)}
+.rc-do:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.rc-do:active{transform:translateY(0)}
+.rc-statustag{cursor:pointer;position:relative}
+.rc-pop-chev{font-size:8px;opacity:.65;margin-left:2px}
+.rc-pop{position:absolute;top:100%;right:0;margin-top:6px;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:9px;padding:9px;width:264px;box-shadow:0 8px 28px rgba(0,0,0,.55);display:none}
+.rc-pop.open{display:block}
+.rc-pop-title{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:7px;padding:0 2px}
+.rc-pop-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.rc-pop-pill{padding:5px 8px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;border:1.5px solid;transition:filter .12s;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden}
+.rc-pop-pill:hover{filter:brightness(1.15)}
+.rc-pop-pill .pd{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.rc-pop-pill.cur{outline:2px solid;outline-offset:1px}
+.rc-att{display:inline-flex;align-items:center;gap:3px;margin-left:4px}
+.rc-att-dot{width:8px;height:8px;border-radius:50%}
 .copy-flash{position:fixed;bottom:20px;right:20px;background:#3dd68c;color:#fff;font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;z-index:9999;animation:fadeup .3s ease;pointer-events:none}
 @keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
@@ -433,11 +480,15 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
           style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text);text-decoration:none;font-size:12px;font-weight:600;transition:all .15s"
           onmouseover="this.style.borderColor='var(--cyan)';this.style.background='var(--bg4)'" onmouseout="this.style.borderColor='var(--border2)';this.style.background='var(--bg3)'"
           title="Open SellerFuse to check for new removal orders">
-          <span style="display:inline-flex;width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,var(--cyan),var(--green));align-items:center;justify-content:center;flex-shrink:0">
-            <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px"><path d="M3 4h10M3 8h10M3 12h6" stroke="#06251c" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span style="display:inline-flex;width:22px;height:22px;border-radius:5px;background:#1a1a2e;align-items:center;justify-content:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px">
+              <path d="M4 16l8 4 8-4" stroke="#e63946" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 12l8 4 8-4" stroke="#e63946" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+              <path d="M4 8l8 4 8-4-8-4-8 4z" stroke="#e63946" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/>
+            </svg>
           </span>
           <span>SellerFuse</span>
-          <svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;color:var(--text3)"><path d="M5 11l6-6M11 5v5M11 5H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" style="width:10px;height:10px;color:var(--text3)"><path d="M5 11l6-6M11 5v5M11 5H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
         <button class="btn btn-primary" onclick="openAdd()">+ Add removal</button>
       </div>
@@ -613,6 +664,10 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
           <input type="text" id="search-reimb" placeholder="Search by product name, ASIN, or Removal ID..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text1);font-size:14px" onkeyup="filterReimbCards()">
         </div>
         <div class="filter-row" id="reimb-filter-row"></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0">Sort:</span>
+          <div id="reimb-sort-row" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
         <div id="reimb-cards"></div>
       </div>
 
@@ -857,7 +912,10 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
     <div class="field"><label>Removal Order ID</label><input id="a-oid" placeholder="2603261DDA"></div>
     <div class="field"><label>Quantity</label><input id="a-qord" type="number" value="1" min="1"></div>
   </div>
-  <div class="field" style="margin-top:10px"><label>Reason for removal *</label><input id="a-reason" type="text" placeholder="e.g. Amazon removed, Gated, Listings gone, Jack asked, Defective, Warehouse damage, Customer damage" title="Required - explain why this item is being removed"></div>
+  <div class="fg g2" style="margin-top:10px">
+    <div class="field"><label>Reason for removal *</label><input id="a-reason" type="text" placeholder="e.g. Amazon removed, Gated, Defective, Customer damage"></div>
+    <div class="field"><label>COG £ (inc VAT)</label><input id="a-cog" type="number" step="0.01" placeholder="e.g. 29.99" title="Cost price including VAT — needed for MSC claims"></div>
+  </div>
   <div class="fg g2" style="margin-top:10px">
     <div class="field"><label>MSC Checked Date (optional)</label><input id="a-dmsc_checked" type="date" title="When you checked MSC eligibility for this item"></div>
     <div class="field"><label>MSC Status (if checked)</label><select id="a-msc_check_status"><option value="">Not checked</option><option value="eligible">Eligible</option><option value="ineligible">Ineligible</option><option value="review">Under review</option></select></div>
@@ -921,7 +979,8 @@ body.light-mode .rc-escalated   {background:#fdf2f8;border-color:#f472b688}
 <div class="modal" style="max-width:520px">
   <div class="modal-title" id="addmsc-title">Log MSC Submission</div>
   <input type="hidden" id="addmsc-rid">
-  <input type="hidden" id="addmsc-idx"> <!-- -1 = new, else edit index -->
+  <input type="hidden" id="addmsc-idx">
+  <div id="am-full-cog-display"></div>
   <div class="fg g2">
     <div class="field"><label>Date Submitted</label><input type="date" id="am-date"></div>
     <div class="field"><label>Attempt #</label><input type="number" id="am-attempt" min="1" max="10" value="1" style="width:80px"></div>
@@ -1140,17 +1199,25 @@ async function pullFromSupabase() {
     });
 
     setSyncState('ok');
-    renderPage(CURRENT_PAGE);
+    // Only re-render if no modal is currently open
+    const anyModalOpen = document.querySelector('.overlay:not(.h)');
+    if (!anyModalOpen) renderPage(CURRENT_PAGE);
   } catch(e) {
     setSyncState('error', e.message.slice(0, 30));
   }
 }
 
+let LAST_USER_INPUT = 0;
+document.addEventListener('input', () => { LAST_USER_INPUT = Date.now(); });
+document.addEventListener('keydown', () => { LAST_USER_INPUT = Date.now(); });
+
 function startSyncPolling() {
   if (SYNC_POLL_INTERVAL) clearInterval(SYNC_POLL_INTERVAL);
   SYNC_POLL_INTERVAL = setInterval(async () => {
     if (SYNC_STATE === 'pending') return;
-    // Don't disrupt user if they're actively typing in any input or textarea
+    // Don't poll if user typed anything in the last 10 seconds
+    if (Date.now() - LAST_USER_INPUT < 10000) return;
+    // Don't poll if any input/textarea/select is focused
     const active = document.activeElement;
     if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
     await pullFromSupabase();
@@ -1339,7 +1406,9 @@ function seed() {
 // DEADLINE LOGIC — 55-day internal deadline (5-day buffer before Amazon's 60-day hard cutoff)
 // Priority: ddeliv (actual delivery) → darr (check-in date) → dsub (submitted)
 function deadlineBase(r) {
-  return r.ddeliv || r.darr || r.dsub || null;
+  // checking_date = when Jack physically checked in = start of 55-day clock
+  // Falls back to ddeliv (actual delivery), then darr, then dsub
+  return r.checking_date || r.ddeliv || r.darr || r.dsub || null;
 }
 function deadline60(r) {
   if (HIST_STATUSES.includes(r.status)) return null;
@@ -1409,6 +1478,37 @@ function counts() {
 }
 
 // NAVIGATION --
+function navToCard(id) {
+  // Find the item to determine correct filter
+  const r = DB.find(x=>x.id===id);
+  if (!r) return;
+  // Set filter to show this item
+  if (REIMB_STATUSES.includes(r.status)) {
+    REIMB_FILTER = 'all';
+    setTimeout(()=>{
+      navTo('reimb');
+      // After render, scroll to and flash the card
+      setTimeout(()=>{
+        const card = document.querySelector(`[data-id="${id}"]`);
+        if (card) {
+          card.scrollIntoView({behavior:'smooth', block:'center'});
+          card.style.transition = 'box-shadow .3s, outline .3s';
+          card.style.outline = '2px solid var(--green)';
+          card.style.boxShadow = '0 0 20px var(--green)44';
+          setTimeout(()=>{
+            card.style.outline = '';
+            card.style.boxShadow = '';
+          }, 2000);
+        }
+      }, 200);
+    }, 0);
+  } else if (ACTIVE_STATUSES.includes(r.status)) {
+    navTo('active');
+  } else {
+    openDetail(id);
+  }
+}
+
 function navTo(page) {
   CURRENT_PAGE = page;
   const pages = ['overview','active','reimb','case','hist','caselog','pdf','auditlog'];
@@ -1571,9 +1671,9 @@ const STATE_CONFIG = {
   checkdiscord: {color:'#a78bfa', bar:10,  step:1, label:'Check Discord',       alert:{color:'#0d0a1f',border:'#a78bfa',text:'📱 Check Discord for Jack\'s photos, LPN and damage notes',btn:null}},
   mscsubmit:    {color:'#4d8ef0', bar:35,  step:2, label:'MSC submitted',       alert:null},
   mscreview:    {color:'#f5a623', bar:55,  step:3, label:'MSC under review',    alert:null},
-  mscapproved:  {color:'#3dd68c', bar:80,  step:4, label:'MSC approved',        alert:{color:'#021508',border:'#3dd68c',text:'✓ MSC Approved -- open a Seller Support case to claim',btn:null}},
+  mscapproved:  {color:'#3dd68c', bar:80,  step:4, label:'MSC approved',        alert:null},
   mscreduced:   {color:'#f5a623', bar:80,  step:4, label:'Reduced MSC approved',alert:{color:'#1a1000',border:'#f5a623',text:'⚠ Reduced MSC -- open a case to claim or appeal',btn:null}},
-  mscdenied:    {color:'#f05050', bar:0,   step:4, label:'MSC denied',          alert:{color:'#180303',border:'#f05050',text:'✗ MSC Denied -- set next MSC update date and open a case',btn:null}},
+  mscdenied:    {color:'#f05050', bar:0,   step:4, label:'MSC denied',          alert:{color:'#180303',border:'#f05050',text:'✗ MSC Denied — wait 30 days then resubmit with reduced COG',btn:null}},
   mscneedsdoc:  {color:'#9b7ff0', bar:35,  step:2, label:'Needs document',      alert:{color:'#0d0620',border:'#9b7ff0',text:'📄 Document required -- find invoice in purchase sheet',btn:null}},
   escalated:    {color:'#f472b6', bar:60,  step:3, label:'Escalated to Jack',   alert:{color:'#2d1028',border:'#f472b6',text:'⬆ Escalated to Jack / MD — awaiting response',btn:null}},
   caseopen:     {color:'#22d3ee', bar:100, step:5, label:'Case opened',         alert:null},
@@ -1581,11 +1681,17 @@ const STATE_CONFIG = {
   reimbursed:   {color:'#3dd68c', bar:100, step:5, label:'Reimbursed',          alert:null},
 };
 
+let REIMB_SORT = 'risk'; // risk=oldest checkin first, newest=newest first, cog=highest cog, status=by status
+
+function setReimbSort(s) { REIMB_SORT = s; renderReimb(); }
+
 function renderReimb() {
   const searchEl = document.getElementById('search-reimb');
   const currentSearch = searchEl ? searchEl.value : '';
 
   const today = new Date().toISOString().split('T')[0];
+  // Show items in REIMB_STATUSES — checking_date required ideally, but if missing
+  // still show the item (better visible in wrong place than disappeared entirely)
   const reimb = DB.filter(r => REIMB_STATUSES.includes(r.status));
   
   // Build filter tabs — overdue is a special filter, not a status
@@ -1598,10 +1704,44 @@ function renderReimb() {
     return `<button class="chip${REIMB_FILTER===f.v?' on':''}" onclick="setReimbFilter('${f.v}')">${f.l}<span class="chip-n">${count}</span></button>`;
   }).join('');
 
+  // Sort bar
+  const sortOpts = [
+    {v:'risk',    l:'Most at risk (oldest)'},
+    {v:'newest',  l:'Newest first'},
+    {v:'oldest',  l:'Oldest first'},
+    {v:'cog',     l:'COG: High → Low'},
+    {v:'cog-asc', l:'COG: Low → High'},
+    {v:'status',  l:'By status'},
+    {v:'overdue', l:'Most overdue'},
+  ];
+  const sortEl = document.getElementById('reimb-sort-row');
+  if (sortEl) sortEl.innerHTML = sortOpts.map(s=>`
+    <button onclick="setReimbSort('${s.v}')" style="font-size:10px;font-weight:${REIMB_SORT===s.v?'800':'500'};padding:3px 10px;border-radius:6px;cursor:pointer;transition:all .12s;border:1px solid ${REIMB_SORT===s.v?'var(--green)':'var(--border)'};background:${REIMB_SORT===s.v?'var(--green-bg)':'var(--bg2)'};color:${REIMB_SORT===s.v?'var(--green)':'var(--text3)'}">
+      ${s.l}
+    </button>`).join('');
+
+  // Apply sort
+  const applySortByRisk = (a, b) => (a.checking_date||a.darr||a.dsub||'9999').localeCompare(b.checking_date||b.darr||b.dsub||'9999');
+  const applySort = (arr) => {
+    const copy = [...arr];
+    if (REIMB_SORT==='risk')    return copy.sort(applySortByRisk);
+    if (REIMB_SORT==='oldest')  return copy.sort(applySortByRisk);
+    if (REIMB_SORT==='newest')  return copy.sort((a,b)=>(b.checking_date||b.darr||b.dsub||'').localeCompare(a.checking_date||a.darr||a.dsub||''));
+    if (REIMB_SORT==='cog')     return copy.sort((a,b)=>Number(b.cog||0)-Number(a.cog||0));
+    if (REIMB_SORT==='cog-asc') return copy.sort((a,b)=>Number(a.cog||0)-Number(b.cog||0));
+    if (REIMB_SORT==='status')  return copy.sort((a,b)=>a.status.localeCompare(b.status));
+    if (REIMB_SORT==='overdue') return copy.sort((a,b)=>{
+      const da = a.reupdate&&a.reupdate<today ? Math.ceil((new Date()-new Date(a.reupdate))/86400000) : -1;
+      const db = b.reupdate&&b.reupdate<today ? Math.ceil((new Date()-new Date(b.reupdate))/86400000) : -1;
+      return db - da;
+    });
+    return copy;
+  };
+
   let rows;
-  if (REIMB_FILTER==='all') rows = reimb;
-  else if (REIMB_FILTER==='overdue') rows = reimb.filter(r=>r.reupdate&&r.reupdate<today).sort((a,b)=>new Date(a.reupdate)-new Date(b.reupdate));
-  else rows = reimb.filter(r=>r.status===REIMB_FILTER);
+  if (REIMB_FILTER==='all') rows = applySort(reimb);
+  else if (REIMB_FILTER==='overdue') rows = applySort(reimb.filter(r=>r.reupdate&&r.reupdate<today));
+  else rows = applySort(reimb.filter(r=>r.status===REIMB_FILTER));
 
   if(!rows.length){
     document.getElementById('reimb-cards').innerHTML=`<div style="text-align:center;padding:60px;font-size:12px;color:var(--text3)">No removals in this filter</div>`;
@@ -1625,11 +1765,78 @@ function buildMscSummaryBar(r) {
   const nextDue = last.next_date;
   const daysToNext = nextDue ? Math.ceil((new Date(nextDue)-new Date())/86400000) : null;
   return `<div style="background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;width:100%;margin-bottom:4px">
-    <span style="color:var(--text3)">MSC: ${attempts.length} attempt${attempts.length!==1?'s':''}</span>
+    <span style="color:var(--text3)">MSC: ${attempts.length} attempt${attempts.length!==1?'s':''}</span>${reimbAttemptDots({msc_attempts:attempts})}
     <span style="color:${OCOLS[last.outcome]||'var(--text2)'};font-weight:600">${OLABELS[last.outcome]||last.outcome}</span>
     ${last.cog?`<span style="color:var(--amber)">Last COG: ${fmtMoney(last.cog)}</span>`:''}
     ${daysToNext!==null?`<span style="color:${daysToNext<0?'var(--red)':daysToNext<=7?'var(--amber)':'var(--green)'};font-weight:700;margin-left:auto">${daysToNext<0?`${Math.abs(daysToNext)}d overdue`:daysToNext===0?'Due today':`Next in ${daysToNext}d`} (${fmtDate(nextDue)})</span>`:''}
   </div>`;
+}
+
+// Maps each status to its single most useful next action for Sarah.
+// Uses only existing functions so nothing new can break.
+function reimbNextAction(r) {
+  const id = r.id;
+  const A = {
+    checkdiscord: {label:'Filled COG → start MSC', call:`openAddMsc('${id}')`},
+    mscsubmit:    {label:'Log MSC result',         call:`openAddMsc('${id}')`},
+    mscreview:    {label:'Log MSC result',         call:`openAddMsc('${id}')`},
+    mscapproved:  {label:'Open Seller case',       call:`openAddCase('${id}')`},
+    mscreduced:   {label:'Open case / appeal',     call:`openAddCase('${id}')`},
+    mscdenied:    {label:'Log MSC resubmit',    call:`openAddMsc('${id}')`},
+    mscneedsdoc:  {label:'Add invoice',            call:`openDetail('${id}')`},
+    escalated:    {label:'Open details',           call:`openDetail('${id}')`},
+    caseopen:     {label:'Mark reimbursed',        call:`markReimbursed('${id}')`},
+    reimbpending: {label:'Mark reimbursed',        call:`markReimbursed('${id}')`},
+  };
+  return A[r.status] || null;
+}
+
+// Builds the click-to-change status popover. Calls existing changeStatus().
+function reimbStatusPopover(r) {
+  const COLS = {checkdiscord:'#a78bfa',mscsubmit:'#4d8ef0',mscreview:'#f5a623',mscneedsdoc:'#9b7ff0',mscapproved:'#3dd68c',mscreduced:'#f5a623',mscdenied:'#f05050',caseopen:'#22d3ee',reimbpending:'#06b6d4',escalated:'#f472b6'};
+  const pills = MSC_STATUS_LIST.filter(s=>s.v!=='all'&&s.v!=='overdue').map(s=>{
+    const c = COLS[s.v]||'#888';
+    const cur = r.status===s.v;
+    return `<div class="rc-pop-pill${cur?' cur':''}" style="background:${c}1c;color:${c};border-color:${c}55;${cur?'outline-color:'+c:''}" onclick="event.stopPropagation();changeStatus('${r.id}','${s.v}','reimb')"><span class="pd" style="background:${c}"></span>${s.l}</div>`;
+  }).join('');
+  return `<div class="rc-pop" id="pop-${r.id}" onclick="event.stopPropagation()"><div class="rc-pop-title">Change status</div><div class="rc-pop-grid">${pills}</div></div>`;
+}
+
+// Tiny coloured dots showing MSC attempt history outcomes.
+function reimbAttemptDots(r) {
+  const att = r.msc_attempts||[];
+  if (att.length<2) return '';
+  const OC = {pending:'#22d3ee',approved:'#3dd68c','approved-reduced':'#f5a623',denied:'#f05050',review:'#4d8ef0',error:'#f05050'};
+  const dots = att.map(a=>`<span class="rc-att-dot" style="background:${OC[a.outcome]||'#888'}" title="${a.outcome}${a.cog?' · '+fmtMoney(a.cog):''}"></span>`).join('');
+  return `<span class="rc-att">${dots}</span>`;
+}
+
+// Fills the right-panel void: a mini attempt timeline (if any) + a bottom-anchored primary action.
+function reimbPanelExtras(r, col) {
+  const att = r.msc_attempts||[];
+  const OC = {pending:'#22d3ee',approved:'#3dd68c','approved-reduced':'#f5a623',denied:'#f05050',review:'#4d8ef0',error:'#f05050'};
+  const OL = {pending:'Pending',approved:'Approved','approved-reduced':'Reduced',denied:'Denied',review:'Review',error:'Error'};
+  let mini = '';
+  if (att.length) {
+    const rows = att.map((a,i)=>`<div style="display:flex;align-items:center;gap:6px;font-size:9.5px;color:var(--text3);padding:1.5px 0"><span class="mdot" style="background:${OC[a.outcome]||'#888'};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>#${i+1} ${OL[a.outcome]||a.outcome}${a.cog?` · ${fmtMoney(a.cog)}`:''}${a.date?` · ${fmtDate(a.date)}`:''}</div>`).join('');
+    mini = `<div class="rc-right-label" style="margin-top:10px">MSC attempts (${att.length})</div><div style="margin-top:2px">${rows}</div>`;
+  }
+  const latestCase = (r.cases||[]).slice(-1)[0];
+  const A = {
+    checkdiscord: {label:'Start MSC submission', icon:'＋', call:`openAddMsc('${r.id}')`},
+    mscsubmit:    {label:'Log MSC result',       icon:'✎', call:`openAddMsc('${r.id}')`},
+    mscreview:    {label:'Log MSC result',       icon:'✎', call:`openAddMsc('${r.id}')`},
+    mscapproved:  {label:'Open Seller case',     icon:'↗', call:`openAddCase('${r.id}')`},
+    mscreduced:   {label:'Open case / appeal',   icon:'↗', call:`openAddCase('${r.id}')`},
+    mscdenied:    {label:'+ Log MSC resubmit',   icon:'↺', call:`openAddMsc('${r.id}')`},
+    mscneedsdoc:  {label:'Add invoice',          icon:'＋', call:`openDetail('${r.id}')`},
+    escalated:    {label:'Open details',         icon:'↗', call:`openDetail('${r.id}')`},
+    caseopen:     {label: latestCase?.id ? 'Open case ↗' : 'Mark reimbursed', icon: latestCase?.id?'':'✓', call: latestCase?.id ? `openCaseLink('${latestCase.id}')` : `markReimbursed('${r.id}')`},
+    reimbpending: {label:'Mark reimbursed',      icon:'✓', call:`markReimbursed('${r.id}')`},
+  };
+  const a = A[r.status];
+  const btn = a ? `<button class="rc-right-act" style="background:${col}22;border-color:${col}66;color:${col}" onclick="event.stopPropagation();${a.call}">${a.icon} ${a.label}</button>` : '';
+  return `${mini}<div class="rc-right-spacer"></div>${btn}`;
 }
 
 function buildReimbCard(r, today) {
@@ -1637,26 +1844,86 @@ function buildReimbCard(r, today) {
   const cog = Number(r.cog||0);
   const ramt = Number(r.ramt||0);
   const shortfall = cog - ramt;
-  const pct = r.status==='mscreduced' && cog>0 ? Math.round((ramt/cog)*100) : sc.bar;
-  const barPct = pct ?? 0;
   const col = sc.color;
   const cardCls = 'rc rc-'+r.status;
 
-  // Step dots - new flow: Check Discord > MSC submitted > MSC under review > MSC result > Case opened
-  const steps = ['Check Discord','MSC submitted','MSC review','MSC result','Case opened'];
-  const stepDots = steps.map((lbl,i) => {
-    const stepN = i+1;
-    let cls='', txt='';
-    if(stepN < sc.step){ cls='done'; txt='✓'; }
-    else if(stepN === sc.step){
-      if(r.status==='mscdenied') { cls='err'; txt='✗'; }
-      else if(r.status==='mscneedsdoc'||r.status==='mscreduced') { cls='warn'; txt='!'; }
-      else { cls='done'; txt='✓'; }
-    }
-    return `<div class="rc-step"><div class="rc-step-dot ${cls}">${txt}</div><div class="rc-step-lbl">${lbl}</div></div>`;
+  // Step dots — TRUE workflow order (matches real life):
+  // 1. Check Discord  2. MSC (submit→review)  3. Result  4. Case / Claim  5. Reimbursed
+  const mscAttempts = r.msc_attempts||[];
+  const lastMsc = mscAttempts.length ? mscAttempts[mscAttempts.length-1] : null;
+  const mscOutcome = lastMsc?.outcome||'';
+  const pastDiscord = ['mscsubmit','mscreview','mscapproved','mscreduced','mscdenied','mscneedsdoc','caseopen','reimbpending','reimbursed','escalated'].includes(r.status);
+
+  // Determine step state based on status AND msc_attempts
+  const stepStates = [
+    // Step 1 — Check Discord (you check in → VA checks Discord for photos/LPN/notes)
+    r.status==='checkdiscord' ? 'active'
+      : pastDiscord ? 'done'
+      : '',
+
+    // Step 2 — MSC (covers submit + under review)
+    ['mscapproved','mscreduced','mscdenied','caseopen','reimbpending','reimbursed'].includes(r.status) ? 'done'
+      : r.status==='mscneedsdoc' ? 'warn'
+      : ['mscsubmit','mscreview'].includes(r.status) ? 'active'
+      : '',
+
+    // Step 3 — Result
+    r.status==='mscdenied' ? 'err'
+      : r.status==='escalated' ? 'warn'
+      : ['mscapproved','mscreduced','caseopen','reimbpending','reimbursed'].includes(r.status) ? 'done'
+      : '',
+
+    // Step 4 — Case / Claim
+    ['reimbpending','reimbursed'].includes(r.status) ? 'done'
+      : r.status==='caseopen' ? 'active'
+      : ['mscapproved','mscreduced'].includes(r.status) ? 'warn'
+      : '',
+
+    // Step 5 — Reimbursed
+    r.status==='reimbursed' ? 'done' : '',
+  ];
+
+  const stepLabels = ['Check Discord','MSC','Result','Case / Claim','Reimbursed'];
+  const stepIcons  = {done:'✓', err:'✗', warn:'!', active:'', '':''};
+
+  const _statusChangedAt = r.status_changed_at ? new Date(r.status_changed_at) : null;
+  const _daysInStatus = _statusChangedAt ? Math.floor((new Date()-_statusChangedAt)/86400000) : null;
+
+  const stepDots = stepStates.map((cls,i) => {
+    const ic = stepIcons[cls];
+    const num = ic || (i+1);
+    let sub = '';
+    if (i===1 && mscAttempts.length>1) sub = `<span class="rc-pseg-sub">#${mscAttempts.length}</span>`;
+    else if (i===2 && r.status==='mscdenied' && lastMsc?.next_date) sub = `<span class="rc-pseg-sub">↻${fmtDate(lastMsc.next_date)}</span>`;
+    const segStyle = cls==='active' ? `background:${col};color:#fff` : '';
+    const timeTag = (cls==='active' && _daysInStatus!==null) ? `<span class="rc-pseg-time">${_daysInStatus}d</span>` : '';
+    return `<div class="rc-pseg ${cls}" style="${segStyle}"><span class="rc-pseg-num">${num}</span>${stepLabels[i]}${sub}${timeTag}</div>`;
   }).join('');
 
-  // Tags
+  // ── 55/60-day Amazon clock timeline ──
+  const tlBase = (typeof deadlineBase==='function') ? deadlineBase(r) : (r.checking_date||r.darr||r.dsub||null);
+  let timelineHtml = '';
+  if (tlBase && !HIST_STATUSES.includes(r.status)) {
+    const elapsed = Math.max(0, Math.floor((new Date() - new Date(tlBase)) / 86400000));
+    const pct = Math.min(100, (elapsed / 60) * 100);
+    const dLeft = 60 - elapsed;                 // days until Amazon's window closes
+    const tlCol = elapsed >= 55 ? '#f05050' : elapsed >= 45 ? '#f5a623' : '#3dd68c';
+    const tlMsg = dLeft <= 0 ? 'WINDOW CLOSED' : elapsed >= 55 ? `${dLeft}d to cliff` : `${dLeft}d left`;
+    timelineHtml = `
+    <div class="rc-timeline">
+      <div class="rc-tl-head">
+        <span class="rc-tl-lbl">Amazon 60-day claim window</span>
+        <span class="rc-tl-days" style="color:${tlCol}">Day ${elapsed} · ${tlMsg}</span>
+      </div>
+      <div class="rc-tl-track">
+        <div class="rc-tl-risk"></div>
+        <div class="rc-tl-fill" style="width:${pct}%;background:${tlCol}"></div>
+        <div class="rc-tl-now" style="left:calc(${pct}% - 1px)"></div>
+      </div>
+      <div class="rc-tl-ticks"><span class="rc-tl-tick">Check-in</span><span class="rc-tl-tick" style="color:${elapsed>=45?'#f5a623':'var(--text3)'}">45d</span><span class="rc-tl-tick" style="color:${elapsed>=55?'#f05050':'var(--text3)'}">55d risk</span><span class="rc-tl-tick">60d</span></div>
+    </div>`;
+  }
+
   const reasonTag = r.reason && r.reason!=='unknown' ? `<span class="rc-tag" style="background:var(--bg5);color:var(--text2)">${REASON_LABELS[r.reason]||r.reason}</span>` : '';
   const statusTag = `<span class="rc-tag" style="background:${col}28;color:${col};border:1px solid ${col}55">${sc.label}</span>`;
 
@@ -1665,27 +1932,47 @@ function buildReimbCard(r, today) {
   const daysSinceStatusChange = statusChangedAt ? Math.floor((new Date()-statusChangedAt)/86400000) : null;
   
   let urgencyAlert = '';
+  if ((r.status==='mscapproved'||r.status==='mscreduced') && !(r.cases&&r.cases.length)) {
+    urgencyAlert = `<div class="rc-alert" style="background:linear-gradient(90deg,#3dd68c26,#3dd68c10);border-bottom:2px solid #3dd68c">
+      <span class="rc-alert-ico" style="background:#3dd68c22;color:#3dd68c">✓</span>
+      <span style="flex:1;color:#3dd68c;font-size:12px;font-weight:700">MSC Approved — open a Seller Support case to claim your money</span>
+      <button class="rc-do" style="background:#3dd68c22;border-color:#3dd68c66;color:#3dd68c" onclick="event.stopPropagation();openAddCase('${r.id}')">Log case →</button>
+    </div>`;
+  }
   if (r.status==='mscreview'||r.status==='mscsubmit') {
     if (daysSinceStatusChange!==null && daysSinceStatusChange>=5) {
-      urgencyAlert = `<div class="rc-alert" style="background:#f5a62322;border-bottom:2px solid #f5a623">
-        <span style="color:#f5a623;font-size:12px;font-weight:700">⏰ ${daysSinceStatusChange} days since submitted — CHECK MSC RESULT NOW</span>
+      urgencyAlert = `<div class="rc-alert" style="background:linear-gradient(90deg,#f5a62326,#f5a62310);border-bottom:2px solid #f5a623">
+        <span class="rc-alert-ico" style="background:#f5a62322;color:#f5a623">!</span>
+        <span style="flex:1;color:#f5a623;font-size:12px;font-weight:700">${daysSinceStatusChange} days since submitted — check MSC result now</span>
+        <button class="rc-do" style="background:#f5a62322;border-color:#f5a62366;color:#f5a623" onclick="event.stopPropagation();openAddMsc('${r.id}')">Log result →</button>
       </div>`;
     }
   }
   if (r.status==='reimbpending') {
     if (daysSinceStatusChange!==null && daysSinceStatusChange>=5) {
-      urgencyAlert = `<div class="rc-alert" style="background:#06b6d422;border-bottom:2px solid #06b6d4">
-        <span style="color:#06b6d4;font-size:12px;font-weight:700">💰 ${daysSinceStatusChange} days — CHECK AMAZON: reimbursement should have reflected</span>
-        ${r.reimbid?`<a href="https://sellercentral.amazon.co.uk/reportcentral/REIMBURSEMENTS/0/%7B%22filters%22:[%22%22,%22%22,%22${r.reimbid}%22,%22%22],%22pageOffset%22:1,%22searchDays%22:365%7D" target="_blank" style="background:#06b6d422;border:1px solid #06b6d455;color:#06b6d4;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">Check Reimb ↗</a>`:''}
+      urgencyAlert = `<div class="rc-alert" style="background:linear-gradient(90deg,#06b6d426,#06b6d410);border-bottom:2px solid #06b6d4">
+        <span class="rc-alert-ico" style="background:#06b6d422;color:#06b6d4">£</span>
+        <span style="flex:1;color:#06b6d4;font-size:12px;font-weight:700">${daysSinceStatusChange} days — check Amazon, reimbursement should have reflected</span>
+        <button class="rc-do" style="background:#06b6d422;border-color:#06b6d466;color:#06b6d4" onclick="event.stopPropagation();markReimbursed('${r.id}')">Mark reimbursed →</button>
+        ${r.reimbid?`<a href="https://sellercentral.amazon.co.uk/reportcentral/REIMBURSEMENTS/0/%7B%22filters%22:[%22%22,%22%22,%22${r.reimbid}%22,%22%22],%22pageOffset%22:1,%22searchDays%22:365%7D" target="_blank" style="background:#06b6d422;border:1px solid #06b6d455;color:#06b6d4;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">Check Reimb ↗</a>`:''}
       </div>`;
     }
   }
 
-  const alertHtml = urgencyAlert || (sc.alert ? `
-    <div class="rc-alert" style="background:${col}18;border-bottom:2px solid ${col}66">
-      <span style="flex:1;color:${col};font-size:12px">${sc.alert.text}</span>
-      ${sc.alert.btn ? `<button class="btn btn-sm" style="background:${col}22;border-color:${col}55;color:${col};font-size:11px;font-weight:600">${sc.alert.btn}</button>` : ''}
-    </div>` : '');
+  const alertHtml = urgencyAlert || (sc.alert ? (() => {
+    const txt = sc.alert.text;
+    const m = txt.match(/^(\S+)\s+(.*)$/);
+    const ico = m ? m[1] : '•';
+    const body = m ? m[2] : txt;
+    const act = reimbNextAction(r);
+    const actBtn = act ? `<button class="rc-do" style="background:${col}22;border-color:${col}66;color:${col}" onclick="event.stopPropagation();${act.call}">${act.label} →</button>` : '';
+    return `
+    <div class="rc-alert" style="background:linear-gradient(90deg,${col}1f,${col}0d);border-bottom:2px solid ${col}66">
+      <span class="rc-alert-ico" style="background:${col}22;color:${col}">${ico}</span>
+      <span style="flex:1;color:${col};font-size:12px;font-weight:600">${body}</span>
+      ${actBtn}
+    </div>`;
+  })() : '');
 
   // Case ID
   const latestCase = (r.cases||[]).slice(-1)[0];
@@ -1756,55 +2043,63 @@ function buildReimbCard(r, today) {
         placeholder="When was it denied?">
       <div class="rc-right-label" style="margin-top:4px">30-Day Appeal Window</div>
       ${appealHtml}
-      <div class="rc-right-sub" style="margin-top:6px">Open a case to appeal</div>`;  } else if(r.status==='mscneedsdoc'){
+      <div class="rc-right-sub" style="margin-top:8px;font-size:11px;color:var(--text2);line-height:1.5">Wait 30 days then resubmit MSC with a reduced COG (~20% less).</div>`;
+  } else if(r.status==='mscneedsdoc'){
     rightContent = `<div class="rc-right-label">Blocked</div><div class="rc-right-val" style="color:#9b7ff0;font-size:16px">Invoice needed</div><div class="rc-right-sub">Find in purchase sheet</div>`;
   } else if(r.status==='caseopen'){
-    rightContent = `<div class="rc-right-label">Case status</div><div class="rc-right-val" style="color:#22d3ee;font-size:16px">Open</div><div class="rc-right-sub">Log case ID + reimb when received</div>`;
+    const d = _daysInStatus;
+    const chase = d!==null && d>=5;
+    rightContent = `<div class="rc-right-label">Days since case opened</div><div class="rc-right-val" style="color:${chase?'#f5a623':'#22d3ee'}">${d!==null?d+'d':'--'}</div><div class="rc-right-sub" style="${chase?'color:#f5a623':''}">${chase?'⚠ Past Amazon SLA — chase the case':'Amazon support SLA ~3-5 days'}</div><div class="rc-right-label" style="margin-top:8px">Next</div><div class="rc-right-sub">Log reimb ID + amount when paid</div>`;
+  } else if(r.status==='escalated'){
+    const d = _daysInStatus;
+    rightContent = `<div class="rc-right-label">Days waiting on Jack</div><div class="rc-right-val" style="color:#f472b6">${d!==null?d+'d':'--'}</div><div class="rc-right-sub">Awaiting MD decision</div>`;
   }
 
   const showMscDate = ['mscreview','mscsubmit'].includes(r.status);
   const statusOpts = MSC_STATUS_LIST.map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('');
 
   return `
-  <div class="${cardCls}">
+  <div class="${cardCls}" data-id="${r.id}">
     <div data-product="${r.name}" data-asin="${r.asin}" data-removid="${r.oid}"></div>
     ${alertHtml}
     <div class="rc-header">
       <div class="rc-header-left">
         <div class="rc-name">${r.name}</div>
         <div class="rc-meta">
-          <button class="rc-copy" onclick="copyText('${r.asin}')" title="Click to copy">${r.asin}</button>
-          ${r.fnsku?`<button class="rc-copy" onclick="copyText('${r.fnsku}')" title="Click to copy">${r.fnsku}</button>`:''}
-          ${r.sku?`<button class="rc-copy" onclick="copyText('${r.sku}')" title="Click to copy">${r.sku}</button>`:''}
+          <span style="font-size:9px;color:var(--text3);font-weight:600">ASIN</span><button class="rc-copy" onclick="copyText('${r.asin}')" title="Click to copy">${r.asin}</button>
+          ${r.fnsku?`<span style="font-size:9px;color:var(--text3);font-weight:600;margin-left:2px">FNSKU</span><button class="rc-copy" onclick="copyText('${r.fnsku}')" title="Click to copy">${r.fnsku}</button>`:''}
+          ${r.sku?`<span style="font-size:9px;color:var(--text3);font-weight:600;margin-left:2px">SKU</span><button class="rc-copy" onclick="copyText('${r.sku}')" title="Click to copy">${r.sku}</button>`:''}
           ${r.oid?`<a class="rc-oid" href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank">${r.oid} ↗</a>`:''}
         </div>
       </div>
-      <div class="rc-tags">${reasonTag}${statusTag}</div>
+      <div class="rc-tags">${reasonTag}<span style="position:relative;display:inline-block"><span class="rc-tag rc-statustag" style="background:${col}1f;color:${col};border:1px solid ${col}55" onclick="event.stopPropagation();toggleStatusPop('${r.id}')" title="Click to change status"><span class="rc-tag-dot" style="background:${col};box-shadow:0 0 6px ${col}"></span>${sc.label}<span class="rc-pop-chev">▾</span></span>${reimbStatusPopover(r)}</span></div>
     </div>
     <div class="rc-progress">
-      <div class="rc-prog-label"><span>MSC Progress</span><span class="rc-prog-step" style="color:${col}">Step ${sc.step} of 5</span></div>
-      <div class="rc-bar-track"><div class="rc-bar-fill" style="width:${barPct}%;background:${col};box-shadow:0 0 12px ${col}66"></div></div>
-      <div class="rc-steps">${stepDots}</div>
+      <div class="rc-pipe">
+        ${stepDots}
+      </div>
     </div>
+    ${timelineHtml}
     <div class="rc-body">
       <div class="rc-left">
-        <div class="rc-field-row"><span class="rc-field-name">Date in</span><span class="rc-field-val" style="font-family:var(--mono);color:var(--text2)">${r.darr||r.dsub||'--'}</span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Date Delivered</span><span class="rc-field-val"><input type="date" class="inl-input" style="width:140px;font-size:11px;padding-right:30px" value="${r.ddeliv||''}" onchange="upd('${r.id}','ddeliv',this.value);renderReimb()"></span></div>
+        <div class="rc-section-lbl">Money</div>
         <div class="rc-field-row"><span class="rc-field-name">COG £</span><span class="rc-field-val">${cogDisplay} <input class="inl-input" type="number" step="0.01" value="${cog||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd('${r.id}','cog',+this.value);renderReimb()"></span></div>
         <div class="rc-field-row"><span class="rc-field-name">Reimb £</span><span class="rc-field-val">${ramtDisplay} <input class="inl-input" type="number" step="0.01" value="${ramt||''}" placeholder="enter" style="width:75px;text-align:right;font-size:11px;margin-left:6px" onchange="upd('${r.id}','ramt',+this.value);renderReimb()"></span></div>
+        <div class="rc-field-row rc-field-emph"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
+        <div class="rc-section-lbl" style="margin-top:10px">Claim tracking</div>
+        <div class="rc-field-row"><span class="rc-field-name">Checked in</span><span class="rc-field-val" style="font-family:var(--mono);color:var(--text2)">${fmtDate(r.checking_date||r.darr||r.dsub)}</span></div>
+        <div class="rc-field-row rc-field-emph"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Case ID</span><span class="rc-field-val"><input class="inl-input" type="text" value="${latestCase?.id||''}" placeholder="enter case ID" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="saveCaseId('${r.id}', this.value)">${latestCase?.id ? `<a href="https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?ref=sc_cd_lobby_vc_v3&ie=UTF&caseID=${latestCase.id}" target="_blank" style="color:var(--blue);margin-left:6px;text-decoration:none;font-size:11px">Open ↗</a>` : ''}</span></div>
         <div class="rc-field-row"><span class="rc-field-name">Reimb ID</span><span class="rc-field-val" style="display:flex;align-items:center;gap:6px"><input class="inl-input" type="text" value="${r.reimbid||''}" placeholder="e.g. 8318367312" style="width:140px;font-size:11px;font-family:var(--mono)" onchange="upd('${r.id}','reimbid',this.value);renderReimb()">${r.reimbid ? `<a href="https://sellercentral.amazon.co.uk/reportcentral/REIMBURSEMENTS/0/%7B%22filters%22:[%22%22,%22%22,%22${r.reimbid}%22,%22%22],%22pageOffset%22:1,%22searchDays%22:365%7D" target="_blank" style="color:var(--green);text-decoration:none;font-size:11px;white-space:nowrap;font-weight:600">View ↗</a>` : ''}</span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Shortfall</span><span class="rc-field-val">${shortfallDisplay}</span></div>
-        <div class="rc-field-row"><span class="rc-field-name">Next MSC update</span><span class="rc-field-val">${reupdateHtml}</span></div>
+        <div class="rc-section-lbl" style="margin-top:10px">Evidence</div>
         <div class="rc-field-row"><span class="rc-field-name">Discord Photos</span><span class="rc-field-val" style="display:flex;gap:8px;align-items:center"><input class="inl-input" type="text" value="${r.discord_photos_link||''}" placeholder="Paste link" style="width:100px;font-size:11px;font-family:var(--mono);flex:1" onchange="upd('${r.id}','discord_photos_link',this.value);renderReimb()" title="Right-click message in Discord → Copy Message Link → Paste here">${r.discord_photos_link?`<button onclick="openDiscordWithLink('${r.discord_photos_link}')" style="background:#5865f2;border:1px solid #5865f2;color:white;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">→ Discord</button>`:''}</span></div>
-        <div class="rc-field-row"><span class="rc-field-name" style="${r.status==='mscneedsdoc'?'color:var(--purple);font-weight:700':''}">📄 Invoice</span><span class="rc-field-val" style="display:flex;gap:6px;align-items:center">${r.invoice_link?`<a href="${r.invoice_link}" target="_blank" style="color:var(--purple);font-size:11px;font-weight:600;text-decoration:none">Open ↗</a>`:`<span style="font-size:11px;color:${r.status==='mscneedsdoc'?'var(--red)':'var(--text3)'}">${r.status==='mscneedsdoc'?'⚠ Not linked':'--'}</span>`}<button onclick="openDetail('${r.id}')" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer">Add ↗</button></span></div>
+        <div class="rc-field-row"><span class="rc-field-name" style="${r.status==='mscneedsdoc'?'color:var(--purple);font-weight:700':''}">Invoice</span><span class="rc-field-val" style="display:flex;gap:6px;align-items:center">${r.invoice_link?`<a href="${r.invoice_link}" target="_blank" style="color:var(--purple);font-size:11px;font-weight:600;text-decoration:none">Open ↗</a>`:`<span style="font-size:11px;color:${r.status==='mscneedsdoc'?'var(--red)':'var(--text3)'}">${r.status==='mscneedsdoc'?'⚠ Not linked':'--'}</span>`}<button onclick="openDetail('${r.id}')" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer">Add ↗</button></span></div>
         ${r.damage?`<div class="rc-field-row"><span class="rc-field-name">Notes</span><span class="rc-field-val" style="font-size:11px;color:var(--text2);text-align:right;max-width:200px">${r.damage}</span></div>`:''}
       </div>
       <div class="rc-right">
-        <div class="rc-right-label" style="margin-bottom:4px">Update status</div>
-        <select class="inl-input" style="margin-bottom:12px;font-size:11px" onchange="changeStatus('${r.id}',this.value,'reimb')">${statusOpts}</select>
-        ${showMscDate && r.status!=='mscdenied' ? `<div class="rc-right-label">Next MSC update date</div><input type="date" class="rc-msc-date-input" style="border-color:${col}44;color:${col}" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value);renderReimb()">` : ''}
         ${rightContent}
+        ${showMscDate && r.status!=='mscdenied' ? `<div class="rc-right-label" style="margin-top:10px">Next MSC update date</div><input type="date" class="rc-msc-date-input" style="border-color:${col}44;color:${col}" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value);renderReimb()">` : ''}
+        ${reimbPanelExtras(r, col)}
       </div>
     </div>
     <div class="rc-footer">
@@ -1816,7 +2111,7 @@ function buildReimbCard(r, today) {
       <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive('${r.id}')">← Active</button>
       <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed('${r.id}')">✓ Reimbursed</button>
       <input class="inl-input" style="flex:1;font-size:11px;min-width:0" value="${r.mscnotes||''}" placeholder="Notes / urgent action..." onchange="upd('${r.id}','mscnotes',this.value)">
-      <span class="rc-age" style="background:${ageColor}22;color:${ageColor};border:1px solid ${ageColor}44">${ageLabel}</span>
+      <span style="margin-left:auto"></span>
     </div>
   </div>`;
 }
@@ -1824,6 +2119,19 @@ function buildReimbCard(r, today) {
 const REASON_LABELS = {damaged:'Damaged',missing:'Missing',wrong:'Wrong item',nolpn:'No LPN',notracking:'No tracking',notarrived:'Never arrived',unknown:'To assess'};
 
 function setReimbFilter(f) { REIMB_FILTER=f; renderReimb(); }
+
+function openCaseLink(caseId){ if(caseId) window.open('https://sellercentral.amazon.co.uk/cu/case-dashboard/view-case?caseID='+caseId,'_blank'); }
+function toggleStatusPop(id) {
+  const pop = document.getElementById('pop-'+id);
+  if (!pop) return;
+  const isOpen = pop.classList.contains('open');
+  document.querySelectorAll('.rc-pop.open').forEach(p=>p.classList.remove('open'));
+  if (!isOpen) {
+    pop.classList.add('open');
+    const close = (e)=>{ if(!pop.contains(e.target)){ pop.classList.remove('open'); document.removeEventListener('click',close); } };
+    setTimeout(()=>document.addEventListener('click',close),0);
+  }
+}
 
 function markReimbursed(id) {
   const r = DB.find(x=>x.id===id);
@@ -1854,17 +2162,19 @@ function confirmReimbursed() {
   r.cog = parseFloat(cog)||0;
   r.ramt = parseFloat(ramt)||0;
   r.status = 'reimbursed';
-  
+  // Auto-stamp dreim as today if not already set — editable later in detail modal
+  if (!r.dreim) r.dreim = new Date().toISOString().split('T')[0];
+
   const timestamp = new Date().toISOString();
   r.status_changed_at = timestamp;
   if (!r.status_log) r.status_log = [];
-  r.status_log.push(`${timestamp} | → reimbursed (COG: ${fmtMoney(r.cog)}, Reimb: ${fmtMoney(r.ramt)})`);
+  r.status_log.push(`${timestamp} | → reimbursed (COG: ${fmtMoney(r.cog)}, Reimb: ${fmtMoney(r.ramt)}, Date: ${r.dreim})`);
   
-  // Single atomic write — everything in one call
   if (SUPABASE_READY && window.sbClient) {
     updateInSupabase(id, {
       cog: r.cog,
       ramt: r.ramt,
+      dreim: r.dreim,
       status: 'reimbursed',
       status_log: r.status_log,
       status_changed_at: timestamp
@@ -1875,7 +2185,7 @@ function confirmReimbursed() {
   renderReimb();
   renderHist();
   updateBadges();
-  renderActive(); // Refresh Active page to show updates
+  renderActive();
 }
 
 function moveRimbBack() {
@@ -1897,12 +2207,14 @@ function moveRimbBack() {
 function moveReimbToActive(id) {
   const r = DB.find(x=>x.id===id);
   if(!r) return;
-  r.status = 'arrived';
-  
+  r.status = 'transit';
+  r.checking_date = '';
+  r.darr = '';
+
   if (SUPABASE_READY && window.sbClient) {
-    updateInSupabase(id, { status: 'arrived' });
+    updateInSupabase(id, { status: 'transit', checking_date: null, darr: null });
   }
-  
+
   renderReimb();
   renderActive();
   updateBadges();
@@ -2318,8 +2630,15 @@ function openDetail(id) {
     <div class="fg g2" style="margin-bottom:10px">
       <div class="field"><label>Status</label>
         <select onchange="changeStatus('${r.id}',this.value,'${CURRENT_PAGE}')">
-          ${STATUS_LIST.map(s=>`<option value="${s.v}"${r.status===s.v?' selected':''}>${s.l}</option>`).join('')}
+          ${STATUS_LIST.map(s=>{
+            const isReimb = REIMB_STATUSES.includes(s.v);
+            const blocked = isReimb && !r.checking_date;
+            return `<option value="${s.v}"${r.status===s.v?' selected':''}${blocked?' disabled title="Item not checked in yet"':''}>
+              ${blocked?'🔒 ':''}${s.l}${blocked?' (check in first)':''}
+            </option>`;
+          }).join('')}
         </select>
+        ${!r.checking_date?`<div style="font-size:10px;color:var(--amber);margin-top:4px">⚠ Reimbursement statuses locked until item is checked in</div>`:''}
       </div>
       <div class="field"><label>Next MSC reupdate</label>
         <input type="date" value="${r.reupdate||''}" onchange="upd('${r.id}','reupdate',this.value)"
@@ -2327,6 +2646,12 @@ function openDetail(id) {
         ${r.reupdate&&r.reupdate<today?`<div style="font-size:10px;color:var(--red);margin-top:3px;font-weight:600">⚠ Overdue by ${Math.ceil((new Date()-new Date(r.reupdate))/86400000)} days</div>`:''}
         ${r.reupdate===today?`<div style="font-size:10px;color:var(--amber);margin-top:3px;font-weight:600">📅 Due today</div>`:''}
       </div>
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Checking Date <span style="font-weight:400;color:var(--text3)">(date Jack physically checked this in)</span></label>
+      <input type="date" value="${r.checking_date||''}" onchange="upd('${r.id}','checking_date',this.value)"
+        style="${!r.checking_date?'border-color:var(--amber)':''}">
+      ${!r.checking_date?`<div style="font-size:10px;color:var(--amber);margin-top:3px">Not checked in yet — 55-day clock starts from this date</div>`:`<div style="font-size:10px;color:var(--green);margin-top:3px">✓ Checked in ${fmtDate(r.checking_date)} · 55-day deadline: ${fmtDate(new Date(new Date(r.checking_date).getTime()+55*864e5).toISOString().split('T')[0])}</div>`}
     </div>
 
     <div class="modal-sub" style="margin-top:0">Audit Log</div>
@@ -2379,15 +2704,15 @@ function saveAdd() {
     reason: reason,
     status:'transit',
     msku:'',ean:'',shipid:'',tracking:'',amid:'',qdis:0,qcan:0,qpen:1,
-    cog:0,lpn:'',disp:'Unsellable',cond:'Damaged',
-    darr:'',ddeliv:'',dreim:'',cases:[],msc_attempts:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:'',discord_photos_link:'',invoice_link:'',invoice_notes:'',
+    cog: parseFloat(document.getElementById('a-cog').value)||0,lpn:'',disp:'Unsellable',cond:'Damaged',
+    darr:'',ddeliv:'',dreim:'',checking_date:'',cases:[],msc_attempts:[],reimbid:'',ramt:0,mscnotes:'',damage:'',reupdate:'',discord_photos_link:'',invoice_link:'',invoice_notes:'',
     status_log: [
       new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) + ' — Added to system'
     ]
   };
   
   DB.unshift(newRemoval);
-  ['a-name','a-asin','a-fnsku','a-sku','a-oid','a-reason'].forEach(id=>document.getElementById(id).value='');
+  ['a-name','a-asin','a-fnsku','a-sku','a-oid','a-reason','a-cog'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('a-qord').value='1';
   document.getElementById('a-dmsc_checked').value='';
   document.getElementById('a-msc_check_status').value='';
@@ -2466,12 +2791,15 @@ function openAddMsc(rid) {
   const r = DB.find(x=>x.id===rid); if(!r) return;
   const attempts = r.msc_attempts||[];
   const nextNum = attempts.length + 1;
+  const lastDenied = [...attempts].reverse().find(a=>a.outcome==='denied'&&a.cog);
+  const suggestedCog = lastDenied ? (lastDenied.cog * 0.8).toFixed(2) : (r.cog||'');
+
   document.getElementById('addmsc-rid').value = rid;
   document.getElementById('addmsc-idx').value = -1;
   document.getElementById('addmsc-title').textContent = `Log MSC Submission #${nextNum}`;
   document.getElementById('am-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('am-attempt').value = nextNum;
-  document.getElementById('am-cog').value = '';
+  document.getElementById('am-cog').value = suggestedCog;
   document.getElementById('am-outcome').value = 'pending';
   document.getElementById('am-denial-date').value = '';
   document.getElementById('am-next-date').value = '';
@@ -2480,15 +2808,20 @@ function openAddMsc(rid) {
   document.getElementById('am-denial-section').style.display = 'none';
   document.getElementById('am-approved-section').style.display = 'none';
 
-  // Suggest reduced COG if previous attempt was denied
-  if (attempts.length > 0) {
-    const lastAttempt = attempts[attempts.length-1];
-    if (lastAttempt.outcome === 'denied' && lastAttempt.cog) {
-      const suggestedCog = (lastAttempt.cog * 0.8).toFixed(2);
-      document.getElementById('am-cog').value = suggestedCog;
-      document.getElementById('am-note').placeholder = `Previous COG was £${lastAttempt.cog} — suggested 20% reduction to £${suggestedCog}`;
+  // Show full COG context
+  const fullCogEl = document.getElementById('am-full-cog-display');
+  if (fullCogEl) {
+    if (r.cog) {
+      fullCogEl.innerHTML = `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;color:var(--text3)">Full COG on record</span>
+        <span style="font-size:14px;font-weight:800;color:var(--amber)">${fmtMoney(r.cog)}</span>
+      </div>
+      ${lastDenied?`<div style="font-size:11px;color:var(--text3);margin-bottom:8px">💡 Previous attempt: ${fmtMoney(lastDenied.cog)} — suggested 20% reduction pre-filled</div>`:''}`;
+    } else {
+      fullCogEl.innerHTML = `<div style="font-size:11px;color:var(--red);margin-bottom:8px">⚠ No COG on record — add COG to the removal first for accurate submissions</div>`;
     }
   }
+
   document.getElementById('addmsc-overlay').classList.remove('h');
 }
 
@@ -2558,22 +2891,26 @@ function saveMscAttempt() {
     r.dmsc_checked = denialDate;
     updates.dmsc_checked = denialDate;
   }
+  // Auto-set status based on outcome — BUT only if item is already in the reimbursement flow
+  // Never auto-change status if item is still in transit or arrived (Jack checks those in)
+  const canAutoStatus = REIMB_STATUSES.includes(r.status);
+
   // Auto-set status to mscdenied
-  if (outcome === 'denied' && r.status !== 'mscdenied') {
+  if (outcome === 'denied' && r.status !== 'mscdenied' && canAutoStatus) {
     r.status = 'mscdenied';
     r.status_changed_at = new Date().toISOString();
     updates.status = 'mscdenied';
     updates.status_changed_at = r.status_changed_at;
   }
   // Auto-set status to mscapproved/mscreduced
-  if ((outcome === 'approved' || outcome === 'approved-reduced') && !['mscapproved','mscreduced'].includes(r.status)) {
+  if ((outcome === 'approved' || outcome === 'approved-reduced') && !['mscapproved','mscreduced'].includes(r.status) && canAutoStatus) {
     r.status = outcome === 'approved-reduced' ? 'mscreduced' : 'mscapproved';
     r.status_changed_at = new Date().toISOString();
     updates.status = r.status;
     updates.status_changed_at = r.status_changed_at;
   }
-  // Auto-set status to mscreview when submitted/pending
-  if (outcome === 'pending' || outcome === 'review') {
+  // Auto-set status to mscreview when submitted/pending — only if already in reimb flow
+  if ((outcome === 'pending' || outcome === 'review') && canAutoStatus) {
     r.status = 'mscreview';
     r.status_changed_at = new Date().toISOString();
     updates.status = 'mscreview';
@@ -2786,10 +3123,15 @@ function renderOverview() {
   const checkReimbNow= DB.filter(r=>r.status==='reimbpending'&&r.status_changed_at&&Math.floor((new Date()-new Date(r.status_changed_at))/86400000)>=5);
   const dueToday     = DB.filter(r=>r.reupdate===today&&!HIST_STATUSES.includes(r.status));
   const escalatedRecs= DB.filter(r=>r.status==='escalated');
+  const mscApprovedRecs = DB.filter(r=>
+    (r.status==='mscapproved'||r.status==='mscreduced') &&
+    r.checking_date && // must be physically checked in
+    !(r.cases&&r.cases.length) // no case already opened
+  );
 
   // ACTION REQUIRED = things Sarah must DO today (submit, check, log)
   // WAITING = things sitting with Amazon that just need monitoring
-  const actionNowCount = overdueReu.length + dueToday.length + checkMscNow.length + checkReimbNow.length + noCaseYet.length + needsDoc.length;
+  const actionNowCount = mscApprovedRecs.length + overdueReu.length + dueToday.length + checkMscNow.length + checkReimbNow.length + noCaseYet.length + needsDoc.length;
   const waitingCount   = DB.filter(r=>['mscsubmit','mscreview','caseopen','reimbpending'].includes(r.status)).length - checkMscNow.length - checkReimbNow.length;
   const monitoringCount = Math.max(0, waitingCount);
 
@@ -3010,14 +3352,14 @@ function renderOverview() {
   };
   const actionAlerts = [];
   const monitorAlerts = [];
+  if (mscApprovedRecs.length) actionAlerts.unshift({icon:G.coin, color:'var(--green)', text:`${mscApprovedRecs.length} MSC approved — open Seller Support case${mscApprovedRecs.length>1?'s':''} now`, fn:"REIMB_FILTER='mscapproved';setTimeout(()=>navTo('reimb'),0)"});
   if (expiredClaims.length) actionAlerts.unshift({icon:G.warn, color:'var(--red)', text:`${expiredClaims.length} claim${expiredClaims.length>1?'s':''} may have EXPIRED — 60d window passed`, fn:"showTileDrill('expired')"});
   if (overdueReu.length)     actionAlerts.push({icon:G.clock, color:'var(--red)',    text:`${overdueReu.length} overdue re-update${overdueReu.length>1?'s':''}`, fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
   if (dueToday.length)       actionAlerts.push({icon:G.cal, color:'var(--amber)',  text:`${dueToday.length} re-update${dueToday.length>1?'s':''} due TODAY`,           fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"});
   if (checkMscNow.length)    actionAlerts.push({icon:G.search, color:'var(--amber)',  text:`${checkMscNow.length} MSC result${checkMscNow.length>1?'s':''} ready to check`, fn:"REIMB_FILTER='mscreview';setTimeout(()=>navTo('reimb'),0)"});
   if (checkReimbNow.length)  actionAlerts.push({icon:G.coin, color:'var(--cyan)',   text:`${checkReimbNow.length} reimbursement${checkReimbNow.length>1?'s':''} to verify in Amazon`, fn:"REIMB_FILTER='reimbpending';setTimeout(()=>navTo('reimb'),0)"});
   if (needsDoc.length)       actionAlerts.push({icon:G.doc, color:'var(--purple)', text:`${needsDoc.length} claim${needsDoc.length>1?'s':''} blocked — needs document`, fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"});
-  if (critical.length)       monitorAlerts.push({icon:G.warn,  color:'var(--red)',    text:`${critical.length} deadline${critical.length>1?'s':''} closing in <7 days`, fn:"navTo('active')"});
-  if (arrived.length)        monitorAlerts.push({icon:G.box,  color:'var(--amber)',  text:`${arrived.length} arrived — awaiting check-in`, fn:"navTo('active')"});
+  if (critical.length) monitorAlerts.push({icon:G.warn, color:'var(--red)', text:`${critical.length} deadline${critical.length>1?'s':''} closing in <7 days`, fn:"navTo('active')"});
 
   const banner = document.getElementById('overview-alert-banner');
   if (actionAlerts.length || monitorAlerts.length) {
@@ -3053,17 +3395,18 @@ function renderOverview() {
   // ── KPI TILES ─────────────────────────────────────────────────────────
   // Each tile is tagged action (Sarah must do something) or wait (just monitor)
   const cogOf = recs => recs.reduce((s,r)=>s+Number(r.cog||0),0);
+  const checkDiscordRecs = DB.filter(r=>r.status==='checkdiscord');
   const tiles = [
     // ACTION-NOW tiles — coloured by urgency
-    {v:overdueReu.length,   l:'Overdue Re-updates',  sub:'Re-push MSC to Amazon now', c:'tile-red',    tv:'tv-red',    key:'overdue',    border:'var(--red)',    kind:'action', urgent:overdueReu.length>0, cog:cogOf(overdueReu)},
-    {v:checkMscNow.length,  l:'MSC Results to Check', sub:'In review 5+ days',        c:'tile-amber',  tv:'tv-amber',  key:'checkmsc',   border:'var(--amber)',  kind:'action', urgent:checkMscNow.length>0, cog:cogOf(checkMscNow)},
-    {v:checkReimbNow.length,l:'Reimbursements to Verify', sub:'Confirm funds in Amazon', c:'tile-cyan', tv:'tv-cyan',   key:'checkreimb', border:'var(--cyan)',   kind:'action', urgent:checkReimbNow.length>0, cog:cogOf(checkReimbNow)},
-    {v:needsDoc.length,     l:'Needs Document',       sub:'Invoice required',          c:'tile-purple', tv:'tv-purple', key:'needsdoc',   border:'var(--purple)', kind:'action', urgent:needsDoc.length>0, cog:cogOf(needsDoc)},
-    // WAITING tiles — neutral slate, monitor only
-    {v:inTransit.length,    l:'In Transit',          sub:'Returning to BDL',          c:'tile-blue',   tv:'tv-blue',   key:'transit',    border:'var(--blue)',   kind:'wait', cog:cogOf(inTransit)},
-    {v:arrived.length,      l:'Arrived',             sub:'Awaiting your check-in',    c:'tile-amber',  tv:'tv-amber',  key:'arrived',    border:'var(--amber)',  kind:'wait', urgent:arrived.length>0, cog:cogOf(arrived)},
-    {v:inReimb.length,      l:'Claims in Progress',  sub:'Open with Amazon',          c:'tile-blue',   tv:'tv-blue',   key:'reimb',      border:'var(--blue)',   kind:'wait', cog:cogOf(inReimb)},
-    {v:approaching.length,  l:'Deadline < 14 Days',  sub:'60-day window closing',     c:'tile-amber',  tv:'tv-amber',  key:'deadline',   border:'var(--amber)',  kind:'wait',   urgent:approaching.length>0, cog:cogOf(approaching)},
+    {v:overdueReu.length,      l:'Overdue Re-updates',     sub:'Re-push MSC to Amazon now',  c:'tile-red',    tv:'tv-red',    key:'overdue',      border:'var(--red)',    kind:'action', urgent:overdueReu.length>0,      cog:cogOf(overdueReu)},
+    {v:checkDiscordRecs.length,l:'Check Discord',           sub:'Photos, LPN, damage notes',  c:'tile-purple', tv:'tv-purple', key:'checkdiscord',  border:'var(--purple)', kind:'action', urgent:checkDiscordRecs.length>0, cog:cogOf(checkDiscordRecs)},
+    {v:checkMscNow.length,     l:'MSC Results to Check',   sub:'In review 5+ days',          c:'tile-amber',  tv:'tv-amber',  key:'checkmsc',      border:'var(--amber)',  kind:'action', urgent:checkMscNow.length>0,      cog:cogOf(checkMscNow)},
+    {v:checkReimbNow.length,   l:'Reimbursements to Verify',sub:'Confirm funds in Amazon',   c:'tile-cyan',   tv:'tv-cyan',   key:'checkreimb',    border:'var(--cyan)',   kind:'action', urgent:checkReimbNow.length>0,    cog:cogOf(checkReimbNow)},
+    {v:needsDoc.length,        l:'Needs Document',          sub:'Invoice required',           c:'tile-purple', tv:'tv-purple', key:'needsdoc',      border:'var(--purple)', kind:'action', urgent:needsDoc.length>0,         cog:cogOf(needsDoc)},
+    // WAITING tiles — monitor only
+    {v:inTransit.length,       l:'In Transit',              sub:'Returning to BDL',           c:'tile-blue',   tv:'tv-blue',   key:'transit',       border:'var(--blue)',   kind:'wait', cog:cogOf(inTransit)},
+    {v:inReimb.length,         l:'Claims in Progress',      sub:'Open with Amazon',           c:'tile-blue',   tv:'tv-blue',   key:'reimb',         border:'var(--blue)',   kind:'wait', cog:cogOf(inReimb)},
+    {v:approaching.length,     l:'Deadline < 14 Days',      sub:'60-day window closing',      c:'tile-amber',  tv:'tv-amber',  key:'deadline',      border:'var(--amber)',  kind:'wait', urgent:approaching.length>0, cog:cogOf(approaching)},
   ];
 
   document.getElementById('overview-tiles').innerHTML = tiles.map(t=>{
@@ -3084,13 +3427,22 @@ function renderOverview() {
   // ── SARAH'S ACTION LIST ───────────────────────────────────────────────
   const actions = [];
 
-  // Priority 0 — 5-day checks (most urgent — actionable RIGHT NOW)
-  // Sort so the longest-waiting items appear first within this group
+  // Priority -1 — MSC APPROVED: open a case immediately (highest priority, money waiting)
+  mscApprovedRecs.forEach(r=>{
+    const label = r.status==='mscreduced'
+      ? `MSC Approved (reduced) — open a Seller Support case to claim ${r.cog>0?fmtMoney(r.cog):''}`
+      : `MSC Approved — open a Seller Support case NOW to claim ${r.cog>0?fmtMoney(r.cog):''}`;
+    actions.push({r, dot:'ad-green', label, meta:fmtDate(r.checking_date||r.darr), pri:-1, urg:{t:'CLAIM NOW',c:'var(--green)'}});
+  });
+
+  // Priority 0 — 5-day checks (MSC review 5+ days = result should be ready)
   const p0Mscs = [];
   DB.filter(r=>r.status==='mscreview'||r.status==='mscsubmit').forEach(r=>{
     if (!r.status_changed_at) return;
     const days = Math.floor((new Date()-new Date(r.status_changed_at))/86400000);
+    // Always show MSC review items with day count so Sarah knows to check at day 5
     if (days >= 5) p0Mscs.push({r, days, type:'msc'});
+    else p0Mscs.push({r, days, type:'msc-watching'});
   });
   DB.filter(r=>r.status==='reimbpending').forEach(r=>{
     if (!r.status_changed_at) return;
@@ -3100,7 +3452,9 @@ function renderOverview() {
   // Most days-waiting first
   p0Mscs.sort((a,b)=>b.days-a.days).forEach(({r,days,type})=>{
     if (type==='msc') {
-      actions.push({r, dot:'ad-amber', label:`MSC in review ${days} days — check the result now`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days, urg:{t:`${days}d`,c:'var(--amber)'}});
+      actions.push({r, dot:'ad-amber', label:`MSC in review ${days} days — check result now (5-day SLA reached)`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days, urg:{t:`${days}d`,c:'var(--amber)'}});
+    } else if (type==='msc-watching') {
+      actions.push({r, dot:'ad-blue', label:`MSC in review — day ${days} of 5 (check on day 5)`, meta:fmtDate(r.reupdate||r.darr), pri:5, sortKey:-days, urg:{t:`day ${days}`,c:'var(--blue)'}});
     } else {
       actions.push({r, dot:'ad-cyan', label:`Reimbursement pending ${days} days — verify funds in Amazon`, meta:fmtDate(r.reupdate||r.darr), pri:0, sortKey:-days, urg:{t:`${days}d`,c:'var(--cyan)'}});
     }
@@ -3134,7 +3488,7 @@ function renderOverview() {
 
   // Priority 3.5 — Escalated to Jack
   DB.filter(r=>r.status==='escalated').forEach(r=>{
-    actions.push({r,dot:'ad-pink',label:'Escalated to Jack / MD — awaiting a decision',meta:fmtDate(r.darr||r.dsub),pri:3, urg:{t:'ESCALATED',c:'var(--pink)'}});
+    actions.push({r,dot:'ad-pink',label:'Escalated to Jack / MD — awaiting a decision',meta:fmtDate(r.darr||r.dsub),pri:7, urg:{t:'ESCALATED',c:'var(--pink)'}});
   });
 
   // Priority 4 — Needs document
@@ -3176,22 +3530,27 @@ function renderOverview() {
     doc:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M4 2.5h5l3 3v8a.5.5 0 01-.5.5h-7a.5.5 0 01-.5-.5v-11a.5.5 0 01.5-.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 2.5v3h3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
     box:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M8 1.8l5.5 3v6.4L8 14.2l-5.5-3V4.8L8 1.8z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2.7 4.9L8 7.8l5.3-2.9M8 7.8v6.4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
     chat:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M2.5 4a1.5 1.5 0 011.5-1.5h8A1.5 1.5 0 0113.5 4v5A1.5 1.5 0 0112 10.5H6l-3 3V10.5H4A1.5 1.5 0 012.5 9V4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+    coin:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4.5v7M9.6 5.8c-.4-.7-1-1-1.8-1-1 0-1.7.5-1.7 1.4 0 1.9 3.6.7 3.6 2.6 0 .9-.8 1.4-1.9 1.4-.8 0-1.5-.3-1.9-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>',
+    warn:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><path d="M8 2l6.5 11.5h-13L8 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.5v.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    search:'<svg viewBox="0 0 16 16" fill="none" style="width:12px;height:12px"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.5"/><path d="M10.2 10.2L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
   };
   const cogSum = items => items.reduce((s,a)=>s+Number(a.r.cog||0),0);
 
-  // Group by priority category — money-recovery framed
+  // Groups — ordered by operational priority (top = Sarah actions first)
   const groups = [
-    {pri:0, label:'Check Now',                icon:GI.bell,  color:'var(--amber)', items:actions.filter(a=>a.pri===0), collapsed:false},
-    {pri:1, label:'Critical — Window Closing', icon:GI.flame, color:'var(--red)',   items:actions.filter(a=>a.pri===1), collapsed:false},
-    {pri:2, label:'Overdue Re-updates',        icon:GI.clock, color:'var(--red)',   items:actions.filter(a=>a.pri===2), collapsed:false,
-     action:{label:'View all →', fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"},
-     maxShow:4},
-    {pri:3, label:'Due Today / Escalated',     icon:GI.cal,   color:'var(--amber)', items:actions.filter(a=>a.pri===3), collapsed:false},
-    {pri:4, label:'Blocked — Needs Document',  icon:GI.doc,   color:'var(--purple)',items:actions.filter(a=>a.pri===4), collapsed:false,
-     action:{label:'View all →', fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"}},
-    {pri:6, label:'No Case Opened Yet',        icon:GI.chat,  color:'var(--cyan)',  items:actions.filter(a=>a.pri===6), collapsed:true,
-     action:{label:'Open Reimbursements →', fn:"REIMB_FILTER='checkdiscord';setTimeout(()=>navTo('reimb'),0)"},
-     maxShow:4},
+    {pri:-1, label:'MSC Approved — No Case Opened',  icon:GI.coin,  color:'var(--green)', items:actions.filter(a=>a.pri===-1), collapsed:false,
+     action:{label:'View →', fn:"REIMB_FILTER='mscapproved';setTimeout(()=>navTo('reimb'),0)"}, maxShow:4},
+    {pri:2,  label:'Overdue Re-updates',              icon:GI.clock, color:'var(--red)',   items:actions.filter(a=>a.pri===2),  collapsed:false,
+     action:{label:'View all →', fn:"REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)"}, maxShow:4},
+    {pri:1,  label:'Deadline Risk — <7 Days Left',    icon:GI.flame, color:'var(--red)',   items:actions.filter(a=>a.pri===1),  collapsed:false, maxShow:4},
+    {pri:3,  label:'Due Today',                       icon:GI.cal,   color:'var(--amber)', items:actions.filter(a=>a.pri===3),  collapsed:false, maxShow:4},
+    {pri:0,  label:'Check Now — SLA Reached',         icon:GI.bell,  color:'var(--amber)', items:actions.filter(a=>a.pri===0),  collapsed:false, maxShow:4},
+    {pri:4,  label:'Needs Document — Claim Blocked',  icon:GI.doc,   color:'var(--purple)',items:actions.filter(a=>a.pri===4),  collapsed:false,
+     action:{label:'View →', fn:"REIMB_FILTER='mscneedsdoc';setTimeout(()=>navTo('reimb'),0)"}, maxShow:4},
+    {pri:7,  label:'Escalated to Jack',               icon:GI.warn,  color:'var(--pink)',  items:actions.filter(a=>a.pri===7),  collapsed:false, maxShow:4},
+    {pri:6,  label:'Discord Check Required',          icon:GI.chat,  color:'var(--purple)',items:actions.filter(a=>a.pri===6),  collapsed:true,
+     action:{label:'View →', fn:"REIMB_FILTER='checkdiscord';setTimeout(()=>navTo('reimb'),0)"}, maxShow:4},
+    {pri:5,  label:'MSC Under Review — Monitoring',   icon:GI.search,color:'var(--blue)',  items:actions.filter(a=>a.pri===5),  collapsed:true,  maxShow:4},
   ].filter(g=>g.items.length);
 
   function renderGroups(expandedSet) {
@@ -3233,7 +3592,7 @@ function renderOverview() {
               </div>
               <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
                 ${r.cog>0?`<span style="font-size:11px;font-weight:800;color:${g.color}">${fmtMoney(r.cog)}</span>`:`<span style="font-size:10px;color:var(--text3)">${meta}</span>`}
-                <button onclick="event.stopPropagation();openDetail('${r.id}')" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:3px 11px;font-size:10px;font-weight:700;cursor:pointer;transition:all .12s" onmouseover="this.style.borderColor='${g.color}';this.style.color='${g.color}'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">Open</button>
+                <button onclick="event.stopPropagation();navToCard('${r.id}')" style="background:var(--bg4);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:3px 11px;font-size:10px;font-weight:700;cursor:pointer;transition:all .12s" onmouseover="this.style.borderColor='${g.color}';this.style.color='${g.color}'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">View →</button>
               </div>
             </div>`;}).join('')}
           ${hasMore ? `<div style="padding:9px 15px;text-align:center;border-bottom:1px solid var(--border)">
@@ -3276,88 +3635,46 @@ function renderOverview() {
   if (!schedEl) return;
 
   if (!reOverdue.length && !reToday.length && !upcoming.length) {
-    schedEl.innerHTML = `<div style="padding:20px 14px;text-align:center;font-size:11px;color:var(--text3)">No re-updates scheduled</div>`;
+    schedEl.innerHTML = `<div style="padding:16px 14px;text-align:center;font-size:11px;color:var(--text3)">All caught up — no re-updates scheduled</div>`;
   } else {
-    // Summary strip
+    // Compact summary: 3 stat boxes + next 3 upcoming items only
+    // Overdue detail is already in Sarah's action list — no need to repeat here
     let html = `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border)">
-      <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border)">
+      <div onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="padding:10px 8px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:background .12s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
         <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Overdue</div>
-        <div style="font-size:18px;font-weight:800;color:${reOverdue.length?'var(--red)':'var(--text3)'};line-height:1;margin-top:2px">${reOverdue.length}</div>
+        <div style="font-size:22px;font-weight:800;color:${reOverdue.length?'var(--red)':'var(--text3)'};line-height:1;margin-top:3px">${reOverdue.length}</div>
+        ${reOverdue.length?`<div style="font-size:9px;color:var(--red);margin-top:2px">View →</div>`:''}
       </div>
-      <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border)">
+      <div style="padding:10px 8px;text-align:center;border-right:1px solid var(--border)">
         <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Today</div>
-        <div style="font-size:18px;font-weight:800;color:${reToday.length?'var(--amber)':'var(--text3)'};line-height:1;margin-top:2px">${reToday.length}</div>
+        <div style="font-size:22px;font-weight:800;color:${reToday.length?'var(--amber)':'var(--text3)'};line-height:1;margin-top:3px">${reToday.length}</div>
       </div>
-      <div style="padding:8px 12px;text-align:center">
+      <div style="padding:10px 8px;text-align:center">
         <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Next 7d</div>
-        <div style="font-size:18px;font-weight:800;color:${next7.length?'var(--cyan)':'var(--text3)'};line-height:1;margin-top:2px">${next7.length}</div>
+        <div style="font-size:22px;font-weight:800;color:${next7.length?'var(--cyan)':'var(--text3)'};line-height:1;margin-top:3px">${next7.length}</div>
       </div>
     </div>`;
 
-    // OVERDUE items — flat list, all visible
-    if (reOverdue.length) {
-      html += `<div style="background:var(--red-bg);border-bottom:1px solid var(--red-dim)">
-        <div style="padding:6px 12px;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:9px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.06em">⚠ Overdue — submit now</span>
-          <button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:none;font-size:9px;color:var(--red);cursor:pointer;font-weight:700">View all →</button>
-        </div>
-        ${reOverdue.slice(0,5).map(r=>{
-          const dl=Math.ceil((nowMs-new Date(r.reupdate).setHours(0,0,0,0))/86400000);
-          const risk=claimDaysLeft(r);
-          const riskCol=risk===null?null:risk<=7?'var(--red)':risk<=15?'var(--amber)':null;
-          return `<div onclick="openDetail('${r.id}')" style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid var(--red-dim);transition:background .1s" onmouseover="this.style.background='rgba(240,80,80,.08)'" onmouseout="this.style.background=''">
-            <div style="flex:1;min-width:0">
-              <div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>35?r.name.slice(0,35)+'…':r.name}</div>
-              <div style="font-size:10px;color:var(--text3);margin-top:1px">Was due ${fmtDate(r.reupdate)}</div>
-            </div>
-            <span style="font-size:9px;font-weight:800;color:var(--red);background:var(--red-dim);border:1px solid var(--red)66;border-radius:4px;padding:2px 6px;white-space:nowrap">${dl}d late</span>
-            ${riskCol?`<span style="font-size:9px;font-weight:700;color:${riskCol};background:${riskCol}22;border:1px solid ${riskCol}66;border-radius:4px;padding:2px 6px;white-space:nowrap">${risk<=0?'EXP':risk+'d left'}</span>`:''}
-            ${r.cog>0?`<span style="font-size:10px;font-weight:700;color:var(--red)">${fmtMoney(r.cog)}</span>`:''}
-          </div>`;
-        }).join('')}
-        ${reOverdue.length>5?`<div style="padding:6px 12px;border-top:1px solid var(--red-dim)"><button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:none;color:var(--red);font-size:10px;font-weight:700;cursor:pointer">+${reOverdue.length-5} more →</button></div>`:''}
-      </div>`;
+    // Next 3 upcoming only — compact rows
+    const nextItems = [...reToday, ...upcoming].slice(0, 3);
+    if (nextItems.length) {
+      html += nextItems.map(r=>{
+        const isToday = r.reupdate === today;
+        const days = isToday ? 0 : Math.ceil((new Date(r.reupdate)-new Date())/86400000);
+        const col = isToday?'var(--amber)':days<=3?'var(--amber)':days<=7?'var(--cyan)':'var(--text3)';
+        return `<div onclick="navToCard('${r.id}')" style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+          <div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>32?r.name.slice(0,32)+'…':r.name}</div></div>
+          <span style="font-size:9px;font-weight:700;color:${col};white-space:nowrap">${isToday?'Today':fmtDate(r.reupdate)}</span>
+        </div>`;
+      }).join('');
     }
 
-    // DUE TODAY
-    if (reToday.length) {
-      html += `<div style="border-bottom:1px solid var(--border)">
-        <div style="padding:6px 12px;background:var(--amber-bg)">
-          <span style="font-size:9px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.06em">📅 Due today</span>
-        </div>
-        ${reToday.map(r=>`
-          <div onclick="openDetail('${r.id}')" style="padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
-            <div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>38?r.name.slice(0,38)+'…':r.name}</div></div>
-            <span style="font-size:9px;font-weight:800;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber)66;border-radius:4px;padding:2px 6px">TODAY</span>
-            ${r.cog>0?`<span style="font-size:10px;font-weight:700;color:var(--amber)">${fmtMoney(r.cog)}</span>`:''}
-          </div>`).join('')}
-      </div>`;
+    if (upcoming.length > 3) {
+      html += `<div style="padding:7px 12px;text-align:center"><button onclick="REIMB_FILTER='overdue';setTimeout(()=>navTo('reimb'),0)" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;font-weight:600">+${upcoming.length-3} more upcoming →</button></div>`;
     }
-
-    // UPCOMING — grouped by date, clean
-    const buckets = {};
-    upcoming.forEach(r=>{ (buckets[r.reupdate]=buckets[r.reupdate]||[]).push(r); });
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    Object.keys(buckets).slice(0,5).forEach(date=>{
-      const recs = buckets[date];
-      const dObj = new Date(date);
-      const days = Math.ceil((dObj-new Date())/86400000);
-      const col = days<=3?'var(--amber)':days<=7?'var(--cyan)':'var(--text3)';
-      const dayLabel = days===1?'Tomorrow':days<=7?dayNames[dObj.getDay()]:fmtDate(date);
-      html += `<div style="border-bottom:1px solid var(--border)">
-        <div style="padding:6px 12px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:9px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.05em">${dayLabel} · in ${days}d · ${fmtDate(date)}</span>
-          <span style="font-size:9px;color:var(--text3);font-weight:600">${recs.length} item${recs.length!==1?'s':''}</span>
-        </div>
-        ${recs.map(r=>`
-          <div onclick="openDetail('${r.id}')" style="padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-top:1px solid var(--border);transition:background .1s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background=''">
-            <div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name.length>38?r.name.slice(0,38)+'…':r.name}</div></div>
-            ${r.cog>0?`<span style="font-size:10px;color:var(--text3)">${fmtMoney(r.cog)}</span>`:''}
-          </div>`).join('')}
-      </div>`;
-    });
     schedEl.innerHTML = html;
   }
+
   // ── APPROACHING DEADLINES ─────────────────────────────────────────────
   const deadlines = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;})
     .sort((a,b)=>deadline60(a)-deadline60(b));
@@ -3572,7 +3889,7 @@ function showTileDrill(key) {
     return Math.ceil(ms/86400000);
   };
 
-  // Drill mode tiles — show a filtered list with relevant date/age column
+  if (key==='checkdiscord') { REIMB_FILTER='checkdiscord'; setTimeout(()=>navTo('reimb'),0); return; }
   if (key==='overdue') {
     items = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status))
       .sort((a,b)=>new Date(a.reupdate)-new Date(b.reupdate));
@@ -3596,7 +3913,7 @@ function showTileDrill(key) {
   else if (key==='needsdoc')   { items=DB.filter(r=>r.status==='mscneedsdoc');                                                  title='Needs Document'; subtitle='Upload invoice or supporting doc to unblock the claim'; }
   else if (key==='transit')    { items=DB.filter(r=>r.status==='transit');                                                      title='In Transit';     subtitle='On the way back to BDL'; }
   else if (key==='arrived')    { items=DB.filter(r=>r.status==='arrived');                                                      title='Arrived at BDL'; subtitle='Awaiting check-in'; }
-  else if (key==='reimb')      { items=DB.filter(r=>REIMB_STATUSES.includes(r.status));                                         title='Active Cases';   subtitle='Currently in the reimbursement pipeline'; }
+  else if (key==='reimb')      { items=DB.filter(r=>REIMB_STATUSES.includes(r.status));                                             title='Active Cases';   subtitle='Currently in the reimbursement pipeline'; }
   else if (key==='nodiscord' || key==='nocase') { items=DB.filter(r=>r.status==='checkdiscord'&&!(r.cases&&r.cases.length));    title='Needs Discord / Case Check'; subtitle='Checked in but no case opened yet'; }
   else if (key==='deadline')   { items=DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;}).sort((a,b)=>deadline60(a)-deadline60(b)); title='Deadlines Within 14 Days'; subtitle='60-day reimbursement window closing soon'; }
   else if (key==='expired')    { items=DB.filter(r=>claimExpired(r));                                                             title='Expired Claims'; subtitle='60-day Amazon window may have passed — escalate immediately'; }
@@ -3745,17 +4062,22 @@ function checkinDecision(type) {
   const rid = document.getElementById('checkin-rid').value;
   const r = DB.find(x=>x.id===rid);
   if(!r) { console.error('Item not found:', rid); return; }
-  
+
   const updates = {};
   const timestamp = new Date().toISOString();
+  const today = timestamp.split('T')[0];
   if (!r.status_log) r.status_log = [];
 
+  // Always stamp checking_date and darr on check-in
+  r.checking_date = today;
+  r.darr = r.darr || today;
+  updates.checking_date = today;
+  updates.darr = r.darr;
+
   if(type === 'claim') {
-    r.darr = r.darr || new Date().toISOString().split('T')[0];
     r.status = 'checkdiscord';
     r.status_changed_at = timestamp;
-    r.status_log.push(`${timestamp} | arrived → checkdiscord (Sent to Reimbursements)`);
-    updates.darr = r.darr;
+    r.status_log.push(`${timestamp} | → checkdiscord (Checked in — sent to Reimbursements)`);
     updates.status = 'checkdiscord';
     updates.status_changed_at = timestamp;
     updates.status_log = r.status_log;
@@ -3765,12 +4087,10 @@ function checkinDecision(type) {
   } else if(type === 'new') {
     r.status = 'sentnew';
     r.cond = 'New';
-    r.darr = r.darr || new Date().toISOString().split('T')[0];
     r.status_changed_at = timestamp;
     r.status_log.push(`${timestamp} | → sentnew (Sent back as New)`);
     updates.status = 'sentnew';
     updates.cond = 'New';
-    updates.darr = r.darr;
     updates.status_changed_at = timestamp;
     updates.status_log = r.status_log;
     closeModal('checkin-overlay');
@@ -3779,20 +4099,17 @@ function checkinDecision(type) {
   } else if(type === 'used') {
     r.status = 'sentused';
     r.cond = 'Used';
-    r.darr = r.darr || new Date().toISOString().split('T')[0];
     r.status_changed_at = timestamp;
     r.status_log.push(`${timestamp} | → sentused (Sent back as Used)`);
     updates.status = 'sentused';
     updates.cond = 'Used';
-    updates.darr = r.darr;
     updates.status_changed_at = timestamp;
     updates.status_log = r.status_log;
     closeModal('checkin-overlay');
     renderActive();
     updateBadges();
   }
-  
-  // Single atomic write
+
   if (SUPABASE_READY && window.sbClient && Object.keys(updates).length > 0) {
     updateInSupabase(rid, updates);
   }
@@ -3819,13 +4136,35 @@ function prefillCase(id) {
 }
 
 function delR(id) {
-  if (!confirm('Delete this removal? This cannot be undone.')) return;
-  
-  // Delete from Supabase
-  if (SUPABASE_READY && window.sbClient) {
-    deleteFromSupabase(id);
-  }
-  
+  const r = DB.find(x=>x.id===id);
+  if (!r) return;
+  // Use a styled confirmation modal instead of browser confirm
+  let existing = document.getElementById('delete-confirm-overlay');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'delete-confirm-overlay';
+  overlay.className = 'overlay';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:420px;text-align:center;padding:28px 24px">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--red-bg);border:2px solid var(--red);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg viewBox="0 0 24 24" fill="none" style="width:22px;height:22px;color:var(--red)"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Delete this removal?</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:600">${r.name.length>60?r.name.slice(0,60)+'…':r.name}</div>
+      <div style="font-size:11px;color:var(--red);margin-bottom:24px;font-weight:600">This cannot be undone. All MSC attempts and case history will be lost.</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="document.getElementById('delete-confirm-overlay').remove()" style="flex:1;background:var(--bg4);border:1px solid var(--border2);color:var(--text2);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Cancel</button>
+        <button onclick="confirmDelR('${id}')" style="flex:1;background:var(--red);border:none;color:white;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer">Yes, delete</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+}
+
+function confirmDelR(id) {
+  document.getElementById('delete-confirm-overlay')?.remove();
+  if (SUPABASE_READY && window.sbClient) deleteFromSupabase(id);
   DB = DB.filter(x=>x.id!==id);
   closeModal('detail-overlay');
   renderPage(CURRENT_PAGE);
