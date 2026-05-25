@@ -2066,10 +2066,11 @@ function buildReimbCard(r, today) {
       <div class="rc-header-left">
         <div class="rc-name">${r.name}</div>
         <div class="rc-meta">
-          <span style="font-size:9px;color:var(--text3);font-weight:600">ASIN</span><button class="rc-copy" onclick="copyText('${r.asin}')" title="Click to copy">${r.asin}</button>
-          ${r.fnsku?`<span style="font-size:9px;color:var(--text3);font-weight:600;margin-left:2px">FNSKU</span><button class="rc-copy" onclick="copyText('${r.fnsku}')" title="Click to copy">${r.fnsku}</button>`:''}
-          ${r.sku?`<span style="font-size:9px;color:var(--text3);font-weight:600;margin-left:2px">SKU</span><button class="rc-copy" onclick="copyText('${r.sku}')" title="Click to copy">${r.sku}</button>`:''}
+          <span style="font-size:9px;color:var(--text3);font-weight:600">ASIN</span><button class="rc-copy" onclick="copyText('${r.asin}',this)" title="Click to copy">${r.asin}</button>
+          ${r.fnsku?`<span style="font-size:9px;color:var(--text3);font-weight:600;margin-left:2px">FNSKU</span><button class="rc-copy" onclick="copyText('${r.fnsku}',this)" title="Click to copy">${r.fnsku}</button>`:''}
+          ${r.sku?`<span style="font-size:9px;color:var(--text3);font-weight:600;margin-left:2px">SKU</span><button class="rc-copy" onclick="copyText('${r.sku}',this)" title="Click to copy">${r.sku}</button>`:''}
           ${r.oid?`<a class="rc-oid" href="https://sellercentral.amazon.co.uk/recoveryui/removal-order/detail?sourceRemovalOrderId=${r.oid}" target="_blank">${r.oid} ↗</a>`:''}
+          <a href="https://sellercentral.amazon.co.uk/inventory-reimbursement/cost-management" target="_blank" style="font-size:9px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber)44;border-radius:4px;padding:1px 7px;text-decoration:none;margin-left:4px;transition:all .12s" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--amber)44'">MSC ↗</a>
         </div>
       </div>
       <div class="rc-tags">${reasonTag}<span style="position:relative;display:inline-block"><span class="rc-tag rc-statustag" style="background:${col}1f;color:${col};border:1px solid ${col}55" onclick="event.stopPropagation();toggleStatusPop('${r.id}')" title="Click to change status"><span class="rc-tag-dot" style="background:${col};box-shadow:0 0 6px ${col}"></span>${sc.label}<span class="rc-pop-chev">▾</span></span>${reimbStatusPopover(r)}</span></div>
@@ -2105,13 +2106,12 @@ function buildReimbCard(r, today) {
     <div class="rc-footer">
       ${buildMscSummaryBar(r)}
       <button class="btn btn-sm btn-blue" onclick="navTo('case');setTimeout(()=>prefillCase('${r.id}'),150)">Case msg</button>
-      <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Case attempt</button>
+      <button class="btn btn-sm" onclick="openAddCase('${r.id}')">+ Case</button>
       <button class="btn btn-sm" style="background:var(--amber-bg);border-color:var(--amber);color:var(--amber)" onclick="event.stopPropagation();openAddMsc('${r.id}')">+ MSC</button>
       <button class="btn btn-sm" onclick="openDetail('${r.id}')">Details</button>
       <button class="btn btn-sm" style="background:#a78bfa22;border-color:#a78bfa55;color:#a78bfa;font-weight:600" onclick="moveReimbToActive('${r.id}')">← Active</button>
       <button class="btn btn-sm" style="background:#3dd68c22;border-color:#3dd68c55;color:#3dd68c;font-weight:600" onclick="markReimbursed('${r.id}')">✓ Reimbursed</button>
       <input class="inl-input" style="flex:1;font-size:11px;min-width:0" value="${r.mscnotes||''}" placeholder="Notes / urgent action..." onchange="upd('${r.id}','mscnotes',this.value)">
-      <span style="margin-left:auto"></span>
     </div>
   </div>`;
 }
@@ -4674,13 +4674,21 @@ function saveCaseId(removalId, caseIdValue) {
   renderReimb();
 }
 
-function copyText(text) {
+function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(()=>{
-    const el = document.createElement('div');
-    el.className = 'copy-flash';
-    el.textContent = 'Copied: ' + text;
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(), 1800);
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✓';
+      btn.style.color = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+      setTimeout(()=>{ btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 1200);
+    } else {
+      const el = document.createElement('div');
+      el.className = 'copy-flash';
+      el.textContent = 'Copied: ' + text;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(), 1800);
+    }
   });
 }
 
