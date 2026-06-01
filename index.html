@@ -1944,7 +1944,15 @@ function buildReimbCard(r, today) {
       urgencyAlert = `<div class="rc-alert" style="background:linear-gradient(90deg,#f5a62326,#f5a62310);border-bottom:2px solid #f5a623">
         <span class="rc-alert-ico" style="background:#f5a62322;color:#f5a623">!</span>
         <span style="flex:1;color:#f5a623;font-size:12px;font-weight:700">${daysSinceStatusChange} days since submitted — check MSC result now</span>
+        <a href="https://sellercentral.amazon.co.uk/inventory-reimbursement/cost-management" target="_blank" style="background:#f5a62322;border:1px solid #f5a62366;color:#f5a623;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">MSC Portal ↗</a>
         <button class="rc-do" style="background:#f5a62322;border-color:#f5a62366;color:#f5a623" onclick="event.stopPropagation();openAddMsc('${r.id}')">Log result →</button>
+      </div>`;
+    } else if (daysSinceStatusChange!==null) {
+      const daysLeft = 5 - daysSinceStatusChange;
+      urgencyAlert = `<div class="rc-alert" style="background:linear-gradient(90deg,#4d8ef026,#4d8ef010);border-bottom:1px solid #4d8ef066">
+        <span class="rc-alert-ico" style="background:#4d8ef022;color:#4d8ef0">↻</span>
+        <span style="flex:1;color:#4d8ef0;font-size:12px">Day ${daysSinceStatusChange} of 5 — check MSC result in ${daysLeft} day${daysLeft!==1?'s':''}</span>
+        <a href="https://sellercentral.amazon.co.uk/inventory-reimbursement/cost-management" target="_blank" style="background:#4d8ef022;border:1px solid #4d8ef066;color:#4d8ef0;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">MSC Portal ↗</a>
       </div>`;
     }
   }
@@ -2360,13 +2368,23 @@ function changeStatus(id, val, page) {
     r.status_log.push(logEntry);
     r.status = val;
     r.status_changed_at = timestamp;
-    // Single atomic write — status + log + timestamp together, no race
+
+    const updates = {
+      status: val,
+      status_log: r.status_log,
+      status_changed_at: timestamp
+    };
+
+    // Clear reupdate when status moves past MSC denial stage
+    // — no point showing overdue reupdate if MSC approved / case open / reimb pending
+    const CLEAR_REUPDATE_ON = ['mscapproved','mscreduced','caseopen','reimbpending','reimbursed','escalated'];
+    if (CLEAR_REUPDATE_ON.includes(val) && r.reupdate) {
+      r.reupdate = '';
+      updates.reupdate = null;
+    }
+
     if (SUPABASE_READY && window.sbClient) {
-      updateInSupabase(id, {
-        status: val,
-        status_log: r.status_log,
-        status_changed_at: timestamp
-      });
+      updateInSupabase(id, updates);
     }
   }
   if (page==='active') renderActive();
@@ -2908,6 +2926,9 @@ function saveMscAttempt() {
     r.status_changed_at = new Date().toISOString();
     updates.status = r.status;
     updates.status_changed_at = r.status_changed_at;
+    // Clear reupdate — no longer needed once MSC is approved
+    r.reupdate = '';
+    updates.reupdate = null;
   }
   // Auto-set status to mscreview when submitted/pending — only if already in reimb flow
   if ((outcome === 'pending' || outcome === 'review') && canAutoStatus) {
@@ -3090,7 +3111,8 @@ function renderOverview() {
   const arrived     = DB.filter(r=>r.status==='arrived');
   const checkedin   = DB.filter(r=>r.status==='checkdiscord');
   const inReimb     = DB.filter(r=>REIMB_STATUSES.includes(r.status));
-  const overdueReu  = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status));
+  const REUPDATE_NOT_NEEDED = ["mscapproved","mscreduced","caseopen","reimbpending","escalated"];
+  const overdueReu  = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status)&&!REUPDATE_NOT_NEEDED.includes(r.status));
   const needsDoc    = DB.filter(r=>r.status==='mscneedsdoc');
   const approaching = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;});
   const critical    = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=7;});
@@ -3828,7 +3850,8 @@ function renderOverview() {
   const arrived     = DB.filter(r=>r.status==='arrived');
   const checkedin   = DB.filter(r=>r.status==='checkdiscord');
   const inReimb     = DB.filter(r=>REIMB_STATUSES.includes(r.status));
-  const overdueReu  = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status));
+  const REUPDATE_NOT_NEEDED = ["mscapproved","mscreduced","caseopen","reimbpending","escalated"];
+  const overdueReu  = DB.filter(r=>r.reupdate&&r.reupdate<today&&!HIST_STATUSES.includes(r.status)&&!REUPDATE_NOT_NEEDED.includes(r.status));
   const needsDoc    = DB.filter(r=>r.status==='mscneedsdoc');
   const approaching = DB.filter(r=>{const d=deadline60(r);return d!==null&&d>=0&&d<=14;});
   const totalActive = DB.filter(r=>!HIST_STATUSES.includes(r.status));
